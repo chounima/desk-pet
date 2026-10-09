@@ -36,6 +36,14 @@ public partial class Main : Node2D
 
     public override void _Ready()
     {
+        if (!SingleInstance.TryAcquire())
+        {
+            GD.Print("[DeskPet] 已經有一隻桌寵在執行，結束這個實例");
+            SetProcess(false);
+            SetProcessInput(false);
+            GetTree().Quit();
+            return;
+        }
         DesktopWindow.Setup();
         settings = Settings.Load();
 
@@ -157,8 +165,10 @@ public partial class Main : Node2D
 
     public override void _ExitTree()
     {
+        if (settings == null) return;    // 重複啟動、還沒初始化就結束的實例
         GlobalInput.Stop();
         settings.Save();
+        SingleInstance.Release();
     }
 
     static Dictionary<string, string> ParseArgs()
