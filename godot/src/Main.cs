@@ -3,6 +3,7 @@
 // 命令列參數（放在 -- 之後）：
 //   --char=sera        起始角色
 //   --action=typing    起始動作（並關閉自動行為），方便截圖檢查
+//   --autostart=on|off 設定開機自動啟動
 using System.Collections.Generic;
 using System.Linq;
 using DeskPet.Content;
@@ -70,18 +71,21 @@ public partial class Main : Node2D
             behavior.Force(action);
         }
 
+        if (args.TryGetValue("autostart", out var auto)) Autostart.Set(auto == "on");
+
         GlobalInput.Start();
 
         tray = new Tray();
         AddChild(tray);
-        tray.Build(ids.Select(id => rigs[id]).ToList(), settings, GD.Load<Texture2D>("res://icon.svg"));
+        tray.Build(ids.Select(id => rigs[id]).ToList(), settings, Autostart.IsEnabled(), GD.Load<Texture2D>("res://icon.svg"));
         tray.CharacterChosen += id => { pet.SetCharacter(rigs[id]); settings.Character = id; settings.Save(); };
         tray.SizeChosen += size => { pet.SetScale(PetScale(size)); settings.Size = size; settings.Save(); };
         tray.AutoToggled += on => { behavior.Auto = on; settings.Auto = on; settings.Save(); };
+        tray.AutostartToggled += Autostart.Set;
         tray.QuitRequested += () => GetTree().Quit();
 
         GD.Print($"[DeskPet] content={ContentLoader.Root} characters={string.Join(",", ids)} " +
-                 $"clips={clips.Count} area={DesktopWindow.Area} uiScale={DesktopWindow.UiScale} start={startId}");
+                 $"clips={clips.Count} area={DesktopWindow.Area} uiScale={DesktopWindow.UiScale} start={startId} autostart={Autostart.IsEnabled()}");
     }
 
     static float PetScale(float size) => Tuning.Scale * DesktopWindow.UiScale * size;

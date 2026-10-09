@@ -11,7 +11,7 @@ namespace DeskPet.UI;
 public partial class Tray : Node
 {
     // 選單項目 id：角色用 0..n-1，大小用 IdSize + i
-    const int IdSize = 100, IdAuto = 1000, IdToday = 1002, IdQuit = 1003;
+    const int IdSize = 100, IdAuto = 1000, IdAutostart = 1001, IdToday = 1002, IdQuit = 1003;
 
     readonly List<string> ids = new();
     PopupMenu menu = null!;
@@ -21,9 +21,10 @@ public partial class Tray : Node
     public event Action<string>? CharacterChosen;
     public event Action<float>? SizeChosen;
     public event Action<bool>? AutoToggled;
+    public event Action<bool>? AutostartToggled;
     public event Action? QuitRequested;
 
-    public void Build(IList<RigData> characters, Settings settings, Texture2D icon)
+    public void Build(IList<RigData> characters, Settings settings, bool autostart, Texture2D icon)
     {
         menu = new PopupMenu();
         AddChild(menu);
@@ -38,6 +39,7 @@ public partial class Tray : Node
             menu.AddRadioCheckItem(Tuning.Sizes[i].Label, IdSize + i);
         menu.AddSeparator();
         menu.AddCheckItem("自動行為", IdAuto);
+        menu.AddCheckItem("開機時自動啟動", IdAutostart);
         menu.AddSeparator();
         menu.AddItem("", IdToday);
         menu.SetItemDisabled(menu.GetItemIndex(IdToday), true);
@@ -47,6 +49,7 @@ public partial class Tray : Node
         SetCharacter(settings.Character);
         SetSize(settings.Size);
         SetChecked(IdAuto, settings.Auto);
+        SetChecked(IdAutostart, autostart);
 
         indicator = new StatusIndicator { Icon = icon, Tooltip = "Desk Pet" };
         AddChild(indicator);
@@ -86,6 +89,11 @@ public partial class Tray : Node
                 var on = !menu.IsItemChecked(menu.GetItemIndex(IdAuto));
                 SetChecked(IdAuto, on);
                 AutoToggled?.Invoke(on);
+                break;
+            case IdAutostart:
+                var start = !menu.IsItemChecked(menu.GetItemIndex(IdAutostart));
+                SetChecked(IdAutostart, start);
+                AutostartToggled?.Invoke(start);
                 break;
             case >= IdSize and < IdSize + 100 when id - IdSize < Tuning.Sizes.Length:
                 var size = Tuning.Sizes[id - IdSize].Value;
