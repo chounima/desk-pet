@@ -88,6 +88,7 @@ MOUTHS = {
              '<path d="M5.5,-13 Q10,-15.5 14.5,-13 L14,-12 Q10,-13.5 6,-12 Z" fill="#fff"/>'),
     "o": f'<ellipse cx="10" cy="-11" rx="3" ry="3.5" fill="{MOUTH_IN}"/>',
     "wavy": _line("M1,-12 Q6,-9 10,-12 Q14,-9 19,-12", MOUTH, 2.2),
+    "pout": _line("M3,-10 Q10,-15 17,-10", MOUTH, 2.4),
 }
 
 SWEAT = ('<path d="M50,-72 C46,-64 44,-60 44,-57 C44,-53 47,-51 50,-51 C53,-51 56,-53 56,-57 '
@@ -109,4 +110,5 @@ def make() -> dict[str, Part]:
         "surprised": _face(_brows("raised"), both(lid="wide"), NOSE, _blush(0.15), MOUTHS["open"], SWEAT),
         "focus": _face(_brows("serious"), both(lid="narrow"), NOSE, MOUTHS["flat"]),
         "shy": _face(_brows("worried"), both(look=-3), NOSE, _blush(0.7, hatch=True), MOUTHS["wavy"]),
+        "angry": _face(_brows("serious"), both(lid="narrow"), NOSE, _blush(0.35), MOUTHS["pout"]),
     }

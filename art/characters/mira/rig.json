@@ -338,7 +338,8 @@
         "sleep": "faces/sleep.svg",
         "surprised": "faces/surprised.svg",
         "focus": "faces/focus.svg",
-        "shy": "faces/shy.svg"
+        "shy": "faces/shy.svg",
+        "angry": "faces/angry.svg"
       }
     },
     {

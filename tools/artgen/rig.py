@@ -100,4 +100,4 @@ SLOTS = [
 
 FACE_SLOT = ("face", "head", 14)
 
-EXPRESSIONS = ("idle", "blink", "happy", "sleep", "surprised", "focus", "shy")
+EXPRESSIONS = ("idle", "blink", "happy", "sleep", "surprised", "focus", "shy", "angry")

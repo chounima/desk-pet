@@ -77,6 +77,7 @@ def _mouth(kind: str, st: FaceStyle) -> str:
         "cat": f'<path d="M2,-19 Q5.5,-15 9,-19 Q12.5,-15 16,-19" {line}/>',
         "open": f'<path d="M3,-21 Q9.5,-10 16,-21 Z" fill="{st.mouth}" stroke="{st.mouth}" stroke-width="2" stroke-linejoin="round"/>',
         "o": f'<ellipse cx="9.5" cy="-17" rx="3" ry="3.5" fill="{st.mouth}"/>',
+        "pout": f'<path d="M4,-16 Q9.5,-21 15,-16" {line}/>',
         "O": f'<ellipse cx="9.5" cy="-16" rx="4.5" ry="6" fill="{st.mouth}"/>',
     }[kind]
 
@@ -106,6 +107,7 @@ def make_faces(st: FaceStyle, scale: float = 1, dy: float = 0) -> dict[str, Part
         "surprised": both_open("wide") + _blush(0.3, st) + _mouth("O", st),
         "focus": both_open("sharp") + _blush(0.2, st) + _mouth("flat", st),
         "shy": _closed("arc", st) + _blush(1.0, st) + _mouth(st.idle_mouth, st),
+        "angry": both_open("sharp") + _blush(0.6, st) + _mouth("pout", st),
     }
     extras = "".join(st.extras)
     if scale == 1 and dy == 0:

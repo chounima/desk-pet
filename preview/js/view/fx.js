@@ -3,35 +3,42 @@
 const EMITTERS = {
   zzz: { every: 0.9, text: () => "Z" },
   notes: { every: 0.45, text: () => (Math.random() < 0.5 ? "♪" : "♫") },
+  hearts: { every: 0.5, text: () => "♥", cls: "fx-heart" },
+};
+
+// 停在頭上、會抖動的符號
+const MARKS = {
+  alert: { text: "!", dx: 0, dy: -14 },
+  anger: { text: "💢", dx: 24, dy: -10 },
 };
 
 export class Fx {
   constructor(layer) {
     this.layer = layer;
     this.timer = 0;
-    this.alert = null;
+    this.mark = null;
+    this.markKind = null;
   }
 
   // kind: 目前動作的特效名稱；anchor: 頭頂的螢幕座標
   update(dt, kind, anchor) {
-    this.setAlert(kind === "alert", anchor);
+    this.setMark(MARKS[kind] ? kind : null, anchor);
     const emitter = EMITTERS[kind];
     if (!emitter) return;
     this.timer -= dt;
     if (this.timer <= 0) {
       this.timer = emitter.every;
-      this.burst(emitter.text(), anchor, `fx-${kind}`);
+      this.burst(emitter.text(), anchor, emitter.cls ?? `fx-${kind}`);
     }
   }
 
-  setAlert(on, anchor) {
-    if (on && !this.alert) {
-      this.alert = this.spawn("!", anchor, "fx-alert");
-    } else if (!on && this.alert) {
-      this.alert.remove();
-      this.alert = null;
+  setMark(kind, anchor) {
+    if (kind !== this.markKind) {
+      this.mark?.remove();
+      this.mark = kind ? this.spawn(MARKS[kind].text, anchor, "fx-alert") : null;
+      this.markKind = kind;
     }
-    if (this.alert) this.place(this.alert, anchor.x, anchor.y - 14);
+    if (this.mark) this.place(this.mark, anchor.x + MARKS[kind].dx, anchor.y + MARKS[kind].dy);
   }
 
   burst(text, anchor, cls = "fx-pop") {

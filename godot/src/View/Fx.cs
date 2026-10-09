@@ -11,16 +11,25 @@ public partial class Fx : Node2D
     {
         ["zzz"] = (0.9f, () => "Z", new Color("#c8d4ff")),
         ["notes"] = (0.45f, () => GD.Randf() < 0.5f ? "♪" : "♫", new Color("#ffd75e")),
+        ["hearts"] = (0.5f, () => "♥", new Color("#ff6b8a")),
     };
 
-    Label? alert;
+    /// <summary>停在頭上、會抖動的符號（驚嘆號、生氣）</summary>
+    static readonly Dictionary<string, (string text, Color color, Vector2 offset)> Marks = new()
+    {
+        ["alert"] = ("!", new Color("#ffd75e"), new Vector2(-6, -44)),
+        ["anger"] = ("💢", new Color("#ff4d5e"), new Vector2(24, -36)),
+    };
+
+    Label? mark;
+    string? markKind;
     float timer;
 
     /// <param name="kind">目前動作的特效名稱</param>
     /// <param name="anchor">頭頂位置</param>
     public void UpdateFx(float dt, string? kind, Vector2 anchor)
     {
-        SetAlert(kind == "alert", anchor);
+        SetMark(kind != null && Marks.ContainsKey(kind) ? kind : null, anchor);
         if (kind == null || !Emitters.TryGetValue(kind, out var e)) return;
         timer -= dt;
         if (timer > 0) return;
@@ -28,22 +37,23 @@ public partial class Fx : Node2D
         Burst(e.text(), anchor, e.color);
     }
 
-    void SetAlert(bool on, Vector2 anchor)
+    void SetMark(string? kind, Vector2 anchor)
     {
-        if (on && alert == null)
+        if (kind != markKind)
         {
-            alert = MakeLabel("!", new Color("#ffd75e"), 30);
-            AddChild(alert);
+            mark?.QueueFree();
+            mark = null;
+            markKind = kind;
+            if (kind != null)
+            {
+                mark = MakeLabel(Marks[kind].text, Marks[kind].color, 30);
+                AddChild(mark);
+            }
         }
-        else if (!on && alert != null)
+        if (mark != null && kind != null)
         {
-            alert.QueueFree();
-            alert = null;
-        }
-        if (alert != null)
-        {
-            alert.Position = anchor + new Vector2(-6, -44) * Platform.DesktopWindow.UiScale;
-            alert.Rotation = Mathf.Sin(Time.GetTicksMsec() / 50f) * 0.2f;
+            mark.Position = anchor + Marks[kind].offset * Platform.DesktopWindow.UiScale;
+            mark.Rotation = Mathf.Sin(Time.GetTicksMsec() / 50f) * 0.2f;
         }
     }
 
