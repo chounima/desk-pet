@@ -5,7 +5,10 @@ namespace DeskPet.Game;
 
 public static class Tuning
 {
-    public const float Scale = 0.8f;          // 角色縮放
+    public const float Scale = 0.8f;          // 角色縮放（「中」的大小）
+
+    /// <summary>系統匣可選的大小（乘在 Scale 上）</summary>
+    public static readonly (string Label, float Value)[] Sizes = { ("小", 0.7f), ("中", 1f), ("大", 1.4f) };
     public const float Gravity = 2400;        // 掉落加速度 (px/s²)
     public const float Crossfade = 0.18f;     // 動作切換的混合時間 (s)
     public const float SleepAfter = 30;       // 多久沒輸入就睡著 (s)

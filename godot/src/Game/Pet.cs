@@ -18,7 +18,7 @@ public sealed class Pet
     public float X, Y;
     public int Facing = 1;                 // 1 = 朝右，-1 = 朝左
     public string? FaceOverride;           // 由行為邏輯暫時指定的表情
-    public float Scale { get; }
+    public float Scale { get; private set; }
     public Animator Animator { get; }
     public RigData Rig { get; private set; } = null!;
     public PetView View { get; private set; } = null!;
@@ -43,6 +43,14 @@ public sealed class Pet
         View = new PetView(rig, props, Scale);
         parent.AddChild(View);
         parent.MoveChild(View, 0);       // 特效等其他節點畫在角色上面
+    }
+
+    /// <summary>改變大小：貼圖依顯示大小產生，所以要重建畫面</summary>
+    public void SetScale(float scale)
+    {
+        if (Mathf.IsEqualApprox(scale, Scale)) return;
+        Scale = scale;
+        SetCharacter(Rig);
     }
 
     public void Play(string name, bool restart = false, Dictionary<string, float>? mods = null) =>

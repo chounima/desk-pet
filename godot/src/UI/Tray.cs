@@ -1,63 +1,101 @@
-// 系統匣圖示與右鍵選單：切換角色、自動行為開關、結束
+// 系統匣圖示與右鍵選單：切換角色、大小、自動行為、今日統計、結束
 using System;
 using System.Collections.Generic;
 using DeskPet.Content;
+using DeskPet.Game;
+using DeskPet.Save;
 using Godot;
 
 namespace DeskPet.UI;
 
 public partial class Tray : Node
 {
-    const int IdAuto = 1000, IdQuit = 1001;
+    // 選單項目 id：角色用 0..n-1，大小用 IdSize + i
+    const int IdSize = 100, IdAuto = 1000, IdToday = 1002, IdQuit = 1003;
 
     readonly List<string> ids = new();
     PopupMenu menu = null!;
+    StatusIndicator indicator = null!;
+    int shownKeys = -1;
 
     public event Action<string>? CharacterChosen;
+    public event Action<float>? SizeChosen;
     public event Action<bool>? AutoToggled;
     public event Action? QuitRequested;
 
-    public void Build(IList<RigData> characters, string current, Texture2D icon)
+    public void Build(IList<RigData> characters, Settings settings, Texture2D icon)
     {
         menu = new PopupMenu();
         AddChild(menu);
+
         for (var i = 0; i < characters.Count; i++)
         {
             ids.Add(characters[i].Id);
             menu.AddRadioCheckItem($"{characters[i].Name}  {characters[i].Description}", i);
         }
+        menu.AddSeparator("大小");
+        for (var i = 0; i < Tuning.Sizes.Length; i++)
+            menu.AddRadioCheckItem(Tuning.Sizes[i].Label, IdSize + i);
         menu.AddSeparator();
         menu.AddCheckItem("自動行為", IdAuto);
-        menu.SetItemChecked(menu.GetItemIndex(IdAuto), true);
+        menu.AddSeparator();
+        menu.AddItem("", IdToday);
+        menu.SetItemDisabled(menu.GetItemIndex(IdToday), true);
         menu.AddItem("結束", IdQuit);
         menu.IdPressed += OnId;
-        SetCurrent(current);
 
-        var indicator = new StatusIndicator { Icon = icon, Tooltip = "Desk Pet" };
+        SetCharacter(settings.Character);
+        SetSize(settings.Size);
+        SetChecked(IdAuto, settings.Auto);
+
+        indicator = new StatusIndicator { Icon = icon, Tooltip = "Desk Pet" };
         AddChild(indicator);
         indicator.Menu = indicator.GetPathTo(menu);
+        SetTodayKeys(settings.TodayKeys);
     }
 
-    public void SetCurrent(string id)
+    public void SetCharacter(string id)
     {
-        for (var i = 0; i < ids.Count; i++) menu.SetItemChecked(menu.GetItemIndex(i), ids[i] == id);
+        for (var i = 0; i < ids.Count; i++) SetChecked(i, ids[i] == id);
     }
+
+    public void SetSize(float value)
+    {
+        for (var i = 0; i < Tuning.Sizes.Length; i++)
+            SetChecked(IdSize + i, Mathf.IsEqualApprox(Tuning.Sizes[i].Value, value));
+    }
+
+    public void SetTodayKeys(int count)
+    {
+        if (count == shownKeys) return;
+        shownKeys = count;
+        menu.SetItemText(menu.GetItemIndex(IdToday), $"今天打了 {count:N0} 下");
+        indicator.Tooltip = $"Desk Pet — 今天 {count:N0} 下";
+    }
+
+    void SetChecked(int id, bool on) => menu.SetItemChecked(menu.GetItemIndex(id), on);
 
     void OnId(long id)
     {
-        if (id == IdQuit) { QuitRequested?.Invoke(); return; }
-        if (id == IdAuto)
+        switch (id)
         {
-            var index = menu.GetItemIndex(IdAuto);
-            var on = !menu.IsItemChecked(index);
-            menu.SetItemChecked(index, on);
-            AutoToggled?.Invoke(on);
-            return;
-        }
-        if (id >= 0 && id < ids.Count)
-        {
-            SetCurrent(ids[(int)id]);
-            CharacterChosen?.Invoke(ids[(int)id]);
+            case IdQuit:
+                QuitRequested?.Invoke();
+                break;
+            case IdAuto:
+                var on = !menu.IsItemChecked(menu.GetItemIndex(IdAuto));
+                SetChecked(IdAuto, on);
+                AutoToggled?.Invoke(on);
+                break;
+            case >= IdSize and < IdSize + 100 when id - IdSize < Tuning.Sizes.Length:
+                var size = Tuning.Sizes[id - IdSize].Value;
+                SetSize(size);
+                SizeChosen?.Invoke(size);
+                break;
+            case >= 0 when id < ids.Count:
+                SetCharacter(ids[(int)id]);
+                CharacterChosen?.Invoke(ids[(int)id]);
+                break;
         }
     }
 }

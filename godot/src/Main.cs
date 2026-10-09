@@ -8,6 +8,7 @@ using System.Linq;
 using DeskPet.Content;
 using DeskPet.Game;
 using DeskPet.Platform;
+using DeskPet.Save;
 using DeskPet.UI;
 using DeskPet.View;
 using Godot;
@@ -22,28 +23,36 @@ public partial class Main : Node2D
         public bool Moved;
     }
 
+    const float SaveEvery = 30;       // 統計每 30 秒存一次檔
+
     Pet pet = null!;
     Behavior behavior = null!;
     Fx fx = null!;
+    Tray tray = null!;
+    Settings settings = null!;
     Drag? drag;
     int keyCount;
+    float saveTimer = SaveEvery;
 
     public override void _Ready()
     {
         DesktopWindow.Setup();
+        settings = Settings.Load();
 
         var (ids, rigs) = ContentLoader.LoadCharacters();
         var (_, clips) = ContentLoader.LoadAnimations();
         var props = ContentLoader.LoadProps();
         var args = ParseArgs();
-        var startId = args.GetValueOrDefault("char", ids[0]);
+        // 起始角色：命令列 > 上次選的 > 第一個
+        var startId = args.GetValueOrDefault("char", rigs.ContainsKey(settings.Character) ? settings.Character : ids[0]);
+        settings.Character = startId;
         dumpState = args.ContainsKey("dump");
 
-        pet = new Pet(this, rigs[startId], clips, props, Tuning.Scale * DesktopWindow.UiScale);
+        pet = new Pet(this, rigs[startId], clips, props, PetScale(settings.Size));
         var area = Area();
         pet.X = area.Size.X / 2;
         pet.Y = area.End.Y;
-        behavior = new Behavior(pet, Area);
+        behavior = new Behavior(pet, Area) { Auto = settings.Auto };
         fx = new Fx();
         AddChild(fx);
 
@@ -55,16 +64,19 @@ public partial class Main : Node2D
 
         GlobalInput.Start();
 
-        var tray = new Tray();
+        tray = new Tray();
         AddChild(tray);
-        tray.Build(ids.Select(id => rigs[id]).ToList(), startId, GD.Load<Texture2D>("res://icon.svg"));
-        tray.CharacterChosen += id => pet.SetCharacter(rigs[id]);
-        tray.AutoToggled += on => behavior.Auto = on;
+        tray.Build(ids.Select(id => rigs[id]).ToList(), settings, GD.Load<Texture2D>("res://icon.svg"));
+        tray.CharacterChosen += id => { pet.SetCharacter(rigs[id]); settings.Character = id; settings.Save(); };
+        tray.SizeChosen += size => { pet.SetScale(PetScale(size)); settings.Size = size; settings.Save(); };
+        tray.AutoToggled += on => { behavior.Auto = on; settings.Auto = on; settings.Save(); };
         tray.QuitRequested += () => GetTree().Quit();
 
         GD.Print($"[DeskPet] content={ContentLoader.Root} characters={string.Join(",", ids)} " +
                  $"clips={clips.Count} area={DesktopWindow.Area} uiScale={DesktopWindow.UiScale} start={startId}");
     }
+
+    static float PetScale(float size) => Tuning.Scale * DesktopWindow.UiScale * size;
 
     Rect2 Area() => new(Vector2.Zero, DesktopWindow.Area.Size);
 
@@ -72,10 +84,21 @@ public partial class Main : Node2D
     {
         var dt = Mathf.Min((float)delta, 0.05f);
 
+        var newKeys = 0;
         while (GlobalInput.TryDequeue(out _))
         {
-            keyCount++;
+            newKeys++;
             behavior.OnKey();
+        }
+        keyCount += newKeys;
+        settings.AddKeys(newKeys);
+        tray.SetTodayKeys(settings.TodayKeys);
+
+        saveTimer -= dt;
+        if (saveTimer <= 0)
+        {
+            saveTimer = SaveEvery;
+            settings.SaveIfDirty();
         }
 
         UpdateDrag();
@@ -91,7 +114,7 @@ public partial class Main : Node2D
 
     void DumpState() =>
         GD.Print($"[state] keys={keyCount} input={GlobalInput.Running} action={pet.Action} " +
-                 $"t={pet.Animator.LocalTime:0.00} pos=({pet.X:0},{pet.Y:0}) facing={pet.Facing}");
+                 $"t={pet.Animator.LocalTime:0.00} char={pet.Rig.Id} scale={pet.Scale:0.00} today={settings.TodayKeys}");
 
     // ---------- 滑鼠：點擊與拖曳 ----------
 
@@ -132,7 +155,11 @@ public partial class Main : Node2D
         DesktopWindow.SetClickThrough(!over);
     }
 
-    public override void _ExitTree() => GlobalInput.Stop();
+    public override void _ExitTree()
+    {
+        GlobalInput.Stop();
+        settings.Save();
+    }
 
     static Dictionary<string, string> ParseArgs()
     {
