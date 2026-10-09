@@ -137,7 +137,10 @@ public partial class PetView : Node2D
     }
 
     /// <summary>point（父節點座標）是否點在角色不透明的像素上</summary>
-    public bool HitTest(Vector2 point)
+    public bool HitTest(Vector2 point) => HitSlot(point) != null;
+
+    /// <summary>point 點到的最上層插槽名稱（道具回傳 "prop"）；沒點到回傳 null</summary>
+    public string? HitSlot(Vector2 point)
     {
         for (var i = items.Count - 1; i >= 0; i--)
         {
@@ -146,9 +149,9 @@ public partial class PetView : Node2D
             var local = (Transform * item.Sprite.Transform).AffineInverse() * point;
             int x = (int)local.X, y = (int)local.Y;
             if (x < 0 || y < 0 || x >= item.Image.GetWidth() || y >= item.Image.GetHeight()) continue;
-            if (item.Image.GetPixel(x, y).A > 0.1f) return true;
+            if (item.Image.GetPixel(x, y).A > 0.1f) return item.Slot?.Name ?? "prop";
         }
-        return false;
+        return null;
     }
 
     /// <summary>所有可見部件的外框（父節點座標）</summary>

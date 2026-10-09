@@ -32,7 +32,4 @@ public static class Tuning
         ["peace"] = (1, new[] { 2f, 3f }),
         ["volleyball"] = (1, new[] { 4f, 7f }),
     };
-
-    /// <summary>點擊角色時隨機挑一個反應</summary>
-    public static readonly string[] ClickReactions = { "wave", "cheer", "peace", "shy" };
 }

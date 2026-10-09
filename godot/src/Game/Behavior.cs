@@ -12,6 +12,9 @@ public sealed class Behavior
 
     readonly Pet pet;
     readonly Func<Rect2> area;     // 活動範圍（視窗座標），底邊 = 地面
+    readonly Interactions interactions;
+    string? tempFace;              // 暫時的表情（例如連按 Backspace 時害羞）
+    double tempFaceUntil;
     float timer;
     float? target;                 // 走路的目標 x
     float vy;
@@ -28,10 +31,11 @@ public sealed class Behavior
 
     void Say(string key) => Said?.Invoke(key);
 
-    public Behavior(Pet pet, Func<Rect2> area)
+    public Behavior(Pet pet, Func<Rect2> area, Interactions interactions)
     {
         this.pet = pet;
         this.area = area;
+        this.interactions = interactions;
         Start("idle");
     }
 
@@ -41,27 +45,62 @@ public sealed class Behavior
 
     // ---------- 外部事件 ----------
 
-    public void OnKey()
+    public void OnKey(GlobalInput.KeyKind kind)
     {
         var t = Now();
         lastInput = t;
         taps.Add(t);
         if (Current != State.Ground) return;
         typingUntil = t + Tuning.TypingHold;
-        if (pet.Action == "typing") return;
-        if (pet.Action == "sleep") Say("wake");
-        else if (GD.Randf() < 0.35f) Say("typingStart");
-        Start("typing");
+        if (pet.Action != "typing" && pet.Action != "salute")
+        {
+            if (pet.Action == "sleep") Say("wake");
+            else if (GD.Randf() < 0.35f) Say("typingStart");
+            Start("typing");
+        }
+
+        // 特殊按鍵：Enter 偶爾說話、連按 Backspace 害羞、Ctrl+S 敬禮
+        if (interactions.OnKey(kind) is { } rule)
+        {
+            if (rule.Line != null) Say(rule.Line);
+            if (rule.Face != null) TempFace(rule.Face, 1.5f);
+            if (rule.Action != null) Start(rule.Action);
+        }
     }
 
-    public void OnPetClick()
+    /// <param name="zone">點到的部位：head、face、body、hand、feet、tail</param>
+    public void OnPetClick(string zone)
     {
         lastInput = Now();
         if (Current != State.Ground) return;
-        var sleeping = pet.Action == "sleep";
-        Say(sleeping ? "wake" : "greet");
-        var reaction = Tuning.ClickReactions[(int)(GD.Randi() % (uint)Tuning.ClickReactions.Length)];
-        Start(sleeping ? "stretch" : reaction, 2.4f);
+        if (pet.Action == "sleep") Apply(interactions.Busy("sleep"));
+        else if (pet.Action == "typing") Apply(interactions.Busy("typing"));
+        else Apply(interactions.OnClick(zone));
+    }
+
+    void Apply(Content.ReactionRule? rule)
+    {
+        if (rule == null) return;
+        if (rule.Line != null) Say(rule.Line);
+        if (rule.Face != null) TempFace(rule.Face, 1.5f);
+        var name = rule.Random is { Count: > 0 } list ? list[(int)(GD.Randi() % (uint)list.Count)] : rule.Action;
+        if (name == null) return;
+        Start(name, rule.Time);
+        if (rule.Flee) target = FarSide();
+    }
+
+    void TempFace(string face, float seconds)
+    {
+        tempFace = face;
+        tempFaceUntil = Now() + seconds;
+    }
+
+    // 跑到離目前位置較遠的那一側
+    float FarSide()
+    {
+        var rect = area();
+        var margin = Tuning.Margin * DesktopWindow.UiScale;
+        return pet.X < rect.GetCenter().X ? rect.End.X - margin : rect.Position.X + margin;
     }
 
     public void Grab(Vector2 at)
@@ -98,6 +137,12 @@ public sealed class Behavior
     // ---------- 每幀 ----------
 
     public void Update(float dt)
+    {
+        UpdateState(dt);
+        if (Now() < tempFaceUntil) pet.FaceOverride = tempFace;
+    }
+
+    void UpdateState(float dt)
     {
         var rect = area();
         if (Current == State.Held) return;

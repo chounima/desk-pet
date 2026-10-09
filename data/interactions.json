@@ -1,0 +1,35 @@
+{
+  "comboWindow": 1.5,
+  "click": {
+    "head": [
+      { "min": 1, "action": "pat", "line": "pat", "time": 2.5 },
+      { "min": 5, "action": "shy", "line": "patMany", "time": 2.5 }
+    ],
+    "face": [
+      { "min": 1, "action": "poke", "line": "poke" },
+      { "min": 4, "action": "angry", "line": "annoyed", "time": 2.5 },
+      { "min": 8, "action": "run", "line": "flee", "flee": true }
+    ],
+    "body": [
+      { "min": 1, "random": ["wave", "peace", "cheer"], "line": "greet", "time": 2.4 }
+    ],
+    "hand": [
+      { "min": 1, "action": "cheer", "line": "highFive", "time": 1.8 }
+    ],
+    "feet": [
+      { "min": 1, "action": "jump", "line": "startle" }
+    ],
+    "tail": [
+      { "min": 1, "action": "angry", "line": "tail", "time": 2 }
+    ]
+  },
+  "busy": {
+    "sleep": { "action": "stretch", "line": "wake" },
+    "typing": { "line": "busy" }
+  },
+  "keys": {
+    "Enter": { "chance": 0.12, "line": "enter" },
+    "Backspace": { "streak": 6, "window": 2, "face": "shy", "line": "oops" },
+    "Save": { "action": "salute", "line": "save" }
+  }
+}

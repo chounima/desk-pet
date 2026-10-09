@@ -100,4 +100,11 @@ public sealed class Pet
     public Vector2 FaceCenter() => ToScreen(world["head"] * new Vector2(Rig.HeadTop[0], Rig.HeadTop[1]) * 0.5f);
 
     Vector2 ToScreen(Vector2 p) => new(X + p.X * Facing * Scale, Y + p.Y * Scale);
+
+    /// <summary>畫面座標 → 某根骨骼的局部座標（判斷點到頭的哪個部位）</summary>
+    public Vector2 ToBoneLocal(string bone, Vector2 screen) =>
+        world[bone].AffineInverse() * new Vector2((screen.X - X) / (Facing * Scale), (screen.Y - Y) / Scale);
+
+    /// <summary>某根骨骼上的點在畫面上的位置</summary>
+    public Vector2 BoneToScreen(string bone, Vector2 local) => ToScreen(world[bone] * local);
 }
