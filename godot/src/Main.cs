@@ -4,6 +4,7 @@
 //   --char=sera        起始角色
 //   --action=typing    起始動作（並關閉自動行為），方便截圖檢查
 //   --autostart=on|off 設定開機自動啟動
+//   --say=greet        一開始就顯示某句台詞（截圖用）
 using System.Collections.Generic;
 using System.Linq;
 using DeskPet.Content;
@@ -29,6 +30,8 @@ public partial class Main : Node2D
     Pet pet = null!;
     Behavior behavior = null!;
     Fx fx = null!;
+    Bubble bubble = null!;
+    Lines lines = null!;
     Tray tray = null!;
     Settings settings = null!;
     Drag? drag;
@@ -64,12 +67,17 @@ public partial class Main : Node2D
         behavior = new Behavior(pet, Area) { Auto = settings.Auto };
         fx = new Fx();
         AddChild(fx);
+        lines = Lines.Load(ids);
+        bubble = new Bubble();
+        AddChild(bubble);
+        behavior.Said += key => bubble.Say(lines.Pick(pet.Rig.Id, key));
 
         if (args.TryGetValue("action", out var action))
         {
             behavior.Auto = false;
             behavior.Force(action);
         }
+        if (args.TryGetValue("say", out var sayKey)) bubble.Say(lines.Pick(startId, sayKey), 999);
 
         if (args.TryGetValue("autostart", out var auto)) Autostart.Set(auto == "on");
 
@@ -117,6 +125,7 @@ public partial class Main : Node2D
         behavior.Update(dt);
         pet.Update(dt);
         fx.UpdateFx(dt, pet.Animator.Fx, pet.HeadTop());
+        bubble.UpdateBubble(dt, pet.HeadTop());
         UpdateClickThrough();
         if (dumpState && Engine.GetProcessFrames() % 120 == 0) DumpState();
     }

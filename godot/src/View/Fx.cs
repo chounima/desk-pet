@@ -67,6 +67,7 @@ public partial class Fx : Node2D
         Text = text,
         LabelSettings = new LabelSettings
         {
+            Font = Fonts.Ui,
             FontSize = (int)(size * Platform.DesktopWindow.UiScale), FontColor = color,
             OutlineSize = (int)(6 * Platform.DesktopWindow.UiScale), OutlineColor = new Color(0, 0, 0, 0.55f),
         },

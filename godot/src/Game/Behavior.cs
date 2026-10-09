@@ -23,6 +23,11 @@ public sealed class Behavior
     public bool Auto { get; set; } = true;
     public State Current { get; private set; } = State.Ground;
 
+    /// <summary>想說話時發出台詞的 key（見 data/lines/）</summary>
+    public event Action<string>? Said;
+
+    void Say(string key) => Said?.Invoke(key);
+
     public Behavior(Pet pet, Func<Rect2> area)
     {
         this.pet = pet;
@@ -43,15 +48,20 @@ public sealed class Behavior
         taps.Add(t);
         if (Current != State.Ground) return;
         typingUntil = t + Tuning.TypingHold;
-        if (pet.Action != "typing") Start("typing");
+        if (pet.Action == "typing") return;
+        if (pet.Action == "sleep") Say("wake");
+        else if (GD.Randf() < 0.35f) Say("typingStart");
+        Start("typing");
     }
 
     public void OnPetClick()
     {
         lastInput = Now();
         if (Current != State.Ground) return;
+        var sleeping = pet.Action == "sleep";
+        Say(sleeping ? "wake" : "greet");
         var reaction = Tuning.ClickReactions[(int)(GD.Randi() % (uint)Tuning.ClickReactions.Length)];
-        Start(pet.Action == "sleep" ? "stretch" : reaction, 2.4f);
+        Start(sleeping ? "stretch" : reaction, 2.4f);
     }
 
     public void Grab(Vector2 at)
@@ -60,6 +70,7 @@ public sealed class Behavior
         grabOffset = pet.Y - at.Y;
         pet.FaceOverride = null;
         pet.Play("dragged");
+        Say("dragged");
         MoveHeld(at);
     }
 
@@ -99,6 +110,7 @@ public sealed class Behavior
                 pet.Y = Ground;
                 Current = State.Ground;
                 Start("idle");
+                Say("land");
             }
             return;
         }
@@ -110,7 +122,12 @@ public sealed class Behavior
         pet.FaceOverride = null;
 
         if (pet.Action == "sleep") return;
-        if (Auto && Now() - lastInput > Tuning.SleepAfter) { Start("sleep", float.PositiveInfinity); return; }
+        if (Auto && Now() - lastInput > Tuning.SleepAfter)
+        {
+            Start("sleep", float.PositiveInfinity);
+            Say("sleep");
+            return;
+        }
 
         if (target != null) { UpdateWalk(dt); return; }
 
