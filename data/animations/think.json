@@ -1,0 +1,8 @@
+{ "label": "思考", "duration": 3, "loop": true, "face": "idle",
+  "tracks": {
+    "head": [[0, -4], [1, -10], [2, -6], [3, -4]],
+    "armNear_u": [[0, -30]], "armNear_l": [[0, -125]],
+    "armFar_u": [[0, -20]], "armFar_l": [[0, -90]],
+    "legNear_u": [[0, -4]], "legFar_u": [[0, 6]],
+    "tail": [[0, 10], [1.5, 40], [3, 10]]
+  } }

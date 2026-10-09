@@ -1,0 +1,33 @@
+; Engine configuration file.
+; 桌面寵物：透明、無邊框、置頂的視窗，執行時會調整成整個工作區大小（不含工作列）。
+
+config_version=5
+
+[application]
+
+config/name="Desk Pet"
+run/main_scene="res://scenes/Main.tscn"
+config/features=PackedStringArray("4.7", "C#", "GL Compatibility")
+config/icon="res://icon.svg"
+boot_splash/show_image=false
+boot_splash/bg_color=Color(0, 0, 0, 0)
+
+[display]
+
+window/size/viewport_width=640
+window/size/viewport_height=480
+window/size/borderless=true
+window/size/always_on_top=true
+window/size/transparent=true
+window/per_pixel_transparency/allowed=true
+window/subwindows/embed_subwindows=false
+
+[dotnet]
+
+project/assembly_name="DeskPet"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+viewport/transparent_background=true

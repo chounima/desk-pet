@@ -1,0 +1,14 @@
+/* 動作總覽 */
+header { display: flex; align-items: center; gap: 20px; padding: 16px 24px; }
+header h1 { margin: 0; font-size: 20px; }
+#chars { display: flex; gap: 8px; }
+#chars a {
+  padding: 5px 14px; border-radius: 999px; border: 1.5px solid var(--line);
+  color: var(--text); text-decoration: none; font-size: 14px;
+}
+#chars a.on { background: var(--accent); border-color: var(--accent); }
+
+#grid { display: block; margin: 0 16px 24px; overflow: visible; }
+#grid .cell { fill: #34374a; }
+#grid .floor { stroke: #4b4f66; stroke-width: 2; }
+#grid text { fill: var(--muted); font-size: 14px; text-anchor: middle; }

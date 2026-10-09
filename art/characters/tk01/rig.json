@@ -1,0 +1,371 @@
+{
+  "id": "tk01",
+  "name": "TK-01",
+  "description": "打字輔助型人形機體",
+  "rootScale": 1.0,
+  "headTop": [
+    6,
+    -110
+  ],
+  "height": 276,
+  "trackScale": {},
+  "bones": [
+    {
+      "name": "root",
+      "parent": null,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "name": "prop",
+      "parent": "root",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "name": "hips",
+      "parent": "root",
+      "x": 0,
+      "y": -96
+    },
+    {
+      "name": "torso",
+      "parent": "hips",
+      "x": 0,
+      "y": -4
+    },
+    {
+      "name": "head",
+      "parent": "torso",
+      "x": 0,
+      "y": -66
+    },
+    {
+      "name": "tail",
+      "parent": "hips",
+      "x": -14,
+      "y": -2
+    },
+    {
+      "name": "cape",
+      "parent": "hips",
+      "x": -14,
+      "y": -2
+    },
+    {
+      "name": "armFar_u",
+      "parent": "torso",
+      "x": 17,
+      "y": -58
+    },
+    {
+      "name": "armFar_l",
+      "parent": "armFar_u",
+      "x": 0,
+      "y": 32
+    },
+    {
+      "name": "handFar",
+      "parent": "armFar_l",
+      "x": 0,
+      "y": 28
+    },
+    {
+      "name": "armNear_u",
+      "parent": "torso",
+      "x": -20,
+      "y": -58
+    },
+    {
+      "name": "armNear_l",
+      "parent": "armNear_u",
+      "x": 0,
+      "y": 32
+    },
+    {
+      "name": "handNear",
+      "parent": "armNear_l",
+      "x": 0,
+      "y": 28
+    },
+    {
+      "name": "legFar_u",
+      "parent": "hips",
+      "x": 9,
+      "y": 4
+    },
+    {
+      "name": "legFar_l",
+      "parent": "legFar_u",
+      "x": 0,
+      "y": 44
+    },
+    {
+      "name": "footFar",
+      "parent": "legFar_l",
+      "x": 0,
+      "y": 42
+    },
+    {
+      "name": "legNear_u",
+      "parent": "hips",
+      "x": -9,
+      "y": 4
+    },
+    {
+      "name": "legNear_l",
+      "parent": "legNear_u",
+      "x": 0,
+      "y": 44
+    },
+    {
+      "name": "footNear",
+      "parent": "legNear_l",
+      "x": 0,
+      "y": 42
+    }
+  ],
+  "slots": [
+    {
+      "name": "hair_back",
+      "bone": "head",
+      "z": 1,
+      "file": "parts/hair_back.svg",
+      "box": [
+        -80,
+        -170,
+        90,
+        110
+      ],
+      "far": false
+    },
+    {
+      "name": "armFar_u",
+      "bone": "armFar_u",
+      "z": 2,
+      "file": "parts/arm_u.svg",
+      "box": [
+        -15.0,
+        -15.0,
+        15.0,
+        42.5
+      ],
+      "far": true
+    },
+    {
+      "name": "armFar_l",
+      "bone": "armFar_l",
+      "z": 3,
+      "file": "parts/arm_l.svg",
+      "box": [
+        -10.5,
+        -10.5,
+        10.5,
+        37.5
+      ],
+      "far": true
+    },
+    {
+      "name": "handFar",
+      "bone": "handFar",
+      "z": 4,
+      "file": "parts/hand.svg",
+      "box": [
+        -12,
+        -6,
+        12,
+        20
+      ],
+      "far": true
+    },
+    {
+      "name": "legFar_u",
+      "bone": "legFar_u",
+      "z": 5,
+      "file": "parts/leg_u.svg",
+      "box": [
+        -14.0,
+        -14.0,
+        14.0,
+        56.0
+      ],
+      "far": true
+    },
+    {
+      "name": "legFar_l",
+      "bone": "legFar_l",
+      "z": 6,
+      "file": "parts/leg_l.svg",
+      "box": [
+        -12.0,
+        -12.0,
+        12.0,
+        52.0
+      ],
+      "far": true
+    },
+    {
+      "name": "footFar",
+      "bone": "footFar",
+      "z": 7,
+      "file": "parts/foot.svg",
+      "box": [
+        -12,
+        -10,
+        24,
+        10
+      ],
+      "far": true
+    },
+    {
+      "name": "legNear_u",
+      "bone": "legNear_u",
+      "z": 8,
+      "file": "parts/leg_u.svg",
+      "box": [
+        -14.0,
+        -14.0,
+        14.0,
+        56.0
+      ],
+      "far": false
+    },
+    {
+      "name": "legNear_l",
+      "bone": "legNear_l",
+      "z": 9,
+      "file": "parts/leg_l.svg",
+      "box": [
+        -12.0,
+        -12.0,
+        12.0,
+        52.0
+      ],
+      "far": false
+    },
+    {
+      "name": "footNear",
+      "bone": "footNear",
+      "z": 10,
+      "file": "parts/foot.svg",
+      "box": [
+        -12,
+        -10,
+        24,
+        10
+      ],
+      "far": false
+    },
+    {
+      "name": "hips",
+      "bone": "hips",
+      "z": 11,
+      "file": "parts/hips.svg",
+      "box": [
+        -30,
+        -16,
+        32,
+        26
+      ],
+      "far": false
+    },
+    {
+      "name": "torso",
+      "bone": "torso",
+      "z": 12,
+      "file": "parts/torso.svg",
+      "box": [
+        -30,
+        -74,
+        32,
+        6
+      ],
+      "far": false
+    },
+    {
+      "name": "head",
+      "bone": "head",
+      "z": 13,
+      "file": "parts/head.svg",
+      "box": [
+        -80,
+        -170,
+        90,
+        110
+      ],
+      "far": false
+    },
+    {
+      "name": "face",
+      "bone": "head",
+      "z": 14,
+      "box": [
+        -60,
+        -80,
+        80,
+        0
+      ],
+      "variants": {
+        "idle": "faces/idle.svg",
+        "blink": "faces/blink.svg",
+        "happy": "faces/happy.svg",
+        "sleep": "faces/sleep.svg",
+        "surprised": "faces/surprised.svg",
+        "focus": "faces/focus.svg",
+        "shy": "faces/shy.svg"
+      }
+    },
+    {
+      "name": "hair_front",
+      "bone": "head",
+      "z": 15,
+      "file": "parts/hair_front.svg",
+      "box": [
+        -80,
+        -170,
+        90,
+        110
+      ],
+      "far": false
+    },
+    {
+      "name": "armNear_u",
+      "bone": "armNear_u",
+      "z": 16,
+      "file": "parts/arm_u.svg",
+      "box": [
+        -15.0,
+        -15.0,
+        15.0,
+        42.5
+      ],
+      "far": false
+    },
+    {
+      "name": "armNear_l",
+      "bone": "armNear_l",
+      "z": 17,
+      "file": "parts/arm_l.svg",
+      "box": [
+        -10.5,
+        -10.5,
+        10.5,
+        37.5
+      ],
+      "far": false
+    },
+    {
+      "name": "handNear",
+      "bone": "handNear",
+      "z": 18,
+      "file": "parts/hand.svg",
+      "box": [
+        -12,
+        -6,
+        12,
+        20
+      ],
+      "far": false
+    }
+  ]
+}

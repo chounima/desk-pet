@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head><meta charset="utf-8"><title>Volley 模擬測試</title></head>
+<body>
+<pre id="out">running…</pre>
+<script>
+  // 把錯誤顯示在頁面上（無頭瀏覽器看不到 console）
+  const show = msg => { document.getElementById("out").textContent = "ERROR: " + msg; };
+  addEventListener("error", e => show(`${e.message} @ ${e.filename}:${e.lineno}`));
+  addEventListener("unhandledrejection", e => show(e.reason?.stack ?? e.reason));
+</script>
+<script type="module">
+// 不開畫面，用真實角色與動作資料模擬排球對打。
+// 玩家：游標固定在 (200, 300)，球落到游標高度時點球回擊（等於完美玩家）。
+// 統計每個角色的平均來回、殺球、魚躍、火焰次數。
+import { TUNING } from "../js/config.js";
+import { loadAll } from "../js/core/loader.js";
+import { Pet } from "../js/game/pet.js";
+import { Volley } from "../js/game/volley.js";
+
+const [{ ids, rigs }, { clips }, props] = await loadAll();
+
+// ?seed=123 固定亂數，讓結果可以重現
+if (new URLSearchParams(location.search).has("seed")) {
+  let s = Number(new URLSearchParams(location.search).get("seed")) >>> 0;
+  Math.random = () => {
+    s = (s + 0x6D2B79F5) >>> 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+let fakeNow = 0;
+performance.now = () => fakeNow * 1000;
+
+// ?player=click（點球，預設）或 swipe（往上揮球）；?w=1920&h=1080 模擬螢幕大小；?char=chouma 只測一個角色
+const q = new URLSearchParams(location.search);
+const playerMode = q.get("player") ?? "click";
+const world = { width: Number(q.get("w") ?? 1200), groundY: Number(q.get("h") ?? 700) - TUNING.taskbar };
+const cursor = { x: 200, y: world.groundY * 0.45 };
+const testIds = q.has("char") ? [q.get("char")] : null;
+const layer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+const results = {};
+
+for (const id of testIds ?? ids) {
+  const pet = new Pet({ layer, rig: rigs[id], clips, props, scale: TUNING.scale, crossfade: TUNING.crossfade });
+  pet.x = world.width / 2;
+  pet.y = world.groundY;
+  const stats = { spikes: 0, spikePlans: 0, dives: 0, divePlans: 0, fires: 0, rallies: [], ends: {}, why: {} };
+  let fireShown = false;
+  const v = new Volley({
+    pet, world, onScore: () => {},
+    fx: { burst() {}, flame() {} },
+    view: { show() {}, hide() {}, draw() {}, setFire: on => { if (on && !fireShown) stats.fires++; fireShown = on; } },
+  });
+  // 計數
+  const wrap = (name, fn) => { const orig = v[name].bind(v); v[name] = (...a) => { fn(); return orig(...a); }; };
+  wrap("spikeHit", () => stats.spikes++);
+  stats.whiffs = [];
+  let seenWhiff = null;
+  wrap("diveHit", () => stats.dives++);
+  const makePlan = v.makePlan.bind(v);
+  v.makePlan = () => {
+    const p = makePlan();
+    if (v.lastHitter === "player") stats.why[v.spikeWhy] = (stats.why[v.spikeWhy] ?? 0) + 1;
+    if (p?.type === "spike") stats.spikePlans++;
+    if (p?.type === "dive") stats.divePlans++;
+    return p;
+  };
+
+  v.onPointerMove(cursor.x, cursor.y);
+  fakeNow += 0.05;
+  v.onPointerMove(cursor.x, cursor.y);
+  v.start();
+
+  const dt = 1 / 60;
+  let lastPlan = null;
+  for (let i = 0; i < 60 * 900 && stats.rallies.length < 20; i++) {
+    fakeNow += dt;
+    const wasPlay = v.state === "play", prevY = v.ball.y;
+    if (v.plan) lastPlan = v.plan.type;
+    v.update(dt);
+    pet.update(dt);
+    // 記錄計畫的建立與消失（保留最後 15 筆）
+    if ((v.plan ?? null) !== (stats.prevPlan ?? null)) {
+      stats.log ??= [];
+      const p = v.plan ?? stats.prevPlan;
+      stats.log.push(`${fakeNow.toFixed(2)} ${v.plan ? "建立" : "清除"} ${p.type}`
+        + ` start+${(p.startAt - fakeNow).toFixed(2)} contact+${(p.contactAt - fakeNow).toFixed(2)}`
+        + ` act=${pet.action} last=${v.lastHitter} hit=${!!p.hit}`
+        + ` ball=(${Math.round(v.ball.x)},${Math.round(v.ball.y)}) v=(${Math.round(v.ball.vx)},${Math.round(v.ball.vy)}) pet=${Math.round(pet.x)}`);
+      if (stats.log.length > 15) stats.log.shift();
+      stats.prevPlan = v.plan;
+    }
+    if (v.lastWhiff && v.lastWhiff !== seenWhiff) {
+      seenWhiff = v.lastWhiff;
+      if (stats.whiffs.length < 6) {
+        const w = v.lastWhiff;
+        stats.whiffs.push(`${w.approach ? "助跑" : "原地"} minDist=${Math.round(w.minDist ?? -1)} jump=${w.jump.toFixed(2)} lead=${(w.contactAt - w.startAt).toFixed(2)}`);
+      }
+    }
+    // 球從寵物那邊落下、穿過游標高度（或落到游標附近）時回擊；三成機率打到遠處（逼她魚躍）
+    const crossed = prevY < cursor.y && v.ball.y >= cursor.y;
+    // 揮球模式下游標會跟著球跑，所以殺球（從較低處扣下來）在快落地前也要救
+    const nearCursor = playerMode === "swipe"
+      ? v.ball.y > world.groundY - 120
+      : Math.abs(v.ball.x - cursor.x) < 60 && v.ball.y > cursor.y;
+    if (v.state === "play" && v.lastHitter === "pet" && v.ball.vy > 0 && (crossed || nearCursor)) {
+      if (playerMode === "swipe") {
+        // 游標從下方往上揮過球：速度隨機，大致朝寵物那一側
+        const toPet = Math.sign(pet.x - v.ball.x) || 1;
+        Object.assign(v.cursor, {
+          x: v.ball.x, y: v.ball.y, seen: true, t: fakeNow,
+          vx: toPet * (200 + Math.random() * 900), vy: -(300 + Math.random() * 1100),
+        });
+        v.lastPlayerHit = 0;
+        v.checkCursorHit();
+      } else if (Math.random() < 0.3) {
+        const far = pet.x < world.width / 2 ? world.width - 80 : 80;
+        v.launch(far, world.groundY - 60, [80, 160]);
+        v.playerHit("far");
+      } else {
+        v.onBallClick();
+      }
+      lastPlan = null;
+    }
+    if (wasPlay && v.state === "over") {
+      stats.rallies.push(v.rally);
+      const who = v.lastHitter === "pet" ? "玩家漏接" : `寵物漏接(${lastPlan ?? "bump"})`;
+      stats.ends[who] = (stats.ends[who] ?? 0) + 1;
+      lastPlan = null;
+    }
+  }
+  const avg = stats.rallies.reduce((a, b) => a + b, 0) / stats.rallies.length;
+  results[id] = {
+    title: v.skill.title, avgRally: +avg.toFixed(1), best: v.best,
+    spike: `${stats.spikes}/${stats.spikePlans}`, dive: `${stats.dives}/${stats.divePlans}`, fires: stats.fires,
+    ends: JSON.stringify(stats.ends),
+    spikeWhy: JSON.stringify(stats.why),
+    whiffs: stats.whiffs.join(" | "),
+    log: stats.log,
+    spikeContactHeight: Math.round(-pet.probe("vbSpike", 0.35, "handNear", 0, 12).dy),
+  };
+}
+
+document.getElementById("out").textContent = JSON.stringify(results, null, 1);
+</script>
+</body>
+</html>

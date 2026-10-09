@@ -1,0 +1,50 @@
+// 各角色的排球能力與台詞
+//
+// speed：跑速倍率　miss：漏接機率倍率　spike：能殺球時選擇殺球的機率
+// dive：來不及時嘗試魚躍的機率　power：殺球速度倍率
+
+const DEFAULT = {
+  title: "一般",
+  speed: 1, miss: 1, spike: 0.3, dive: 0.6, power: 1,
+  lines: {
+    spike: ["看招！"], dive: ["救到了！"], diveFail: ["差一點…"],
+    petMiss: ["漏接了…"], playerMiss: ["得分！"], fire: ["🔥 燃起來了！"],
+  },
+};
+
+const SKILLS = {
+  chouma: {
+    title: "排球系主力", speed: 1.2, miss: 0.4, spike: 0.9, dive: 0.95, power: 1.35,
+    lines: {
+      spike: ["看我的！", "殺——！", "Nice set！"], dive: ["救到了！", "還沒結束！"],
+      diveFail: ["可惡…"], petMiss: ["啊，失誤…", "再一球！"],
+      playerMiss: ["繼續打球！", "耶～"], fire: ["🔥 手感來了！"],
+    },
+  },
+  sera: {
+    title: "敏捷但粗心", speed: 1.45, miss: 1.2, spike: 0.35, dive: 1, power: 0.95,
+    lines: {
+      spike: ["喵哈！", "抓到了喵！"], dive: ["撲——！"], diveFail: ["喵嗚…"],
+      petMiss: ["嗚…", "剛剛不算！"], playerMiss: ["嘿嘿～"], fire: ["🔥 尾巴著火了喵！"],
+    },
+  },
+  tk01: {
+    title: "精準計算", speed: 1, miss: 0.6, spike: 0.35, dive: 0.35, power: 1.15,
+    lines: {
+      spike: ["執行扣殺。"], dive: ["回收成功。"], diveFail: ["超出計算範圍。"],
+      petMiss: ["計算誤差。"], playerMiss: ["目標未接住。"], fire: ["🔥 處理器過熱。"],
+    },
+  },
+  mira: {
+    title: "玩票性質", speed: 1.05, miss: 1.5, spike: 0.2, dive: 0.5, power: 1,
+    lines: {
+      spike: ["看招！"], dive: ["好險！"], diveFail: ["哎呀～"],
+      petMiss: ["哎呀～", "手滑了！"], playerMiss: ["贏了！"], fire: ["🔥 火力全開！"],
+    },
+  },
+};
+
+export function skillFor(id) {
+  const s = SKILLS[id] ?? {};
+  return { ...DEFAULT, ...s, lines: { ...DEFAULT.lines, ...(s.lines ?? {}) } };
+}

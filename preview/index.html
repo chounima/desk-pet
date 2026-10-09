@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>Desk Pet Preview</title>
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/desktop.css">
+</head>
+<body>
+  <!-- 模擬桌面 -->
+  <div id="wallpaper"></div>
+  <svg id="world"><g id="pets"></g></svg>
+  <div id="fx"></div>
+  <div id="taskbar">
+    <span>⌨️ <b id="score">0</b> <span id="volleyHud"></span> <span id="debugHud"></span></span>
+    <span id="clock"></span>
+  </div>
+
+  <!-- 控制面板 -->
+  <aside id="panel">
+    <h1>Desk Pet</h1>
+    <h2>角色</h2>
+    <div class="buttons" data-characters></div>
+    <h2>動作</h2>
+    <div class="buttons" data-actions></div>
+    <h2>小遊戲</h2>
+    <div class="buttons" data-games></div>
+    <label class="toggle"><input type="checkbox" data-auto checked> 自動行為</label>
+    <p class="hint">
+      打字 → 拿出筆電一起打<br>
+      點她 → 揮手／歡呼<br>
+      拖曳 → 抓起來，放開會掉下去<br>
+      30 秒沒動作 → 睡覺<br>
+      對打：游標快速揮過球來擊球，或直接點球
+    </p>
+    <a href="gallery.html">→ 動作總覽</a>
+  </aside>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

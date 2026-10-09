@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+
+# Godot
+.godot/
+.mono/
+export/
+
+# .NET
+bin/
+obj/
+*.user
+
+# OS / 編輯器
+Thumbs.db
+.DS_Store
+.vs/

@@ -1,0 +1,24 @@
+/* 兩個頁面共用 */
+:root {
+  --bg: #2b2d3a;
+  --panel: rgba(30, 32, 44, 0.92);
+  --line: #4b4f66;
+  --text: #e8e9f0;
+  --muted: #a9acc4;
+  --accent: #d81e2c;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: system-ui, "Microsoft JhengHei", sans-serif; }
+a { color: #ffb4bb; }
+
+/* 角色部件 */
+.pet image { pointer-events: auto; cursor: grab; }
+.pet .far { filter: brightness(0.82); }
+
+button {
+  font: inherit; font-size: 13px; padding: 5px 10px; border-radius: 999px;
+  border: 1.5px solid var(--line); background: transparent; color: inherit; cursor: pointer;
+}
+button:hover { border-color: var(--muted); }
+button.on { background: var(--accent); border-color: var(--accent); color: #fff; }

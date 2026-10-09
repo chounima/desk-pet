@@ -1,0 +1,28 @@
+{
+  "laptop": {
+    "file": "laptop.svg",
+    "bone": "hips",
+    "x": 46,
+    "y": -6,
+    "z": 15.5,
+    "box": [
+      -34,
+      -48,
+      36,
+      6
+    ]
+  },
+  "volleyball": {
+    "file": "volleyball.svg",
+    "bone": "prop",
+    "x": 0,
+    "y": 0,
+    "z": 19,
+    "box": [
+      -17,
+      -17,
+      17,
+      17
+    ]
+  }
+}

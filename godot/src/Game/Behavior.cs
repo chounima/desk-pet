@@ -1,0 +1,183 @@
+﻿// 行為邏輯：自動選動作、走路移動、打字反應、睡覺、被拖曳與掉落（移植自 preview/js/game/behavior.js）
+using System;
+using System.Linq;
+using DeskPet.Platform;
+using Godot;
+
+namespace DeskPet.Game;
+
+public sealed class Behavior
+{
+    public enum State { Ground, Held, Air }
+
+    readonly Pet pet;
+    readonly Func<Rect2> area;     // 活動範圍（視窗座標），底邊 = 地面
+    float timer;
+    float? target;                 // 走路的目標 x
+    float vy;
+    float grabOffset;
+    double lastInput = Now();
+    double typingUntil;
+    readonly System.Collections.Generic.List<double> taps = new();
+
+    public bool Auto { get; set; } = true;
+    public State Current { get; private set; } = State.Ground;
+
+    public Behavior(Pet pet, Func<Rect2> area)
+    {
+        this.pet = pet;
+        this.area = area;
+        Start("idle");
+    }
+
+    static double Now() => Time.GetTicksMsec() / 1000.0;
+    static float Rand(float a, float b) => a + GD.Randf() * (b - a);
+    float Ground => area().End.Y;
+
+    // ---------- 外部事件 ----------
+
+    public void OnKey()
+    {
+        var t = Now();
+        lastInput = t;
+        taps.Add(t);
+        if (Current != State.Ground) return;
+        typingUntil = t + Tuning.TypingHold;
+        if (pet.Action != "typing") Start("typing");
+    }
+
+    public void OnPetClick()
+    {
+        lastInput = Now();
+        if (Current != State.Ground) return;
+        var reaction = Tuning.ClickReactions[(int)(GD.Randi() % (uint)Tuning.ClickReactions.Length)];
+        Start(pet.Action == "sleep" ? "stretch" : reaction, 2.4f);
+    }
+
+    public void Grab(Vector2 at)
+    {
+        Current = State.Held;
+        grabOffset = pet.Y - at.Y;
+        pet.FaceOverride = null;
+        pet.Play("dragged");
+        MoveHeld(at);
+    }
+
+    public void MoveHeld(Vector2 at)
+    {
+        pet.X = at.X;
+        pet.Y = at.Y + grabOffset;
+    }
+
+    public void Release()
+    {
+        Current = State.Air;
+        vy = 0;
+        pet.Play("fall");
+    }
+
+    public void Force(string name)
+    {
+        lastInput = Now();
+        if (Current != State.Ground) return;
+        if (name == "typing") typingUntil = Auto ? Now() + 5 : double.MaxValue;
+        Start(name, Auto ? null : float.PositiveInfinity);
+    }
+
+    // ---------- 每幀 ----------
+
+    public void Update(float dt)
+    {
+        var rect = area();
+        if (Current == State.Held) return;
+        if (Current == State.Air)
+        {
+            vy += Tuning.Gravity * DesktopWindow.UiScale * dt;
+            pet.Y += vy * dt;
+            if (pet.Y >= Ground)
+            {
+                pet.Y = Ground;
+                Current = State.Ground;
+                Start("idle");
+            }
+            return;
+        }
+        pet.Y = Ground;
+        var edge = 40 * DesktopWindow.UiScale;
+        pet.X = Math.Clamp(pet.X, rect.Position.X + edge, rect.End.X - edge);
+
+        if (pet.Action == "typing") { UpdateTyping(); return; }
+        pet.FaceOverride = null;
+
+        if (pet.Action == "sleep") return;
+        if (Auto && Now() - lastInput > Tuning.SleepAfter) { Start("sleep", float.PositiveInfinity); return; }
+
+        if (target != null) { UpdateWalk(dt); return; }
+
+        timer -= dt;
+        if (!pet.Animator.Finished && timer > 0) return;
+        if (Auto) Start(WeightedPick());
+        else if (pet.Animator.Finished) Start(pet.Animator.Clip.Next ?? "idle", float.PositiveInfinity);
+    }
+
+    void UpdateTyping()
+    {
+        var t = Now();
+        taps.RemoveAll(k => t - k >= 1);
+        pet.FaceOverride = taps.Count >= Tuning.FocusRate ? "focus" : null;
+        if (t > typingUntil)
+        {
+            pet.FaceOverride = null;
+            Start("idle");
+        }
+    }
+
+    void UpdateWalk(float dt)
+    {
+        var step = pet.Speed * dt;
+        var dist = target!.Value - pet.X;
+        if (Math.Abs(dist) <= step)
+        {
+            pet.X = target.Value;
+            target = null;
+            if (Auto) Start("idle");
+            else Start(pet.Action, float.PositiveInfinity);
+            return;
+        }
+        pet.Facing = Math.Sign(dist);
+        pet.X += Math.Sign(dist) * step;
+    }
+
+    // ---------- 切換動作 ----------
+
+    public void Start(string name, float? duration = null)
+    {
+        pet.Play(name, true);
+        var clip = pet.Animator.Clip;
+        var range = Tuning.Auto.TryGetValue(name, out var a) && a.Time != null ? a.Time : new[] { 3f, 5f };
+        timer = duration ?? (clip.Loop ? Rand(range[0], range[1]) : float.PositiveInfinity);
+        target = clip.Move > 0 ? PickTarget() : null;
+    }
+
+    float PickTarget()
+    {
+        var rect = area();
+        var margin = Tuning.Margin * DesktopWindow.UiScale;
+        var lo = rect.Position.X + margin;
+        var hi = rect.End.X - margin;
+        float x;
+        var tries = 0;
+        do x = Rand(lo, hi);
+        while (Math.Abs(x - pet.X) < 150 * DesktopWindow.UiScale && rect.Size.X > 400 * DesktopWindow.UiScale && ++tries < 20);
+        return x;
+    }
+
+    static string WeightedPick()
+    {
+        var total = Tuning.Auto.Values.Sum(v => v.Weight);
+        var r = GD.Randf() * total;
+        foreach (var (name, v) in Tuning.Auto)
+            if ((r -= v.Weight) <= 0) return name;
+        return "idle";
+    }
+}
