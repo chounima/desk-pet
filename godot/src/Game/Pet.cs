@@ -23,6 +23,7 @@ public sealed class Pet
     public RigData Rig { get; private set; } = null!;
     public PetView View { get; private set; } = null!;
     public IReadOnlyDictionary<string, Transform2D> World => world;
+    public Gaze Gaze { get; } = new();
 
     public Pet(Node parent, RigData rig, Dictionary<string, ClipData> clips, Dictionary<string, PropData> props, float scale)
     {
@@ -63,8 +64,12 @@ public sealed class Pet
 
     public void Update(float dt)
     {
-        world = skeleton.Compute(Animator.Update(dt));
+        var pose = Animator.Update(dt);
+        Gaze.Update(this, dt);
+        pose["head"] = pose.GetValueOrDefault("head") + Gaze.HeadAngle;
+        world = skeleton.Compute(pose);
         View.SetFace(CurrentFace(dt));
+        View.SetFaceOffset(Gaze.FaceOffset);
         View.SetProps(Animator.Props);
         View.SetAlt(Animator.Alt);
         View.Render(world, new Vector2(X, Y), Facing, Scale);
@@ -89,9 +94,10 @@ public sealed class Pet
     }
 
     /// <summary>頭頂在畫面上的位置（特效錨點）</summary>
-    public Vector2 HeadTop()
-    {
-        var p = world["head"] * new Vector2(Rig.HeadTop[0], Rig.HeadTop[1]);
-        return new Vector2(X + p.X * Facing * Scale, Y + p.Y * Scale);
-    }
+    public Vector2 HeadTop() => ToScreen(world["head"] * new Vector2(Rig.HeadTop[0], Rig.HeadTop[1]));
+
+    /// <summary>臉的中心在畫面上的位置（視線起點）</summary>
+    public Vector2 FaceCenter() => ToScreen(world["head"] * new Vector2(Rig.HeadTop[0], Rig.HeadTop[1]) * 0.5f);
+
+    Vector2 ToScreen(Vector2 p) => new(X + p.X * Facing * Scale, Y + p.Y * Scale);
 }

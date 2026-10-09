@@ -130,11 +130,33 @@ public sealed class Behavior
         }
 
         if (target != null) { UpdateWalk(dt); return; }
+        TurnToCursor(dt);
 
         timer -= dt;
         if (!pet.Animator.Finished && timer > 0) return;
         if (Auto) Start(WeightedPick());
         else if (pet.Animator.Finished) Start(pet.Animator.Clip.Next ?? "idle", float.PositiveInfinity);
+    }
+
+    // 游標在背後一段時間就轉過身來
+    float behindTime;
+
+    void TurnToCursor(float dt)
+    {
+        var u = DesktopWindow.UiScale;
+        if (pet.Gaze.Target is not { } t || !Gaze.Lookable.Contains(pet.Action))
+        {
+            behindTime = 0;
+            return;
+        }
+        var dx = t.X - pet.X;
+        var behind = Math.Sign(dx) == -pet.Facing && Math.Abs(dx) > 120 * u && t.DistanceTo(pet.FaceCenter()) < 900 * u;
+        behindTime = behind ? behindTime + dt : 0;
+        if (behindTime > 0.8f)
+        {
+            pet.Facing = -pet.Facing;
+            behindTime = 0;
+        }
     }
 
     void UpdateTyping()

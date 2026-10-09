@@ -94,6 +94,11 @@ public partial class PetView : Node2D
         face = name;
     }
 
+    Vector2 faceOffset;
+
+    /// <summary>臉部在頭部骨骼座標中的位移（視線用）</summary>
+    public void SetFaceOffset(Vector2 offset) => faceOffset = offset;
+
     public void SetProps(IReadOnlyList<string> list)
     {
         var key = string.Join(",", list);
@@ -124,6 +129,7 @@ public partial class PetView : Node2D
             if (!item.Sprite.Visible) continue;
             var m = world[item.Bone];
             if (item.Offset is { } offset) m *= offset;
+            if (item == faceItem) m *= new Transform2D(0, faceOffset);
             // 貼圖像素 → 部件座標：縮小 res 倍，再移到部件範圍的左上角
             item.Sprite.Transform = m * new Transform2D(new Vector2(1 / res, 0), new Vector2(0, 1 / res),
                                                         new Vector2(item.Box[0], item.Box[1]));

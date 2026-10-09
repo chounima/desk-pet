@@ -5,6 +5,7 @@
 //   --action=typing    起始動作（並關閉自動行為），方便截圖檢查
 //   --autostart=on|off 設定開機自動啟動
 //   --say=greet        一開始就顯示某句台詞（截圖用）
+//   --look=x,y         固定看某一點而不是游標（截圖用）
 using System.Collections.Generic;
 using System.Linq;
 using DeskPet.Content;
@@ -37,6 +38,7 @@ public partial class Main : Node2D
     Drag? drag;
     int keyCount;
     float saveTimer = SaveEvery;
+    Vector2? lookOverride;     // --look=x,y：固定看某一點（截圖用）
 
     public override void _Ready()
     {
@@ -78,6 +80,8 @@ public partial class Main : Node2D
             behavior.Force(action);
         }
         if (args.TryGetValue("say", out var sayKey)) bubble.Say(lines.Pick(startId, sayKey), 999);
+        if (args.TryGetValue("look", out var look) && look.Split(',') is [var lx, var ly])
+            lookOverride = new Vector2(float.Parse(lx), float.Parse(ly));
 
         if (args.TryGetValue("autostart", out var auto)) Autostart.Set(auto == "on");
 
@@ -122,6 +126,7 @@ public partial class Main : Node2D
         }
 
         UpdateDrag();
+        pet.Gaze.Target = lookOverride ?? DesktopWindow.CursorInWindow();
         behavior.Update(dt);
         pet.Update(dt);
         fx.UpdateFx(dt, pet.Animator.Fx, pet.HeadTop());
@@ -135,7 +140,7 @@ public partial class Main : Node2D
 
     void DumpState() =>
         GD.Print($"[state] keys={keyCount} input={GlobalInput.Running} action={pet.Action} " +
-                 $"t={pet.Animator.LocalTime:0.00} char={pet.Rig.Id} scale={pet.Scale:0.00} today={settings.TodayKeys}");
+                 $"t={pet.Animator.LocalTime:0.00} facing={pet.Facing} x={pet.X:0} char={pet.Rig.Id} scale={pet.Scale:0.00} today={settings.TodayKeys}");
 
     // ---------- 滑鼠：點擊與拖曳 ----------
 
