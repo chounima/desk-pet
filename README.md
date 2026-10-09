@@ -28,7 +28,10 @@ Godot 4.7 .NET（C#）。直接讀取專案根目錄的 `art/` 與 `data/`，和
 | 隱私 | 按鍵當下分類成「一般字元／Enter／Backspace／Ctrl+S」就丟掉，不記錄內容 |
 | 高 DPI | 讀取螢幕 DPI，角色大小、速度、重力、特效文字都乘上縮放倍率（例如 4K 300% → ×3） |
 | 角色繪製 | 執行時把 SVG 轉成貼圖（依顯示大小 ×2 解析度），保留 Image 做像素級點擊判定 |
-| 系統匣 | 切換角色、自動行為開關、結束 |
+| 系統匣 | 切換角色、大小、自動行為、開機自動啟動、今日按鍵數、結束 |
+| 設定存檔 | `user://settings.json`（`%APPDATA%\Godot\app_userdata\Desk Pet\`）：角色、大小、自動行為、每日按鍵次數 |
+| 單一實例 | 具名互斥鎖 `Local\DeskPet.SingleInstance`，重複啟動時新的直接結束 |
+| 開機自動啟動 | `HKCU\Software\Microsoft\Windows\CurrentVersion\Run\DeskPet`（`--autostart=on/off` 也可設定） |
 
 ```
 godot/src/
