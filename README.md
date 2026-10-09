@@ -12,6 +12,8 @@ powershell -File tools/run_pet.ps1                       # 桌寵（Godot 版）
 powershell -File tools/run_pet.ps1 -Char sera -NoBuild   # 指定角色、略過建置
 ```
 
+也可以直接**雙擊專案根目錄的 `run_pet.cmd`** 啟動桌寵。
+
 桌寵結束方式：系統匣圖示右鍵 →「結束」。
 
 ## 桌寵（Godot 版，`godot/`）
