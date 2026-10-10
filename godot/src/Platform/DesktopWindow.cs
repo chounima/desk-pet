@@ -14,6 +14,9 @@ public static class DesktopWindow
     static IntPtr hwnd;
     static bool? clickThrough;
 
+    /// <summary>桌寵自己的視窗</summary>
+    public static IntPtr Hwnd => hwnd;
+
     /// <summary>工作區在螢幕上的位置與大小（實際像素）</summary>
     public static Rect2I Area { get; private set; }
 

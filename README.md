@@ -31,6 +31,7 @@ Godot 4.7 .NET（C#）。直接讀取專案根目錄的 `art/` 與 `data/`，和
 | 系統匣 | 切換角色、大小、自動行為、開機自動啟動、今日按鍵數、結束 |
 | 設定存檔 | `user://settings.json`（`%APPDATA%\Godot\app_userdata\Desk Pet\`）：角色、大小、自動行為、每日按鍵次數 |
 | 單一實例 | 具名互斥鎖 `Local\DeskPet.SingleInstance`，重複啟動時新的直接結束 |
+| 站在視窗上 | 每 0.25 秒用 `GetTopWindow/GetWindow` 走訪視窗（不用需要回呼的 `EnumWindows`），沒被擋住的頂邊當平台；會跳上去、跳下來、跟著視窗移動，視窗關閉或最小化時掉下來。測試：`tools/test_platform.ps1` + `run_pet.ps1 -Action idle` 搭配 `--test=do:climb` |
 | 開機自動啟動 | `HKCU\Software\Microsoft\Windows\CurrentVersion\Run\DeskPet`（`--autostart=on/off` 也可設定） |
 
 ```

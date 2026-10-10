@@ -7,6 +7,7 @@
 //   --say=greet        一開始就顯示某句台詞（截圖用）
 //   --look=x,y         固定看某一點而不是游標（截圖用）
 //   --test=face*4,Save 模擬點擊部位或特殊按鍵（測試互動規則）
+//                      do:climb 強制做某件事、wait 空一拍
 //   --zones            印出身體各點判定成哪個部位
 using System.Collections.Generic;
 using System.Linq;
@@ -62,14 +63,17 @@ public partial class Main : Node2D
         var args = ParseArgs();
         // 起始角色：命令列 > 上次選的 > 第一個
         var startId = args.GetValueOrDefault("char", rigs.ContainsKey(settings.Character) ? settings.Character : ids[0]);
-        settings.Character = startId;
+        // 命令列指定的角色（測試用）不寫回設定，才不會蓋掉使用者在系統匣選的角色
+        if (!args.ContainsKey("char")) settings.Character = startId;
         dumpState = args.ContainsKey("dump");
 
         pet = new Pet(this, rigs[startId], clips, props, PetScale(settings.Size));
         var area = Area();
         pet.X = area.Size.X / 2;
         pet.Y = area.End.Y;
-        behavior = new Behavior(pet, Area, new Interactions(InteractionData.Load())) { Auto = settings.Auto };
+        RefreshWindows();
+        behavior = new Behavior(pet, Area, new Interactions(InteractionData.Load()),
+                                new Surfaces(Area, () => WindowTracker.Platforms)) { Auto = settings.Auto };
         fx = new Fx();
         AddChild(fx);
         lines = Lines.Load(ids);
@@ -108,6 +112,16 @@ public partial class Main : Node2D
 
     static float PetScale(float size) => Tuning.Scale * DesktopWindow.UiScale * size;
 
+    // 重新掃描桌面上的視窗（角色可以站的平台）
+    const float WindowRefresh = 0.25f;
+    float windowTimer;
+
+    static void RefreshWindows()
+    {
+        var u = DesktopWindow.UiScale;
+        WindowTracker.Refresh(DesktopWindow.Hwnd, DesktopWindow.Area, minWidth: 160 * u, minTop: 60 * u);
+    }
+
     Rect2 Area() => new(Vector2.Zero, DesktopWindow.Area.Size);
 
     public override void _Process(double delta)
@@ -132,6 +146,13 @@ public partial class Main : Node2D
             settings.SaveIfDirty();
         }
 
+        windowTimer -= dt;
+        if (windowTimer <= 0)
+        {
+            windowTimer = WindowRefresh;
+            RefreshWindows();
+        }
+
         UpdateDrag();
         pet.Gaze.Target = lookOverride ?? DesktopWindow.CursorInWindow();
         behavior.Update(dt);
@@ -153,9 +174,11 @@ public partial class Main : Node2D
         if (frame == 60 && zoneProbe) ProbeZones();
         if (testSteps.Count == 0 || frame < 120 || frame % 12 != 0) return;
         var step = testSteps.Dequeue();
-        if (System.Enum.TryParse<GlobalInput.KeyKind>(step, out var kind)) behavior.OnKey(kind);
+        if (step.StartsWith("do:")) behavior.Force(step[3..]);          // do:climb、do:hopDown…
+        else if (step == "wait") { }                                     // 空一拍
+        else if (System.Enum.TryParse<GlobalInput.KeyKind>(step, out var kind)) behavior.OnKey(kind);
         else behavior.OnPetClick(step);
-        GD.Print($"[test] {step} -> action={pet.Action} face={pet.FaceOverride ?? pet.Animator.Face}");
+        GD.Print($"[test] {step} -> action={pet.Action} face={pet.FaceOverride ?? pet.Animator.Face} surface={behavior.SurfaceInfo}");
     }
 
     static IEnumerable<string> ParseTestSteps(string spec) =>
@@ -185,7 +208,7 @@ public partial class Main : Node2D
 
     void DumpState() =>
         GD.Print($"[state] keys={keyCount} input={GlobalInput.Running} action={pet.Action} " +
-                 $"t={pet.Animator.LocalTime:0.00} facing={pet.Facing} x={pet.X:0} char={pet.Rig.Id} scale={pet.Scale:0.00} today={settings.TodayKeys}");
+                 $"t={pet.Animator.LocalTime:0.00} facing={pet.Facing} x={pet.X:0} char={pet.Rig.Id} scale={pet.Scale:0.00} today={settings.TodayKeys} y={pet.Y:0} surface={behavior.SurfaceInfo} windows=[{WindowTracker.Stats}]");
 
     // ---------- 滑鼠：點擊與拖曳 ----------
 
