@@ -1,0 +1,3 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-17 -17 34 34" width="34" height="34">
+<clipPath id="ballclip"><circle cx="0" cy="0" r="14"/></clipPath><circle cx="0" cy="0" r="14" fill="#e8752a"/><g clip-path="url(#ballclip)"><path d="M-14,0 L14,0 M0,-14 L0,14" fill="none" stroke="#2a1a10" stroke-width="1.6"/><path d="M-9,-11 Q-3,0 -9,11 M9,-11 Q3,0 9,11" fill="none" stroke="#2a1a10" stroke-width="1.6"/></g><circle cx="0" cy="0" r="14" fill="none" stroke="#24161b" stroke-width="2.2"/><circle cx="-4.5" cy="-6" r="3.4" fill="#fff" opacity="0.7"/>
+</svg>

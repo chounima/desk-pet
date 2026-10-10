@@ -31,13 +31,15 @@ export const AUTO = {
   jump: { weight: 1 },
   peace: { weight: 1, time: [2, 3] },
   volleyball: { weight: 1, time: [4, 7] },
+  coffee: { weight: 1, time: [5, 8] },       // 商店商品，買了才會出現
+  read: { weight: 1, time: [6, 10] },
 };
 
 // 排球對打小遊戲（長度單位：螢幕 px；reach / hitHeight 為 Q 版單位，會依角色身材放大）
 export const VOLLEY = {
   gravity: 900,         // 球的重力，比真實小，比較好接
   ballRadius: 26,       // 球的顯示半徑
-  artRadius: 14,        // 排球圖檔裡的半徑（= tools/artgen/props.py 的 BALL_R）
+  artRadius: 14,        // 排球圖檔裡的半徑（= tools/artgen/balls.py 的 BALL_R）
   reach: 44,            // 擊球點在身體前方多遠
   hitHeight: 104,       // 擊球點離地多高
   hitTolerance: 34,     // 球離擊球點多近算接到

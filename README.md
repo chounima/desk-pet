@@ -68,7 +68,8 @@ godot/src/
   （`index.html?volley=1&debug=1` 在工作列顯示她對每顆球的殺球判斷：球不夠高／時間不夠／跑不到…）
 - 收集系統：面板「📖 收藏」看點數、好感度、解鎖進度；進度存在瀏覽器 localStorage（`deskpet.progress`）
   - `?dev=1` 開發者模式：即時修改 `data/progression.json` 的參數（暫存在瀏覽器）、💎 +100、❤ +50、模擬隔天、重置進度
-  - `?collection=1` 直接打開收藏視窗（截圖用）
+  - `?collection=1` 直接打開收藏視窗、`?shop=ball` 直接打開商店某個分頁（截圖用）
+  - 商店：面板「🛒 商店」；商品在 `progression.json` 的 `shop.items`（分類 ball／fx／bubble／action）。新動作商品要在 `config.js` 的 `AUTO` 加權重，買了才會自動出現
   - 測試：`/preview/tests/progress.html` 用真實參數跑一遍規則（每日上限、升級、解鎖、連續登入、排球破紀錄）
 - 測試：`/preview/tests/volley.html` 不開畫面，用真實角色資料模擬每個角色 20 回合排球對打，
   顯示平均來回、殺球／魚躍成功數、火焰次數、每回合怎麼結束、沒殺球的原因

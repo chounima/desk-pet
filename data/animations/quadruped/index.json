@@ -29,6 +29,8 @@
   "leap": "fall",
   "vbApproach": "vbBump",
   "vbSpike": "vbBump",
-  "vbDive": "vbBump"
+  "vbDive": "vbBump",
+  "coffee": "sit",
+  "read": "sit"
  }
 }

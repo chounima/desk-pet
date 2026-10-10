@@ -7,14 +7,19 @@ export class BallView {
     this.artRadius = artRadius;
     this.g = document.createElementNS(NS, "g");
     this.g.classList.add("ball");
-    const [x0, y0, x1, y1] = prop.box;
-    const img = document.createElementNS(NS, "image");
-    Object.entries({ href: prop.url, x: x0, y: y0, width: x1 - x0, height: y1 - y0 })
-      .forEach(([k, v]) => img.setAttribute(k, v));
-    this.g.append(img);
+    this.img = document.createElementNS(NS, "image");
+    this.setSkin(prop);
+    this.g.append(this.img);
     this.g.addEventListener("pointerdown", e => { e.stopPropagation(); onClick(); });
     this.hide();
     layer.append(this.g);
+  }
+
+  // 換外觀（商店的排球外觀）：prop 是 props.json 裡的球
+  setSkin(prop) {
+    const [x0, y0, x1, y1] = prop.box;
+    Object.entries({ href: prop.url, x: x0, y: y0, width: x1 - x0, height: y1 - y0 })
+      .forEach(([k, v]) => this.img.setAttribute(k, v));
   }
 
   show() { this.g.style.display = ""; }

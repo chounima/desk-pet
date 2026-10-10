@@ -2,26 +2,188 @@
   "_說明": "收集系統的所有數值。網頁預覽與 Godot 共用；開發者模式（網頁 ?dev=1）可以即時修改並暫存覆寫。",
   "points": {
     "_說明": "點數 💎：所有角色共用的貨幣",
-    "typing": { "every": 200, "gain": 1, "dailyMax": 50 },
-    "interaction": { "gain": 1, "dailyMax": 10 },
-    "volley": { "everyRally": 5, "gain": 1, "recordBonus": 5, "dailyMax": 30 },
-    "login": { "base": 10, "streakBonus": 2, "maxBonus": 20 },
+    "typing": {
+      "every": 200,
+      "gain": 1,
+      "dailyMax": 50
+    },
+    "interaction": {
+      "gain": 1,
+      "dailyMax": 10
+    },
+    "volley": {
+      "everyRally": 5,
+      "gain": 1,
+      "recordBonus": 5,
+      "dailyMax": 30
+    },
+    "login": {
+      "base": 10,
+      "streakBonus": 2,
+      "maxBonus": 20
+    },
     "levelUp": 20
   },
   "affection": {
     "_說明": "好感度 ❤：每個角色各自累積，只增不減。levels[i] = 升到 Lv(i+1) 需要的累積經驗",
-    "companionPerMinute": 1, "companionDailyMax": 120,
-    "interaction": 2, "interactionDailyMax": 30,
-    "volleyEveryRally": 5, "volleyGain": 1, "volleyDailyMax": 30,
-    "levels": [0, 60, 180, 400, 800, 1500]
+    "companionPerMinute": 1,
+    "companionDailyMax": 120,
+    "interaction": 2,
+    "interactionDailyMax": 30,
+    "volleyEveryRally": 5,
+    "volleyGain": 1,
+    "volleyDailyMax": 30,
+    "levels": [
+      0,
+      60,
+      180,
+      400,
+      800,
+      1500
+    ]
   },
   "start": {
     "_說明": "一開始就能用的角色（預設型態一律開放）",
-    "characters": ["tk01", "sera", "mira", "chouma"]
+    "characters": [
+      "tk01",
+      "sera",
+      "mira",
+      "chouma"
+    ]
   },
   "unlocks": {
     "_說明": "解鎖條件。key：character:<角色> 或 form:<角色>/<型態>。條件：affection（某角色好感度達到等級）或 cost（花點數購買）",
-    "character:choupaca": { "affection": { "char": "chouma", "level": 3 }, "hint": "Chouma 好感度 Lv3 時，他會變身…？" },
-    "form:choupaca/quadruped": { "affection": { "char": "choupaca", "level": 2 }, "hint": "Choupaca 好感度 Lv2 解鎖四足型態" }
+    "character:choupaca": {
+      "affection": {
+        "char": "chouma",
+        "level": 3
+      },
+      "hint": "Chouma 好感度 Lv3 時，他會變身…？"
+    },
+    "form:choupaca/quadruped": {
+      "affection": {
+        "char": "choupaca",
+        "level": 2
+      },
+      "hint": "Choupaca 好感度 Lv2 解鎖四足型態"
+    }
+  },
+  "shop": {
+    "_說明": "商店：買了就永久擁有。price 0 = 預設就有。requires 同 unlocks 的 affection 條件，達成才能買。外觀類（ball/fx/bubble）可在商店切換使用中的款式",
+    "categories": {
+      "ball": "🏐 排球外觀",
+      "fx": "✨ 特效樣式",
+      "bubble": "💬 對話泡泡",
+      "action": "🎭 動作"
+    },
+    "defaults": {
+      "ball": "ball:classic",
+      "fx": "fx:heart",
+      "bubble": "bubble:classic"
+    },
+    "items": {
+      "ball:classic": {
+        "category": "ball",
+        "label": "經典排球",
+        "price": 0,
+        "prop": "volleyball"
+      },
+      "ball:beach": {
+        "category": "ball",
+        "label": "沙灘球",
+        "price": 50,
+        "prop": "ball_beach"
+      },
+      "ball:basket": {
+        "category": "ball",
+        "label": "籃球紋",
+        "price": 80,
+        "prop": "ball_basket"
+      },
+      "ball:watermelon": {
+        "category": "ball",
+        "label": "西瓜球",
+        "price": 100,
+        "prop": "ball_watermelon"
+      },
+      "ball:fire": {
+        "category": "ball",
+        "label": "火焰球",
+        "price": 150,
+        "prop": "ball_fire",
+        "requires": {
+          "affection": {
+            "char": "chouma",
+            "level": 2
+          }
+        }
+      },
+      "fx:heart": {
+        "category": "fx",
+        "label": "愛心",
+        "price": 0,
+        "symbol": "♥",
+        "color": "#ff6b8a"
+      },
+      "fx:star": {
+        "category": "fx",
+        "label": "星星",
+        "price": 30,
+        "symbol": "★",
+        "color": "#ffd75e"
+      },
+      "fx:note": {
+        "category": "fx",
+        "label": "音符",
+        "price": 30,
+        "symbol": "♪",
+        "color": "#7fd0ff"
+      },
+      "fx:sakura": {
+        "category": "fx",
+        "label": "櫻花",
+        "price": 80,
+        "symbol": "🌸",
+        "color": "#ffb7d0"
+      },
+      "bubble:classic": {
+        "category": "bubble",
+        "label": "經典",
+        "price": 0,
+        "style": "classic"
+      },
+      "bubble:cloud": {
+        "category": "bubble",
+        "label": "雲朵",
+        "price": 50,
+        "style": "cloud"
+      },
+      "bubble:pixel": {
+        "category": "bubble",
+        "label": "像素風",
+        "price": 50,
+        "style": "pixel"
+      },
+      "bubble:hand": {
+        "category": "bubble",
+        "label": "手寫風",
+        "price": 50,
+        "style": "hand"
+      },
+      "action:coffee": {
+        "category": "action",
+        "label": "喝咖啡",
+        "price": 100,
+        "action": "coffee",
+        "icon": "☕"
+      },
+      "action:read": {
+        "category": "action",
+        "label": "看書",
+        "price": 100,
+        "action": "read",
+        "icon": "📖"
+      }
+    }
   }
 }

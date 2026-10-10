@@ -1,0 +1,41 @@
+/* 商店視窗與對話泡泡款式 */
+#shop { width: 460px; }
+#shop .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+.items { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.item { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 8px;
+  border: 1px solid var(--line); border-radius: 10px; text-align: center; }
+.item.equipped { border-color: #ffd75e; box-shadow: 0 0 0 1px #ffd75e inset; }
+.item .preview { height: 56px; display: flex; align-items: center; justify-content: center; }
+.item .preview img { width: 48px; height: 48px; }
+.item .preview .symbol { font-size: 34px; }
+.item-actions { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; align-items: center; min-height: 28px; }
+.item-actions button { font-size: 12px; padding: 3px 8px; }
+.item-actions button.buy { border-color: #7fe0ff; }
+.item-actions button.ghost { opacity: 0.7; }
+.item-actions button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* 對話泡泡 */
+.bubble {
+  position: fixed; transform: translate(-50%, -100%); max-width: 260px; padding: 8px 14px;
+  font-size: 15px; line-height: 1.4; color: #2a2230; background: #fff; pointer-events: none;
+  border-radius: 14px; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3); white-space: nowrap;
+}
+.bubble.sample { position: static; transform: none; font-size: 13px; padding: 5px 10px; }
+.bubble.style-classic::after {
+  content: ""; position: absolute; left: 50%; bottom: -8px; margin-left: -6px;
+  border: 8px solid transparent; border-top-color: #fff; border-bottom: 0;
+}
+.bubble.sample::after { display: none; }
+.bubble.style-cloud {
+  border-radius: 40px; background: #f4f8ff;
+  box-shadow: -10px 4px 0 -2px #f4f8ff, 10px 4px 0 -2px #f4f8ff, 0 3px 10px rgba(0, 0, 0, 0.25);
+}
+.bubble.style-pixel {
+  border-radius: 0; font-family: "Courier New", monospace; font-weight: bold; color: #1a1a2e; background: #e8f7d8;
+  box-shadow: 4px 0 #1a1a2e, -4px 0 #1a1a2e, 0 4px #1a1a2e, 0 -4px #1a1a2e;
+}
+.bubble.style-hand {
+  border-radius: 18px 6px 18px 8px; font-family: "Segoe Print", "Comic Sans MS", cursive; color: #3a2a18;
+  background: #fff8e6; border: 2px dashed #b08a5a; transform: translate(-50%, -100%) rotate(-2deg);
+}
+.bubble.sample.style-hand { transform: rotate(-2deg); }

@@ -1,4 +1,6 @@
 """可依動作顯示的道具。每個道具綁在某根骨骼上，有自己的位移與圖層順序。"""
+from .balls import BALLS
+from .handheld import book, mug
 from .shapes import stroke
 from .svg import Part
 
@@ -24,23 +26,11 @@ def keyboard() -> Part:
         (-32, -14, 32, 4))
 
 
-BALL_R = 14     # 排球半徑（Q 版單位）；對打小遊戲依此換算顯示大小
-
-
-def volleyball() -> Part:
-    return Part(
-        f'<circle cx="0" cy="0" r="{BALL_R}" fill="#f7f5ee" stroke="#24161b" stroke-width="2.2"/>'
-        '<path d="M-13,-4.5 Q0,-9.5 13,-4.5 M-8,11 Q-3,0 -9,-11 M8,11.5 Q3,0 9,-11" '
-        'fill="none" stroke="#2f6fd6" stroke-width="3.2" stroke-linecap="round"/>'
-        '<path d="M-13,-4.5 Q0,-9.5 13,-4.5" fill="none" stroke="#f2c230" stroke-width="1.8"/>'
-        '<path d="M-12,4 Q0,9 12,4" fill="none" stroke="#f2c230" stroke-width="1.6"/>'
-        '<circle cx="-4.5" cy="-6" r="3.4" fill="#fff" opacity="0.8"/>',
-        (-17, -17, 17, 17))
-
-
 # 名稱: (產生函式, 骨骼, x, y, 圖層順序)
 PROPS = {
     "laptop": (laptop, "hips", 46, -6, 15.5),
-    "volleyball": (volleyball, "prop", 0, 0, 19),
+    **{name: (fn, "prop", 0, 0, 19) for name, fn in BALLS.items()},      # 排球與商店的球外觀
+    "mug": (mug, "handNear", 0, 10, 18.5),
+    "book": (book, "handNear", 4, 12, 18.5),
     "keyboard": (keyboard, "root", 66, 0, 15.6),
 }

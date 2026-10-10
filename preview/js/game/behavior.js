@@ -4,8 +4,8 @@ import { AUTO, CLICK_REACTIONS, TUNING } from "../config.js";
 const now = () => performance.now() / 1000;
 const rand = ([a, b]) => a + Math.random() * (b - a);
 
-function weightedPick(table) {
-  const entries = Object.entries(table);
+function weightedPick(table, allowed = () => true) {
+  const entries = Object.entries(table).filter(([name]) => allowed(name));
   let r = Math.random() * entries.reduce((s, [, v]) => s + v.weight, 0);
   for (const [name, v] of entries) if ((r -= v.weight) <= 0) return name;
   return entries[0][0];
@@ -121,7 +121,7 @@ export class Behavior {
 
     this.timer -= dt;
     if (!pet.animator.finished && this.timer > 0) return;
-    if (this.auto) this.start(weightedPick(AUTO));
+    if (this.auto) this.start(weightedPick(AUTO, this.allowed ?? undefined));
     else if (pet.animator.finished) this.start(pet.animator.clip.next ?? "idle", Infinity);
   }
 

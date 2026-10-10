@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="zh-Hant">
-<head><meta charset="utf-8"><title>收集系統測試</title></head>
+<head><meta charset="utf-8"><title>收集系統與商店測試</title></head>
 <body>
 <pre id="out">running…</pre>
 <script>
@@ -13,6 +13,7 @@
 // 用真實的 data/progression.json 跑一遍收集系統的規則（不存檔、不開畫面）
 import { loadProgression } from "../js/core/loader.js";
 import { Progress } from "../js/game/progress.js";
+import { Shop } from "../js/game/shop.js";
 
 const { cfg } = await loadProgression();
 const lines = [];
@@ -89,6 +90,28 @@ check("同一天不重複送", q.state.points === pts);
 q.checkDay(day(5));
 check("中斷後重新計算", q.state.login.streak === 1);
 check("換日重置每日上限", q.state.day.pts.typing === 0 && q.state.day.date === day(5));
+
+// 商店
+const s = new Progress(cfg, {}, () => {});
+const shop = new Shop(s);
+check("預設款式不用買就擁有", shop.owns("ball:classic") && shop.equipped("ball") === "ball:classic");
+check("點數不夠不能買", !shop.buy("ball:beach") && shop.canBuy("ball:beach").reason === "points");
+s.addPoints(1000, "test");
+check("點數夠就能買", shop.buy("ball:beach") && shop.owns("ball:beach"));
+check("扣了點數", s.state.points === 1000 - cfg.shop.items["ball:beach"].price);
+check("外觀買了直接換上", shop.equipped("ball") === "ball:beach");
+check("買過不能重買", !shop.buy("ball:beach") && shop.canBuy("ball:beach").reason === "owned");
+check("可以換回預設款式", shop.equip("ball:classic") && shop.equipped("ball") === "ball:classic");
+check("沒買的不能換上", !shop.equip("ball:basket"));
+const fire = cfg.shop.items["ball:fire"].requires.affection;
+check("沒達成條件不能買", shop.canBuy("ball:fire").reason === "locked");
+s.addXp(fire.char, cfg.affection.levels[fire.level - 1]);
+check("達成條件就能買", shop.buy("ball:fire"));
+check("動作商品沒買不能用", !shop.actionOwned("coffee"));
+check("不是商品的動作可以用", shop.actionOwned("wave"));
+shop.buy("action:coffee");
+check("動作買了就能用", shop.actionOwned("coffee"));
+check("動作不能「換上」", !shop.equip("action:coffee"));
 
 lines.push("", fails ? `✗ ${fails} 項失敗` : "全部通過");
 document.getElementById("out").textContent = lines.join("\n");

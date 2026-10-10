@@ -4,11 +4,14 @@ import { formRig, loadAll, loadProgression } from "./core/loader.js";
 import { Behavior } from "./game/behavior.js";
 import { Pet } from "./game/pet.js";
 import { Progress } from "./game/progress.js";
+import { Shop } from "./game/shop.js";
 import { Volley } from "./game/volley.js";
 import { loadSkills } from "./game/volleySkills.js";
 import { Collection } from "./ui/collection.js";
 import { DevPanel, OVERRIDE_KEY } from "./ui/devPanel.js";
 import { Panel } from "./ui/panel.js";
+import { ShopWindow } from "./ui/shopWindow.js";
+import { Bubble, loadLines } from "./view/bubble.js";
 import { BallView } from "./view/ball.js";
 import { Fx } from "./view/fx.js";
 
@@ -28,6 +31,7 @@ const { defaults: progressDefaults, cfg: progressCfg } = await loadProgression(d
 let savedProgress = {};
 try { savedProgress = JSON.parse(store.get(SAVE_KEY) ?? "{}"); } catch { /* 存檔壞掉就重新開始 */ }
 const progress = new Progress(progressCfg, savedProgress, s => store.set(SAVE_KEY, JSON.stringify(s)));
+const shop = new Shop(progress);
 
 // ---------- 世界與寵物 ----------
 const world = {
@@ -46,7 +50,16 @@ const pet = new Pet({
 pet.x = world.width / 2;
 pet.y = world.groundY;
 const behavior = new Behavior(pet, world);
+behavior.allowed = name => shop.actionOwned(name);     // 商店的動作買了才會自動出現
 const fx = new Fx($("fx"));
+const bubble = new Bubble(document.body, await loadLines(ids));
+
+// 套用商店的外觀（特效、泡泡；球在開始對打時套用）
+function applyCosmetics() {
+  fx.setStyle(shop.equippedItem("fx"));
+  bubble.setStyle(shop.equippedItem("bubble").style);
+  volley.view.setSkin(props[shop.equippedItem("ball").prop] ?? props.volleyball);
+}
 
 // 點數入帳：短時間內的合併成一個「+N 💎」
 let pendingPoints = 0, pointsTimer = 0;
@@ -61,6 +74,11 @@ progress.onEvent = e => {
   if (e.type === "points") pendingPoints += e.amount;
   if (e.type === "levelUp" && e.char === charId) fx.burst(`❤ Lv${e.level}!`, pet.headTop(), "fx-level");
   if (e.type === "levelUp") showToast(`❤ ${rigs[e.char]?.name ?? e.char} 好感度 Lv${e.level}！`);
+  if (e.type === "buy") {
+    showToast(`🛒 買到「${e.item.label}」！`);
+    bubble.say(charId, "highFive");
+  }
+  if (e.type === "buy" || e.type === "equip") { applyCosmetics(); refreshLocks(); shopWindow.render(); }
   if (e.type === "unlock") {
     const [kind, what] = e.key.split(":");
     const [id, form] = what.split("/");
@@ -106,10 +124,25 @@ const panel = new Panel($("panel"), {
   actions: names.map(n => [n, clips[n]]),
   onCharacter: id => { charId = id; switchRig(); },
   onForm: form => { forms[charId] = form; switchRig(); fx.burst("💨", pet.headTop(), "fx-heart"); },
-  onAction: name => { if (!volley.active) behavior.force(name); },
+  // 還沒買的動作：打開商店的動作分頁
+  onAction: name => {
+    if (!shop.actionOwned(name)) { shopWindow.toggle(true, "action"); return; }
+    if (!volley.active) behavior.force(name);
+  },
   onAuto: on => behavior.setAuto(on),
   onVolley: toggleVolley,
   onCollection: () => collection.toggle(),
+  onShop: () => shopWindow.toggle(),
+});
+const shopWindow = new ShopWindow($("shop"), {
+  shop, props, names: id => rigs[id]?.name ?? id,
+  // 預覽：動作直接播一次、特效冒出來、泡泡講一句、球顯示在頭上
+  onPreview: (id, it) => {
+    if (it.action) behavior.force(it.action);
+    else if (it.symbol) for (let i = 0; i < 4; i++) setTimeout(() => fx.burst(it.symbol, pet.headTop(), "fx-heart", it.color), i * 150);
+    else if (it.style) { bubble.setStyle(it.style); bubble.say(charId, "greet"); setTimeout(applyCosmetics, 3000); }
+    else if (it.prop) fx.burst(`${it.label}`, pet.headTop());
+  },
 });
 const collection = new Collection($("collection"), { progress, ids, rigs });
 if (dev) new DevPanel($("dev"), { progress, defaults: progressDefaults, getChar: () => charId, onChange: () => { refreshLocks(); collection.render(); } });
@@ -122,6 +155,10 @@ function lockHint(key) {
   return `${rule.hint ?? "尚未解鎖"}（${r.cost ? `💎 ${r.cost}` : `${rigs[r.char]?.name ?? r.char} ❤ Lv${r.have} / ${r.need}`}）`;
 }
 function refreshLocks() {
+  panel.setActionLocks(name => {
+    const id = shop.actionItem(name);
+    return id && !shop.owns(id) ? `商店商品：💎 ${shop.item(id).price}` : null;
+  });
   panel.setLocks(id => (progress.characterUnlocked(id) ? null : lockHint(`character:${id}`)));
   const all = rigs[charId].forms ?? {};
   panel.setForms(all, forms[charId] in all ? forms[charId] : defaultForm(charId),
@@ -136,6 +173,7 @@ function switchRig() {
 progress.checkDay();
 progress.checkUnlocks();
 switchRig();
+applyCosmetics();
 
 // ---------- 輸入 ----------
 addEventListener("keydown", e => {
@@ -166,7 +204,8 @@ addEventListener("pointerup", () => {
   else {
     behavior.onPetClick();
     progress.onInteraction(charId);
-    fx.burst("♥", pet.headTop(), "fx-heart");
+    fx.heart(pet.headTop());
+    bubble.say(charId, Math.random() < 0.5 ? "greet" : "pat");
   }
   drag = null;
 });
@@ -187,6 +226,7 @@ if (q.has("action")) {
   }
 }
 if (q.has("collection")) collection.toggle(true);     // 截圖用：直接打開收藏視窗
+if (q.has("shop")) shopWindow.toggle(true, q.get("shop") || undefined);   // 截圖用：?shop=ball 直接打開商店某個分頁
 if (q.has("volley")) {
   toggleVolley();
   // 截圖用：?volley=1&rally=12 直接從第 12 次來回開始（檢查火焰特效）
@@ -209,6 +249,8 @@ function frame(ts) {
   fx.update(dt, pet.animator.fx, pet.headTop());
   panel.setAction(pet.action);
   if (!frozen) progress.tick(dt, charId);
+  bubble.update(dt, pet.headTop());
+  if (shopWindow.open) $("shop").querySelector("[data-points]").textContent = `💎 ${progress.state.points}`;
   pointsTimer -= dt;
   if (pendingPoints > 0 && pointsTimer <= 0) {
     fx.burst(`+${pendingPoints} 💎`, pet.headTop(), "fx-points");

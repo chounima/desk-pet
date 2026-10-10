@@ -6,6 +6,7 @@
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/desktop.css">
 <link rel="stylesheet" href="css/collection.css">
+<link rel="stylesheet" href="css/shop.css">
 </head>
 <body>
   <!-- 模擬桌面 -->
@@ -46,6 +47,13 @@
     <div data-today></div>
     <h3>角色</h3>
     <div class="cards" data-chars></div>
+  </section>
+
+  <!-- 商店視窗 -->
+  <section id="shop" class="window" hidden>
+    <header><b>🛒 商店</b><span data-points></span><button data-close>✕</button></header>
+    <div class="tabs" data-tabs></div>
+    <div class="items" data-items></div>
   </section>
 
   <!-- 解鎖提示 -->

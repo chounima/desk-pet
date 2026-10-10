@@ -1,0 +1,3 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-17 -17 34 34" width="34" height="34">
+<defs><radialGradient id="fireg" cx="0.4" cy="0.35" r="0.7"><stop offset="0" stop-color="#fff3a0"/><stop offset="0.5" stop-color="#ff9a2a"/><stop offset="1" stop-color="#d9311f"/></radialGradient></defs><circle cx="0" cy="0" r="14" fill="url(#fireg)"/><path d="M-12,8 Q-6,-2 -8,-12 Q-2,-4 0,-14 Q3,-4 8,-11 Q7,0 12,6" fill="none" stroke="#ffe066" stroke-width="2" stroke-linejoin="round"/><circle cx="0" cy="0" r="14" fill="none" stroke="#7a1a10" stroke-width="2.2"/>
+</svg>

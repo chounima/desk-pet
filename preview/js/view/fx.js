@@ -18,7 +18,14 @@ export class Fx {
     this.timer = 0;
     this.mark = null;
     this.markKind = null;
+    this.style = { symbol: "♥", color: null };    // 愛心特效的款式（商店的特效樣式）
   }
+
+  // style：{ symbol, color }，見 data/progression.json 的 fx 商品
+  setStyle(style) { this.style = { symbol: style.symbol, color: style.color }; }
+
+  // 點擊、被摸頭時冒出的愛心（依款式）
+  heart(anchor) { this.burst(this.style.symbol, anchor, "fx-heart", this.style.color); }
 
   // kind: 目前動作的特效名稱；anchor: 頭頂的螢幕座標
   update(dt, kind, anchor) {
@@ -28,7 +35,8 @@ export class Fx {
     this.timer -= dt;
     if (this.timer <= 0) {
       this.timer = emitter.every;
-      this.burst(emitter.text(), anchor, emitter.cls ?? `fx-${kind}`);
+      if (kind === "hearts") this.heart(anchor);
+      else this.burst(emitter.text(), anchor, emitter.cls ?? `fx-${kind}`);
     }
   }
 
@@ -41,8 +49,9 @@ export class Fx {
     if (this.mark) this.place(this.mark, anchor.x + MARKS[kind].dx, anchor.y + MARKS[kind].dy);
   }
 
-  burst(text, anchor, cls = "fx-pop") {
+  burst(text, anchor, cls = "fx-pop", color = null) {
     const el = this.spawn(text, anchor, `fx-float ${cls}`);
+    if (color) el.style.color = color;
     this.place(el, anchor.x + (Math.random() - 0.5) * 40, anchor.y);
     el.addEventListener("animationend", () => el.remove());
   }

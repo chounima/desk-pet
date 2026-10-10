@@ -9,7 +9,7 @@ function button(text, onClick, title = "") {
 }
 
 export class Panel {
-  constructor(root, { characters, actions, onCharacter, onForm, onAction, onAuto, onVolley, onCollection }) {
+  constructor(root, { characters, actions, onCharacter, onForm, onAction, onAuto, onVolley, onCollection, onShop }) {
     this.charButtons = {};
     this.actionButtons = {};
     this.formsRow = root.querySelector("[data-forms]");
@@ -26,6 +26,7 @@ export class Panel {
     for (const [name, clip] of actions) {
       if (clip.hidden) continue;      // 小遊戲專用等內部動作不放在面板上
       const b = button(clip.label, () => onAction(name), name);
+      b.dataset.label = clip.label;
       acts.append(b);
       this.actionButtons[name] = b;
     }
@@ -35,7 +36,9 @@ export class Panel {
 
     this.volleyButton = button("🏐 排球對打", onVolley, "用游標揮球和她對打");
     root.querySelector("[data-games]").append(this.volleyButton);
-    root.querySelector("[data-collection]").append(button("📖 收藏", onCollection, "點數、好感度、解鎖"));
+    root.querySelector("[data-collection]").append(
+      button("📖 收藏", onCollection, "點數、好感度、解鎖"),
+      button("🛒 商店", onShop, "用點數買外觀與動作"));
   }
 
   setVolley(on) {
@@ -67,6 +70,16 @@ export class Panel {
       b.classList.toggle("locked", !!hint);
       b.dataset.hint = hint ?? "";
       if (hint) b.title = hint;
+    }
+  }
+
+  // 動作按鈕的鎖定狀態（商店商品）：lockedHint(name) 回傳文字表示鎖住
+  setActionLocks(lockedHint) {
+    for (const [name, b] of Object.entries(this.actionButtons)) {
+      const hint = lockedHint(name);
+      b.classList.toggle("locked", !!hint);
+      b.textContent = hint ? `🔒 ${b.dataset.label}` : b.dataset.label;
+      b.title = hint ?? name;
     }
   }
 

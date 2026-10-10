@@ -25,6 +25,84 @@
       17
     ]
   },
+  "ball_beach": {
+    "file": "ball_beach.svg",
+    "bone": "prop",
+    "x": 0,
+    "y": 0,
+    "z": 19,
+    "box": [
+      -17,
+      -17,
+      17,
+      17
+    ]
+  },
+  "ball_basket": {
+    "file": "ball_basket.svg",
+    "bone": "prop",
+    "x": 0,
+    "y": 0,
+    "z": 19,
+    "box": [
+      -17,
+      -17,
+      17,
+      17
+    ]
+  },
+  "ball_watermelon": {
+    "file": "ball_watermelon.svg",
+    "bone": "prop",
+    "x": 0,
+    "y": 0,
+    "z": 19,
+    "box": [
+      -17,
+      -17,
+      17,
+      17
+    ]
+  },
+  "ball_fire": {
+    "file": "ball_fire.svg",
+    "bone": "prop",
+    "x": 0,
+    "y": 0,
+    "z": 19,
+    "box": [
+      -17,
+      -17,
+      17,
+      17
+    ]
+  },
+  "mug": {
+    "file": "mug.svg",
+    "bone": "handNear",
+    "x": 0,
+    "y": 10,
+    "z": 18.5,
+    "box": [
+      -10,
+      -16,
+      16,
+      18
+    ]
+  },
+  "book": {
+    "file": "book.svg",
+    "bone": "handNear",
+    "x": 4,
+    "y": 12,
+    "z": 18.5,
+    "box": [
+      -18,
+      -11,
+      18,
+      15
+    ]
+  },
   "keyboard": {
     "file": "keyboard.svg",
     "bone": "root",
