@@ -21,25 +21,16 @@ VOLLEY = {"reach": 48, "hitHeight": 176, "spike": False, "dive": False}
 
 
 def hips() -> Part:
-    """後半身（身體中心）。"""
+    """整個身體是一大團毛，掛在身體中心。前半身骨頭（torso）不畫圖，只讓前腳和脖子接在上面。"""
     curls = "".join(f'<path d="M{x},{y} q4,-5 8,0" fill="none" stroke="{OL}" stroke-width="1.8" '
-                    f'stroke-linecap="round" opacity="0.55"/>' for x, y in ((-26, -14), (-10, 4)))
+                    f'stroke-linecap="round" opacity="0.55"/>' for x, y in ((-30, -14), (-8, 2), (22, -16)))
     return Part(
-        fluff(cloud(-10, -4, 38, 25, 13, 0.12, 0.3))
+        fluff(cloud(3, -4, 51, 26, 17, 0.1, 0.3))
+        + f'<ellipse cx="24" cy="-2" rx="20" ry="15" fill="{WOOL_HL}" opacity="0.55"/>'
         + curls
-        + f'<path d="M-34,10 Q-14,22 8,16" fill="none" stroke="{WOOL_SHADE}" stroke-width="5" '
+        + f'<path d="M-38,10 Q-8,24 30,16" fill="none" stroke="{WOOL_SHADE}" stroke-width="5" '
           f'stroke-linecap="round" opacity="0.7"/>',
-        (-56, -36, 34, 30))
-
-
-def torso() -> Part:
-    """前半身，疊在後半身上面。"""
-    return Part(
-        fluff(cloud(-2, -5, 30, 25, 12, 0.12, 0.1))
-        + f'<ellipse cx="2" cy="-2" rx="17" ry="15" fill="{WOOL_HL}" opacity="0.55"/>'
-        + f'<path d="M4,-18 q4,-5 8,0" fill="none" stroke="{OL}" stroke-width="1.8" '
-          f'stroke-linecap="round" opacity="0.55"/>',
-        (-38, -36, 34, 26))
+        (-56, -36, 62, 30))
 
 
 def neck() -> Part:
@@ -73,7 +64,7 @@ def leg_l() -> Part:
 PARTS = {
     "tail": tail,
     "hair_back": neck, "head": head.head, "hair_front": head.hair_front,
-    "torso": torso, "hips": hips,
+    "hips": hips,
     "arm_u": leg_u, "arm_l": leg_l, "hand": limbs.foot,
     "leg_u": leg_u, "leg_l": leg_l, "foot": limbs.foot,
 }

@@ -278,21 +278,8 @@
       "box": [
         -56,
         -36,
-        34,
+        62,
         30
-      ],
-      "far": false
-    },
-    {
-      "name": "torso",
-      "bone": "torso",
-      "z": 12,
-      "file": "parts/torso.svg",
-      "box": [
-        -38,
-        -36,
-        34,
-        26
       ],
       "far": false
     },
