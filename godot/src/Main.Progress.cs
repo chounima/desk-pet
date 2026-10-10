@@ -21,6 +21,8 @@ public partial class Main
     Dictionary<string, PropData> allProps = null!;
     Dictionary<string, AccessoryData> accessories = null!;
     bool progressDirty;
+    Achievements achievements = null!;
+    float achievementTimer = 3;
     bool sandbox;
     float progressSaveTimer = ProgressSaveEvery;
     int pendingPoints;
@@ -52,6 +54,17 @@ public partial class Main
         hub.Dev.Changed += () => { InjectCustomItems(); RefreshLocks(); ApplyCosmetics(); };
         hub.Settings.Toggled += SetOption;
         hub.Settings.SizeChosen += SetSize;
+        hub.Settings.ScreenChosen += screen =>
+        {
+            settings.Screen = screen;
+            settings.Save();
+            DesktopWindow.Screen = screen;
+            if (DesktopWindow.RefreshDisplay()) OnDisplayChanged();
+        };
+
+        achievements = new Achievements(progress);
+        hub.Collection.Achievements = achievements;
+        achievements.Check();
         tray.HubRequested += tab => hub.Open(tab);
 
         // 起始角色還沒解鎖（例如開發者重置進度後）：換成第一個能用的
@@ -85,6 +98,11 @@ public partial class Main
             fx.Burst($"+{pendingPoints} 💎", pet.HeadTop(), new Color("#7fe0ff"));
             pendingPoints = 0;
             pointsTimer = 0.6f;
+        }
+        if ((achievementTimer -= dt) <= 0)
+        {
+            achievementTimer = 3;
+            achievements.Check();
         }
         if ((progressSaveTimer -= dt) <= 0)
         {
@@ -132,6 +150,11 @@ public partial class Main
                 break;
             case "equip":
                 ApplyCosmetics();
+                break;
+            case "achievement":
+                var a = achievements.All.Find(x => x.Id == e.Key);
+                bubble.Say($"🏆 成就解鎖：{a?.Name}！", 4f);
+                sfx.Play("chime");
                 break;
             case "wear":
                 ApplyAccessories();

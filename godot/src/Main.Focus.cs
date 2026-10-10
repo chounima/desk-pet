@@ -38,6 +38,7 @@ public partial class Main
         focus.WorkCompleted += _ =>
         {
             progress.AddPoints(focusCfg.Reward.Points, "focus");
+            progress.AddStat("focusRounds");
             progress.AddXp(pet.Rig.Id, focusCfg.Reward.Affection);
             progress.Commit();
             behavior.Say("focusDone");

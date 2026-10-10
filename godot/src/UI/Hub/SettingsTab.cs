@@ -11,6 +11,8 @@ public partial class SettingsTab : VBoxContainer
     /// <summary>(設定名稱, 新的值)：auto、sound、autostart、fullscreenHide、fitScreen、devMode</summary>
     public event Action<string, bool>? Toggled;
     public event Action<float>? SizeChosen;
+    /// <summary>選了要顯示的螢幕（-1 = 主螢幕）</summary>
+    public event Action<int>? ScreenChosen;
 
     readonly Settings settings;
     readonly Func<bool> autostart;
@@ -43,6 +45,19 @@ public partial class SettingsTab : VBoxContainer
         size.ItemSelected += i => SizeChosen?.Invoke(Tuning.Sizes[i].Value);
         AddChild(size);
         AddChild(Check("大小跟著螢幕高度（否則跟著 Windows 縮放比例）", settings.FitScreen, "fitScreen"));
+
+        AddChild(Ui.Heading("螢幕"));
+        var screens = new OptionButton { FocusMode = FocusModeEnum.None };
+        var primary = DisplayServer.GetPrimaryScreen();
+        screens.AddItem("主螢幕", 0);
+        for (var i = 0; i < DisplayServer.GetScreenCount(); i++)
+        {
+            var res = DisplayServer.ScreenGetSize(i);
+            screens.AddItem($"螢幕 {i + 1}（{res.X}×{res.Y}{(i == primary ? "，主螢幕" : "")}）", i + 1);
+        }
+        screens.Select(settings.Screen < 0 ? 0 : screens.GetItemIndex(settings.Screen + 1));
+        screens.ItemSelected += idx => ScreenChosen?.Invoke(screens.GetItemId((int)idx) - 1);
+        AddChild(screens);
 
         AddChild(Ui.Heading("系統"));
         AddChild(Check("開機時自動啟動", autostart(), "autostart"));

@@ -59,6 +59,13 @@ public sealed class Progress
 
     // ---------- 點數 ----------
 
+    /// <summary>累計統計（成就用）</summary>
+    public void AddStat(string name, int amount = 1)
+    {
+        State.Stats[name] = State.Stats.GetValueOrDefault(name) + amount;
+        Commit();
+    }
+
     public void AddPoints(int amount, string reason)
     {
         if (amount <= 0) return;
@@ -84,6 +91,7 @@ public sealed class Progress
         var T = Cfg.Points.Typing;
         var d = State.Day;
         d.Keys += n;
+        State.Stats["keys"] = State.Stats.GetValueOrDefault("keys") + n;
         var earned = d.Keys / T.Every * T.Gain;
         var given = d.Pts.GetValueOrDefault("typing");
         if (earned > given) Capped("typing", earned - given, T.DailyMax);
@@ -93,6 +101,7 @@ public sealed class Progress
     public void OnInteraction(string ch)
     {
         CheckDay();
+        State.Stats["interactions"] = State.Stats.GetValueOrDefault("interactions") + 1;
         Capped("interaction", Cfg.Points.Interaction.Gain, Cfg.Points.Interaction.DailyMax);
         AddXp(ch, Cfg.Affection.Interaction, "interaction", Cfg.Affection.InteractionDailyMax);
         Commit();

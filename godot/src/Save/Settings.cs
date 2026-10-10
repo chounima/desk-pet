@@ -43,6 +43,8 @@ public sealed class Settings
     public bool AppAwareness { get; set; }
     /// <summary>每個角色穿的自訂衣服 { 角色: 衣服資料夾名 }</summary>
     public Dictionary<string, string> Outfits { get; set; } = new();
+    /// <summary>顯示在哪個螢幕（-1 = 主螢幕）</summary>
+    public int Screen { get; set; } = -1;
     /// <summary>每日按鍵次數 { "2026-10-10": 1234 }，保留最近 30 天</summary>
     public SortedDictionary<string, int> DailyKeys { get; set; } = new();
 

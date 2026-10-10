@@ -94,6 +94,17 @@ public static class ProgressSelfTest
         Check("不同部位可以同時穿", shop.Worn("tk01").Count() == 2);
         Check("可以脫下", shop.TakeOff("acc:scarf", "tk01") && shop.Worn("tk01").Count() == 1);
 
+        // 成就
+        var ap = new Progress(cfg, new ProgressState(), _ => { }, () => day);
+        var ach = new Achievements(ap);
+        Check("一開始沒有成就", ach.Check().Count == 0 || ach.All.All(a => ach.Value(a.Stat) >= a.Goal == ach.IsUnlocked(a.Id)));
+        ap.OnKeys(1000);
+        Check("打字 1000 下解鎖成就", ach.Check().Any(a => a.Id == "typing_1k") && ach.IsUnlocked("typing_1k"));
+        var pts = ap.State.Points;
+        Check("成就不會重複解鎖", ach.Check().Count == 0 && ap.State.Points == pts);
+        ap.AddStat("focusRounds");
+        Check("專注一輪解鎖成就", ach.Check().Any(a => a.Id == "focus_1"));
+
         GD.Print(fails == 0 ? "全部通過" : $"✗ {fails} 項失敗");
         return fails;
     }

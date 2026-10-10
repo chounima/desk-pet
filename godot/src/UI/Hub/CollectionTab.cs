@@ -14,6 +14,9 @@ public partial class CollectionTab : ScrollContainer
     readonly List<RigData> characters;
     readonly VBoxContainer list = new() { SizeFlagsHorizontal = SizeFlags.ExpandFill };
 
+    /// <summary>成就（Main 建立後設定）</summary>
+    public Achievements? Achievements { get; set; }
+
     public CollectionTab(Progress progress, List<RigData> characters)
     {
         this.progress = progress;
@@ -43,6 +46,20 @@ public partial class CollectionTab : ScrollContainer
 
         list.AddChild(Ui.Heading("角色"));
         foreach (var rig in characters) list.AddChild(CharacterCard(rig));
+
+        if (Achievements is { } ach)
+        {
+            list.AddChild(Ui.Heading($"🏆 成就（{ach.All.Count(a => ach.IsUnlocked(a.Id))} / {ach.All.Count}）"));
+            foreach (var a in ach.All.OrderBy(a => ach.IsUnlocked(a.Id) ? 0 : 1))
+            {
+                var done = ach.IsUnlocked(a.Id);
+                var (card, body) = Ui.Card(highlight: done, dim: !done);
+                body.AddChild(Ui.Row(Ui.Text(done ? $"🏆 {a.Name}" : $"🔒 {a.Name}"), Ui.Text(a.Desc, Ui.Muted, 13)));
+                var v = Math.Min(ach.Value(a.Stat), a.Goal);
+                body.AddChild(ProgressRow(done ? "完成" : "進度", (float)v / Math.Max(1, a.Goal), $"{v:N0} / {a.Goal:N0}"));
+                list.AddChild(card);
+            }
+        }
     }
 
     static HBoxContainer ProgressRow(string label, float ratio, string value)

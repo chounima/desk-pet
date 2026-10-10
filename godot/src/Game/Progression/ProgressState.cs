@@ -17,6 +17,10 @@ public sealed class ProgressState
     /// <summary>配件：{ 角色: { 部位: 商品 id } }</summary>
     public Dictionary<string, Dictionary<string, string>> Wear { get; set; } = new();
     public Dictionary<string, int> Best { get; set; } = new();
+    /// <summary>累計統計（keys、interactions、focusRounds、guitar…），成就用</summary>
+    public Dictionary<string, int> Stats { get; set; } = new();
+    /// <summary>已解鎖的成就 id</summary>
+    public List<string> Achievements { get; set; } = new();
     public LoginInfo Login { get; set; } = new();
     public DayInfo Day { get; set; } = new();
 

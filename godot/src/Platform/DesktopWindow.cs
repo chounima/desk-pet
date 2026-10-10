@@ -23,6 +23,11 @@ public static class DesktopWindow
     /// <summary>Windows 顯示縮放倍率（例如 4K 螢幕設 300% → 3），角色大小、速度都要乘上它</summary>
     public static float UiScale { get; private set; } = 1;
 
+    /// <summary>要顯示在哪個螢幕（-1 = 主螢幕）；超出範圍時也用主螢幕</summary>
+    public static int Screen { get; set; } = -1;
+
+    public static int ScreenIndex => Screen >= 0 && Screen < DisplayServer.GetScreenCount() ? Screen : DisplayServer.GetPrimaryScreen();
+
     public static void Setup()
     {
         RefreshDisplay();
@@ -40,7 +45,7 @@ public static class DesktopWindow
     /// </summary>
     public static bool RefreshDisplay()
     {
-        var screen = DisplayServer.GetPrimaryScreen();
+        var screen = ScreenIndex;
         var ui = Mathf.Max(1f, DisplayServer.ScreenGetDpi(screen) / 96f);
         // 高度少 1px：無邊框視窗和螢幕一樣大時，顯示卡驅動會把它當成獨佔全螢幕，透明視窗畫面就不會更新
         var usable = DisplayServer.ScreenGetUsableRect(screen);

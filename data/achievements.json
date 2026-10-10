@@ -1,0 +1,125 @@
+{
+  "_說明": "成就：stat 是統計項目（keys 累計打字、interactions 互動次數、volleyBest 排球最佳來回、focusRounds 專注輪數、guitar 彈吉他次數、itemsOwned 買過的商品數、affectionLevel 最高好感度等級、streak 連續登入天數、unlock:<key> 是否已解鎖），達到 goal 就解鎖並送 points。id 之後可直接對應 Steam 成就的 API 名稱",
+  "achievements": [
+    {
+      "id": "typing_1k",
+      "name": "初次敲擊",
+      "desc": "累計打字 1,000 下",
+      "stat": "keys",
+      "goal": 1000,
+      "points": 10
+    },
+    {
+      "id": "typing_50k",
+      "name": "鍵盤常客",
+      "desc": "累計打字 50,000 下",
+      "stat": "keys",
+      "goal": 50000,
+      "points": 30
+    },
+    {
+      "id": "typing_500k",
+      "name": "鍵盤大師",
+      "desc": "累計打字 500,000 下",
+      "stat": "keys",
+      "goal": 500000,
+      "points": 100
+    },
+    {
+      "id": "pats_100",
+      "name": "最好的朋友是你",
+      "desc": "和角色互動 100 次",
+      "stat": "interactions",
+      "goal": 100,
+      "points": 20
+    },
+    {
+      "id": "volley_10",
+      "name": "來回十次",
+      "desc": "排球對打連續來回 10 次",
+      "stat": "volleyBest",
+      "goal": 10,
+      "points": 20
+    },
+    {
+      "id": "volley_30",
+      "name": "排球魂",
+      "desc": "排球對打連續來回 30 次",
+      "stat": "volleyBest",
+      "goal": 30,
+      "points": 50
+    },
+    {
+      "id": "focus_1",
+      "name": "第一顆番茄",
+      "desc": "完成 1 輪專注",
+      "stat": "focusRounds",
+      "goal": 1,
+      "points": 10
+    },
+    {
+      "id": "focus_25",
+      "name": "番茄農夫",
+      "desc": "累計完成 25 輪專注",
+      "stat": "focusRounds",
+      "goal": 25,
+      "points": 50
+    },
+    {
+      "id": "guitar_10",
+      "name": "街頭藝人",
+      "desc": "彈吉他 10 次",
+      "stat": "guitar",
+      "goal": 10,
+      "points": 20
+    },
+    {
+      "id": "shopper_5",
+      "name": "購物愛好者",
+      "desc": "在商店買 5 件東西",
+      "stat": "itemsOwned",
+      "goal": 5,
+      "points": 20
+    },
+    {
+      "id": "collector_15",
+      "name": "收藏家",
+      "desc": "在商店買 15 件東西",
+      "stat": "itemsOwned",
+      "goal": 15,
+      "points": 50
+    },
+    {
+      "id": "friend_lv3",
+      "name": "變熟了",
+      "desc": "任一角色好感度達到 Lv3",
+      "stat": "affectionLevel",
+      "goal": 3,
+      "points": 20
+    },
+    {
+      "id": "friend_lv6",
+      "name": "心有靈犀",
+      "desc": "任一角色好感度達到 Lv6",
+      "stat": "affectionLevel",
+      "goal": 6,
+      "points": 80
+    },
+    {
+      "id": "streak_7",
+      "name": "每天都見面",
+      "desc": "連續登入 7 天",
+      "stat": "streak",
+      "goal": 7,
+      "points": 30
+    },
+    {
+      "id": "alpaca",
+      "name": "羊駝的秘密",
+      "desc": "解鎖 Choupaca",
+      "stat": "unlock:character:choupaca",
+      "goal": 1,
+      "points": 30
+    }
+  ]
+}

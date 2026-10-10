@@ -84,8 +84,9 @@ public partial class Main : Node2D
             GetTree().Quit();
             return;
         }
-        DesktopWindow.Setup();
         settings = Settings.Load();
+        DesktopWindow.Screen = settings.Screen;
+        DesktopWindow.Setup();
 
         daily = DailyConfig.Load();
         var (ids, loadedRigs) = ContentLoader.LoadCharacters();

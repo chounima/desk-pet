@@ -40,6 +40,7 @@ public partial class Main
         if (!performing)
         {
             performing = true;
+            progress.AddStat("guitar");
             behavior.EnterMinigame();
             pet.Play("guitar", true);
             behavior.Say("guitar");
