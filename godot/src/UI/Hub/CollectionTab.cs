@@ -21,7 +21,7 @@ public partial class CollectionTab : ScrollContainer
     {
         this.progress = progress;
         this.characters = characters;
-        Name = "📖 收藏";
+        Name = I18n.T("tab.collection");
         HorizontalScrollMode = ScrollMode.Disabled;
         AddChild(list);
     }
@@ -36,27 +36,27 @@ public partial class CollectionTab : ScrollContainer
         Ui.Clear(list);
         var s = progress.State;
         var P = progress.Cfg.Points;
-        list.AddChild(Ui.Text($"🔥 連續登入 {s.Login.Streak} 天"));
-        list.AddChild(Ui.Heading("今日點數"));
-        foreach (var (label, kind, max) in new[] { ("⌨️ 打字", "typing", P.Typing.DailyMax), ("👆 互動", "interaction", P.Interaction.DailyMax), ("🏐 排球", "volley", P.Volley.DailyMax) })
+        list.AddChild(Ui.Text(I18n.T("collection.streak", s.Login.Streak)));
+        list.AddChild(Ui.Heading(I18n.T("collection.today")));
+        foreach (var (label, kind, max) in new[] { (I18n.T("collection.typing"), "typing", P.Typing.DailyMax), (I18n.T("collection.interaction"), "interaction", P.Interaction.DailyMax), (I18n.T("collection.volley"), "volley", P.Volley.DailyMax) })
         {
             var v = s.Day.Pts.GetValueOrDefault(kind);
             list.AddChild(ProgressRow(label, (float)v / Math.Max(1, max), $"{v} / {max}"));
         }
 
-        list.AddChild(Ui.Heading("角色"));
+        list.AddChild(Ui.Heading(I18n.T("collection.characters")));
         foreach (var rig in characters) list.AddChild(CharacterCard(rig));
 
         if (Achievements is { } ach)
         {
-            list.AddChild(Ui.Heading($"🏆 成就（{ach.All.Count(a => ach.IsUnlocked(a.Id))} / {ach.All.Count}）"));
+            list.AddChild(Ui.Heading(I18n.T("collection.achievements", ach.All.Count(a => ach.IsUnlocked(a.Id)), ach.All.Count)));
             foreach (var a in ach.All.OrderBy(a => ach.IsUnlocked(a.Id) ? 0 : 1))
             {
                 var done = ach.IsUnlocked(a.Id);
                 var (card, body) = Ui.Card(highlight: done, dim: !done);
                 body.AddChild(Ui.Row(Ui.Text(done ? $"🏆 {a.Name}" : $"🔒 {a.Name}"), Ui.Text(a.Desc, Ui.Muted, 13)));
                 var v = Math.Min(ach.Value(a.Stat), a.Goal);
-                body.AddChild(ProgressRow(done ? "完成" : "進度", (float)v / Math.Max(1, a.Goal), $"{v:N0} / {a.Goal:N0}"));
+                body.AddChild(ProgressRow(done ? I18n.T("collection.done") : I18n.T("collection.progress"), (float)v / Math.Max(1, a.Goal), $"{v:N0} / {a.Goal:N0}"));
                 list.AddChild(card);
             }
         }
@@ -78,7 +78,7 @@ public partial class CollectionTab : ScrollContainer
         var (card, body) = Ui.Card(dim: !unlocked);
         if (!unlocked)
         {
-            body.AddChild(Ui.Text("？？？"));
+            body.AddChild(Ui.Text(I18n.T("collection.unknown")));
             body.AddChild(Ui.Text($"🔒 {progress.LockHint($"character:{rig.Id}", NameOf)}", Ui.Muted, wrap: true));
             return card;
         }
@@ -87,7 +87,7 @@ public partial class CollectionTab : ScrollContainer
         var ratio = lv.To is { } to ? (float)(lv.Xp - lv.From) / Math.Max(1, to - lv.From) : 1;
         body.AddChild(ProgressRow($"❤ Lv{lv.Level}", ratio, lv.To is { } next ? $"{lv.Xp} / {next}" : "MAX"));
         if (progress.State.Best.TryGetValue(rig.Id, out var best) && best > 0)
-            body.AddChild(Ui.Text($"🏐 最佳來回 {best}", Ui.Muted, 13));
+            body.AddChild(Ui.Text(I18n.T("collection.bestRally", best), Ui.Muted, 13));
 
         if (rig.Forms is { Count: > 1 } forms)
         {

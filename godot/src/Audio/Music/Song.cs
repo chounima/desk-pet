@@ -30,6 +30,7 @@ public sealed class Song
         {
             var song = JsonSerializer.Deserialize<Song>(ContentLoader.ReadText($"{dir}/{id}.json"), Options)!;
             song.Id = id;
+            song.Title = I18n.Name($"song.{id}", song.Title);
             songs.Add(song);
         }
         return songs;

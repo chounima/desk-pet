@@ -23,12 +23,20 @@ public sealed class VolleySkill
 public static class VolleySkills
 {
     static readonly Dictionary<string, JsonElement> Data = new();
+    static readonly Dictionary<string, JsonElement> Overlay = new();      // 目前語言的稱號與台詞（data/i18n/<語言>/volley.json）
 
     public static void Load()
     {
-        using var doc = JsonDocument.Parse(ContentLoader.ReadText($"{ContentLoader.Root}/data/volley.json"));
+        Read($"{ContentLoader.Root}/data/volley.json", Data);
+        if (I18n.OverlayPath("volley.json") is { } path && (Godot.FileAccess.FileExists(path) || System.IO.File.Exists(path)))
+            Read(path, Overlay);
+    }
+
+    static void Read(string path, Dictionary<string, JsonElement> into)
+    {
+        using var doc = JsonDocument.Parse(ContentLoader.ReadText(path));
         foreach (var p in doc.RootElement.EnumerateObject())
-            if (p.Value.ValueKind == JsonValueKind.Object) Data[p.Name] = p.Value.Clone();
+            if (p.Value.ValueKind == JsonValueKind.Object) into[p.Name] = p.Value.Clone();
     }
 
     /// <summary>角色的能力：以 default 為底，再套用角色自己有寫的欄位</summary>
@@ -37,6 +45,8 @@ public static class VolleySkills
         var skill = new VolleySkill();
         if (Data.TryGetValue("default", out var d)) Apply(skill, d);
         if (Data.TryGetValue(id, out var c)) Apply(skill, c);
+        if (Overlay.TryGetValue("default", out var od)) Apply(skill, od);
+        if (Overlay.TryGetValue(id, out var oc)) Apply(skill, oc);
         return skill;
     }
 

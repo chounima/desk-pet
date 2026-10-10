@@ -13,15 +13,28 @@ public sealed class Lines
 
     public static Lines Load(IEnumerable<string> characterIds)
     {
-        var lines = new Lines { fallback = Read("default") ?? new() };
+        var lines = new Lines { fallback = Merge(Read("default"), ReadOverlay("default")) ?? new() };
         foreach (var id in characterIds)
-            if (Read(id) is { } d) lines.byCharacter[id] = d;
+            if (Merge(Read(id), ReadOverlay(id)) is { } d) lines.byCharacter[id] = d;
         return lines;
     }
 
-    static Dictionary<string, List<string>>? Read(string name)
+    // 目前語言的台詞（data/i18n/<語言>/lines/<角色>.json）蓋在繁中上面；沒翻到的 key 還是用繁中
+    static Dictionary<string, List<string>>? Merge(Dictionary<string, List<string>>? baseLines, Dictionary<string, List<string>>? overlay)
     {
-        var path = $"{ContentLoader.Root}/data/lines/{name}.json";
+        if (overlay == null) return baseLines;
+        var merged = new Dictionary<string, List<string>>(baseLines ?? new());
+        foreach (var (k, v) in overlay) merged[k] = v;
+        return merged;
+    }
+
+    static Dictionary<string, List<string>>? ReadOverlay(string name) =>
+        I18n.OverlayPath($"lines/{name}.json") is { } path ? ReadPath(path) : null;
+
+    static Dictionary<string, List<string>>? Read(string name) => ReadPath($"{ContentLoader.Root}/data/lines/{name}.json");
+
+    static Dictionary<string, List<string>>? ReadPath(string path)
+    {
         if (!Godot.FileAccess.FileExists(path) && !File.Exists(path)) return null;
         return JsonSerializer.Deserialize<Dictionary<string, List<string>>>(ContentLoader.ReadText(path));
     }

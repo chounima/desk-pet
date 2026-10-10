@@ -137,6 +137,7 @@
    - ✅ 6c 自訂角色：編輯器「🧍 角色」模式（選內建角色當身形與動作範本，部件和表情換成自己的圖），桌寵讀 `文件\DeskPet\characters`，重新啟動後出現在角色清單
    - ✅ 6b 自訂配件／衣服：編輯器 `preview/editor.html`（上傳圖片、拖曳對齊、匯出 json）；桌寵讀 `文件\DeskPetccessories`、`outfits`，「👗 衣櫃」分頁穿戴
 7. 🔶 多國語言、多螢幕、Steam
+   - ✅ 7b 多國語言架構：`data/i18n/{zh-TW,en,ja}.json`（介面文字＋資料名稱）、`data/i18n/<語言>/lines/`、`volley.json` 覆蓋檔；設定可選語言（預設依 Windows），換語言自動重新啟動
    - ✅ 7a 多螢幕：設定選顯示在哪個螢幕（只有一個螢幕可測，多螢幕未實測）；成就 15 個（本機），留好 Steam 介面 `IAchievementSink`，接法見 README
 
 暫不做：同時放多隻角色（之後可能不只兩隻，再討論）

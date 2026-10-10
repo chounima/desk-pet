@@ -74,6 +74,7 @@ public partial class Main : Node2D
             GetTree().Quit(code);
             return;
         }
+        var args0 = ParseArgs();
         if (!SingleInstance.TryAcquire())
         {
             GD.Print("[DeskPet] 已經有一隻桌寵在執行，結束這個實例");
@@ -85,6 +86,7 @@ public partial class Main : Node2D
             return;
         }
         settings = Settings.Load();
+        I18n.Load(args0.GetValueOrDefault("lang", settings.Language));     // --lang=en：測試用，不存設定
         DesktopWindow.Screen = settings.Screen;
         DesktopWindow.Setup();
 
@@ -97,8 +99,10 @@ public partial class Main : Node2D
             rigs[custom.Id] = custom;
             ids.Add(custom.Id);
         }
+        I18n.LocalizeRigs(rigs.Values);
         var bodies = rigs.Values.SelectMany(r => (r.Forms?.Values.Select(f => f.Data) ?? new[] { r }).Append(r)).Select(r => r.Body);
         var (_, clips) = ContentLoader.LoadAnimations(bodies);
+        I18n.LocalizeClips(clips.Values);
         var props = ContentLoader.LoadProps();
         args = ParseArgs();
         // 起始角色：命令列 > 上次選的 > 第一個

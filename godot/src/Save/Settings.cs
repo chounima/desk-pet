@@ -45,6 +45,8 @@ public sealed class Settings
     public Dictionary<string, string> Outfits { get; set; } = new();
     /// <summary>顯示在哪個螢幕（-1 = 主螢幕）</summary>
     public int Screen { get; set; } = -1;
+    /// <summary>介面語言：auto（依 Windows）、zh-TW、en、ja</summary>
+    public string Language { get; set; } = "auto";
     /// <summary>每日按鍵次數 { "2026-10-10": 1234 }，保留最近 30 天</summary>
     public SortedDictionary<string, int> DailyKeys { get; set; } = new();
 

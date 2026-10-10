@@ -44,6 +44,11 @@ public sealed class Achievements
         All = defs ?? JsonSerializer.Deserialize<FileFormat>(ContentLoader.ReadText($"{ContentLoader.Root}/data/achievements.json"),
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true })!.Achievements;
         progress.State.Achievements ??= new();
+        foreach (var a in All)
+        {
+            a.Name = I18n.Name($"ach.{a.Id}.name", a.Name);
+            a.Desc = I18n.Name($"ach.{a.Id}.desc", a.Desc);
+        }
     }
 
     public bool IsUnlocked(string id) => progress.State.Achievements.Contains(id);

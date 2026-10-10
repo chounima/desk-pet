@@ -1,4 +1,5 @@
 // 音樂分頁：播放清單（內建曲＋自訂資料夾）、播放／停止、音量、隨機、循環、打開音樂資料夾
+using DeskPet.Content;
 using System;
 using DeskPet.Audio.Music;
 using DeskPet.Game.Progression;
@@ -25,7 +26,7 @@ public partial class MusicTab : VBoxContainer
         this.player = player;
         this.shop = shop;
         this.settings = settings;
-        Name = "🎵 音樂";
+        Name = I18n.T("tab.music");
     }
 
     public void Refresh()
@@ -36,28 +37,28 @@ public partial class MusicTab : VBoxContainer
 
         if (!shop.ActionOwned("guitar"))
         {
-            AddChild(Ui.Text("🔒 要先在商店買「彈吉他」才能演奏", Ui.Muted, wrap: true));
-            AddChild(Ui.Button("🛒 去商店", () => ShopRequested?.Invoke("action")));
+            AddChild(Ui.Text(I18n.T("music.needGuitar"), Ui.Muted, wrap: true));
+            AddChild(Ui.Button(I18n.T("music.toShop"), () => ShopRequested?.Invoke("action")));
         }
 
         var status = player.Current is { } cur
-            ? $"🎸 正在彈：{cur.Title}" + (player.Bpm is { } bpm ? $"（{bpm:0} BPM）" : "")
-            : "沒有在演奏";
+            ? I18n.T("music.playing", cur.Title) + (player.Bpm is { } bpm ? I18n.T("music.bpm", bpm) : "")
+            : I18n.T("music.idle");
         AddChild(Ui.Text(status, Ui.Accent));
         AddChild(Ui.Row(
-            Ui.Button("▶ 開始彈", () => PlayRequested?.Invoke(null)),
-            Ui.Button("⏹ 停止", () => StopRequested?.Invoke()),
-            Ui.Button("📂 打開音樂資料夾", () => { MusicPlayer.EnsureFolder(); OS.ShellOpen(MusicPlayer.Folder); }),
-            Ui.Button("🔄 重新整理", Refresh)));
+            Ui.Button(I18n.T("music.start"), () => PlayRequested?.Invoke(null)),
+            Ui.Button(I18n.T("music.stop"), () => StopRequested?.Invoke()),
+            Ui.Button(I18n.T("music.folder"), () => { MusicPlayer.EnsureFolder(); OS.ShellOpen(MusicPlayer.Folder); }),
+            Ui.Button(I18n.T("music.refresh"), Refresh)));
 
         var volume = new HSlider { MinValue = 0, MaxValue = 1, Step = 0.05, Value = settings.MusicVolume,
                                    SizeFlagsHorizontal = SizeFlags.ExpandFill, CustomMinimumSize = new Vector2(Ui.Px(160), 0) };
         volume.ValueChanged += v => { settings.MusicVolume = (float)v; player.Volume = (float)v; settings.Save(); };
-        AddChild(Ui.Row(Ui.Text("🔊 音量"), volume));
-        AddChild(Ui.Row(Check("🔀 隨機播放", settings.MusicShuffle, on => { settings.MusicShuffle = player.Shuffle = on; }),
-                        Check("🔁 播完從頭", settings.MusicLoop, on => { settings.MusicLoop = player.Loop = on; })));
+        AddChild(Ui.Row(Ui.Text(I18n.T("music.volume")), volume));
+        AddChild(Ui.Row(Check(I18n.T("music.shuffle"), settings.MusicShuffle, on => { settings.MusicShuffle = player.Shuffle = on; }),
+                        Check(I18n.T("music.loop"), settings.MusicLoop, on => { settings.MusicLoop = player.Loop = on; })));
 
-        AddChild(Ui.Heading("播放清單"));
+        AddChild(Ui.Heading(I18n.T("music.playlist")));
         var scroll = new ScrollContainer { SizeFlagsVertical = SizeFlags.ExpandFill, HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled };
         var list = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
         scroll.AddChild(list);
@@ -67,14 +68,14 @@ public partial class MusicTab : VBoxContainer
             var playing = player.Current?.Id == t.Id;
             var name = Ui.Text($"{(playing ? "▶ " : "")}{(t.Builtin ? "🎵" : "📁")} {t.Title}", playing ? Ui.Accent : null);
             name.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-            list.AddChild(Ui.Row(name, Ui.Button("彈這首", () => PlayRequested?.Invoke(t))));
+            list.AddChild(Ui.Row(name, Ui.Button(I18n.T("music.playThis"), () => PlayRequested?.Invoke(t))));
         }
         // 還沒買的內建曲
         foreach (var (id, item) in shop.Items("music"))
             if (!shop.Owns(id))
-                list.AddChild(Ui.Row(Ui.Text($"🔒 🎵 {item.Label}（商店 💎 {item.Price}）", Ui.Muted)));
-        if (player.Tracks.Count == 0) list.AddChild(Ui.Text("清單是空的：去商店買曲子，或把音樂檔放進音樂資料夾", Ui.Muted, wrap: true));
-        list.AddChild(Ui.Text($"自訂音樂資料夾：{MusicPlayer.Folder}", Ui.Muted, 12, wrap: true));
+                list.AddChild(Ui.Row(Ui.Text(I18n.T("music.lockedSong", item.Label, item.Price), Ui.Muted)));
+        if (player.Tracks.Count == 0) list.AddChild(Ui.Text(I18n.T("music.empty"), Ui.Muted, wrap: true));
+        list.AddChild(Ui.Text(I18n.T("music.folderPath", MusicPlayer.Folder), Ui.Muted, 12, wrap: true));
         refreshing = false;
     }
 

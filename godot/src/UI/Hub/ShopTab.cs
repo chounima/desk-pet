@@ -34,7 +34,7 @@ public partial class ShopTab : VBoxContainer
         this.accessories = accessories;
         this.currentChar = currentChar;
         this.names = names;
-        Name = "🛒 商店";
+        Name = I18n.T("tab.shop");
         category = shop.Categories.Keys.FirstOrDefault() ?? "";
         AddChild(tabs);
         var scroll = new ScrollContainer { SizeFlagsVertical = SizeFlags.ExpandFill, HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled };
@@ -89,7 +89,7 @@ public partial class ShopTab : VBoxContainer
             var (style, text, _, rot) = BubbleStyles.Make(it.Style, Ui.U * 0.8f);
             var panel = new PanelContainer { Rotation = rot };
             panel.AddThemeStyleboxOverride("panel", style);
-            panel.AddChild(Ui.Text("嗨！", text, 13));
+            panel.AddChild(Ui.Text(I18n.T("shop.sampleBubble"), text, 13));
             box.AddChild(panel);
         }
         else box.AddChild(Ui.Text(it.Icon ?? "🎁", null, 34));
@@ -113,26 +113,26 @@ public partial class ShopTab : VBoxContainer
         {
             var ch = currentChar();
             actions.AddChild(shop.IsWorn(id, ch)
-                ? Ui.Button("脫下", () => { shop.TakeOff(id, ch); Refresh(); })
-                : Ui.Button("穿上", () => { shop.Wear(id, ch); Refresh(); }));
+                ? Ui.Button(I18n.T("shop.takeOff"), () => { shop.TakeOff(id, ch); Refresh(); })
+                : Ui.Button(I18n.T("shop.wear"), () => { shop.Wear(id, ch); Refresh(); }));
         }
         else if (owned)
         {
-            if (equipped) actions.AddChild(Ui.Text("使用中", Ui.Accent, 13));
-            else if (shop.IsCosmetic(it.Category)) actions.AddChild(Ui.Button("使用", () => { shop.Equip(id); Refresh(); }));
-            else actions.AddChild(Ui.Text("✓ 已擁有", Ui.Muted, 13));
+            if (equipped) actions.AddChild(Ui.Text(I18n.T("shop.inUse"), Ui.Accent, 13));
+            else if (shop.IsCosmetic(it.Category)) actions.AddChild(Ui.Button(I18n.T("shop.use"), () => { shop.Equip(id); Refresh(); }));
+            else actions.AddChild(Ui.Text(I18n.T("shop.owned"), Ui.Muted, 13));
         }
         else if (shop.Requirement(id) is { } req)
             actions.AddChild(Ui.Text($"🔒 {names(req.Char)} ❤ Lv{req.Have} / {req.Need}", Ui.Muted, 13));
         else
         {
             var (ok, reason) = shop.CanBuy(id);
-            var buy = Ui.Button($"購買 💎 {it.Price}", () => { shop.Buy(id); Refresh(); });
+            var buy = Ui.Button(I18n.T("shop.buy", it.Price), () => { shop.Buy(id); Refresh(); });
             buy.Disabled = !ok;
-            if (reason == "points") buy.TooltipText = $"還差 {it.Price - progress.State.Points} 點";
+            if (reason == "points") buy.TooltipText = I18n.T("shop.short", it.Price - progress.State.Points);
             actions.AddChild(buy);
         }
-        actions.AddChild(Ui.Button("預覽", () => Previewed?.Invoke(id, it)));
+        actions.AddChild(Ui.Button(I18n.T("shop.preview"), () => Previewed?.Invoke(id, it)));
         body.AddChild(actions);
         return card;
     }

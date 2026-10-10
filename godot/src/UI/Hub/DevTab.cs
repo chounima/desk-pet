@@ -25,29 +25,29 @@ public partial class DevTab : VBoxContainer
     {
         this.progress = progress;
         this.currentChar = currentChar;
-        Name = "🛠 開發者";
+        Name = I18n.T("tab.dev");
         status = Ui.Text("", Ui.Muted, 13);
         status.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         status.ClipText = true;
 
         var cheats = new HFlowContainer();
-        cheats.AddChild(Ui.Button("💎 +100", () => { progress.AddPoints(100, "dev"); Done("已加 100 點"); }));
-        cheats.AddChild(Ui.Button("❤ +50（目前角色）", () => { progress.AddXp(currentChar(), 50); Done($"{currentChar()} 好感度 +50"); }));
-        cheats.AddChild(Ui.Button("⏭ 隔天", () => { progress.SimulateNextDay(); Done("已模擬換日"); }));
-        cheats.AddChild(Ui.Button("🗑 重置進度", () => { progress.Reset(); Done("已清除所有進度"); }));
+        cheats.AddChild(Ui.Button("💎 +100", () => { progress.AddPoints(100, "dev"); Done(I18n.T("dev.addedPoints")); }));
+        cheats.AddChild(Ui.Button(I18n.T("dev.addXp"), () => { progress.AddXp(currentChar(), 50); Done(I18n.T("dev.addedXp", currentChar())); }));
+        cheats.AddChild(Ui.Button(I18n.T("dev.nextDay"), () => { progress.SimulateNextDay(); Done(I18n.T("dev.nextDayDone")); }));
+        cheats.AddChild(Ui.Button(I18n.T("dev.reset"), () => { progress.Reset(); Done(I18n.T("dev.resetDone")); }));
         AddChild(cheats);
 
-        AddChild(Ui.Heading("參數（data/progression.json）"));
+        AddChild(Ui.Heading(I18n.T("dev.params")));
         editor.AddThemeFontSizeOverride("font_size", Ui.Px(13));
         AddChild(editor);
         AddChild(Ui.Row(
-            Ui.Button("套用", Apply),
-            Ui.Button("還原預設", () =>
+            Ui.Button(I18n.T("dev.apply"), Apply),
+            Ui.Button(I18n.T("dev.restore"), () =>
             {
                 ProgressionConfig.ClearOverride();
                 progress.Cfg = ProgressionConfig.Load();
                 editor.Text = ProgressionConfig.DefaultText();
-                Done("已還原成 data/progression.json");
+                Done(I18n.T("dev.restored"));
             }),
             status));
     }
@@ -64,11 +64,11 @@ public partial class DevTab : VBoxContainer
             progress.Cfg = ProgressionConfig.Parse(editor.Text);
             ProgressionConfig.SaveOverride(editor.Text);
             progress.CheckUnlocks();
-            Done("已套用（存在 user://progression.override.json）");
+            Done(I18n.T("dev.applied"));
         }
         catch (Exception e) when (e is JsonException or InvalidOperationException)
         {
-            status.Text = $"JSON 格式錯誤：{e.Message}";
+            status.Text = I18n.T("dev.jsonError", e.Message);
         }
     }
 

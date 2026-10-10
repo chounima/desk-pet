@@ -1,4 +1,5 @@
 // 專注分頁：開始／結束／跳過、目前狀態、專注與休息的分鐘數
+using DeskPet.Content;
 using System;
 using DeskPet.Game;
 using DeskPet.Save;
@@ -21,7 +22,7 @@ public partial class FocusTab : VBoxContainer
         this.focus = focus;
         this.cfg = cfg;
         this.settings = settings;
-        Name = "🍅 專注";
+        Name = I18n.T("tab.focus");
     }
 
     public void Refresh()
@@ -29,22 +30,21 @@ public partial class FocusTab : VBoxContainer
         Ui.Clear(this);
         var status = focus.Current switch
         {
-            Focus.Phase.Work => $"專注中　{focus.Label()}",
-            Focus.Phase.Break => $"休息中　{focus.Label()}",
-            _ => "沒有在專注",
+            Focus.Phase.Work => I18n.T("focus.working", focus.Label()),
+            Focus.Phase.Break => I18n.T("focus.resting", focus.Label()),
+            _ => I18n.T("focus.off"),
         };
         AddChild(Ui.Text(status, Ui.Accent, 18));
-        if (focus.Current != Focus.Phase.Off) AddChild(Ui.Text($"這次已完成 {focus.Rounds} 輪", Ui.Muted));
+        if (focus.Current != Focus.Phase.Off) AddChild(Ui.Text(I18n.T("focus.rounds", focus.Rounds), Ui.Muted));
         AddChild(Ui.Row(
-            Ui.Button(focus.Current == Focus.Phase.Off ? "▶ 開始專注" : "↺ 重新開始", () => StartRequested?.Invoke()),
-            Ui.Button("⏭ 跳到下一段", () => SkipRequested?.Invoke()),
-            Ui.Button("⏹ 結束", () => StopRequested?.Invoke())));
+            Ui.Button(focus.Current == Focus.Phase.Off ? I18n.T("focus.start") : I18n.T("focus.restart"), () => StartRequested?.Invoke()),
+            Ui.Button(I18n.T("focus.skip"), () => SkipRequested?.Invoke()),
+            Ui.Button(I18n.T("focus.stop"), () => StopRequested?.Invoke())));
 
-        AddChild(Ui.Heading("時間（分鐘）"));
-        AddChild(Ui.Row(Ui.Text("專注"), Spin(settings.FocusWork ?? cfg.WorkMinutes, 5, 120, v => { settings.FocusWork = v; focus.WorkMinutes = v; }),
-                        Ui.Text("休息"), Spin(settings.FocusBreak ?? cfg.ShortBreakMinutes, 1, 60, v => { settings.FocusBreak = v; focus.BreakMinutes = v; })));
-        AddChild(Ui.Text($"每 {cfg.LongBreakEvery} 輪有一次 {cfg.LongBreakMinutes:0} 分鐘的長休息。專注時角色只做安靜的動作、不講話；" +
-                         $"完成一輪送 💎 {cfg.Reward.Points}、❤ {cfg.Reward.Affection}。", Ui.Muted, 13, wrap: true));
+        AddChild(Ui.Heading(I18n.T("focus.minutes")));
+        AddChild(Ui.Row(Ui.Text(I18n.T("focus.work")), Spin(settings.FocusWork ?? cfg.WorkMinutes, 5, 120, v => { settings.FocusWork = v; focus.WorkMinutes = v; }),
+                        Ui.Text(I18n.T("focus.break")), Spin(settings.FocusBreak ?? cfg.ShortBreakMinutes, 1, 60, v => { settings.FocusBreak = v; focus.BreakMinutes = v; })));
+        AddChild(Ui.Text(I18n.T("focus.note", cfg.LongBreakEvery, cfg.LongBreakMinutes, cfg.Reward.Points, cfg.Reward.Affection), Ui.Muted, 13, wrap: true));
     }
 
     SpinBox Spin(float value, float min, float max, Action<float> changed)

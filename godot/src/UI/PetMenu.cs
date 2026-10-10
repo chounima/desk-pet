@@ -70,7 +70,7 @@ public partial class PetMenu : Node
             var index = actions.GetItemIndex(IdAction + i);
             if (hint != null) actions.SetItemTooltip(index, hint);     // 鎖住的仍可選：選了會打開商店
         }
-        menu.AddSubmenuNodeItem("🎭 動作", actions);
+        menu.AddSubmenuNodeItem(I18n.T("menu.actions"), actions);
 
         if (formList is { Count: > 1 })
         {
@@ -82,18 +82,18 @@ public partial class PetMenu : Node
                 if (locked != null) forms.SetItemDisabled(formIds.Count, true);
                 formIds.Add(name);
             }
-            menu.AddSubmenuNodeItem("🔁 型態", forms);
+            menu.AddSubmenuNodeItem(I18n.T("menu.forms"), forms);
         }
 
         menu.AddSeparator();
-        menu.AddItem(Focusing ? "⏹ 結束專注" : "🍅 開始專注", IdFocus);
-        menu.AddItem(Performing ? "⏹ 停止演奏" : "🎸 彈吉他", IdGuitar);
-        menu.AddItem(volleyOn ? "🏐 結束對打" : "🏐 排球對打", IdVolley);
-        menu.AddItem($"😴 躲起來 {hideMinutes:0} 分鐘", IdHide);
+        menu.AddItem(I18n.T(Focusing ? "menu.focusStop" : "menu.focusStart"), IdFocus);
+        menu.AddItem(I18n.T(Performing ? "menu.guitarStop" : "menu.guitar"), IdGuitar);
+        menu.AddItem(I18n.T(volleyOn ? "menu.volleyStop" : "menu.volley"), IdVolley);
+        menu.AddItem(I18n.T("menu.hideFor", hideMinutes), IdHide);
         menu.AddSeparator();
-        menu.AddItem("👗 衣櫃", IdWardrobe);
-        menu.AddItem("📖 收藏", IdCollection);
-        menu.AddItem("🛒 商店", IdShop);
+        menu.AddItem(I18n.T("tab.wardrobe"), IdWardrobe);
+        menu.AddItem(I18n.T("tab.collection"), IdCollection);
+        menu.AddItem(I18n.T("tab.shop"), IdShop);
 
         foreach (var m in new[] { menu, actions, forms }) MenuStyle.Apply(m, uiScale);
         menu.Popup(new Rect2I(screenPos, Vector2I.Zero));

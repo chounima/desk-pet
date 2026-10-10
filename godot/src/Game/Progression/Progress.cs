@@ -204,10 +204,10 @@ public sealed class Progress
     public string? LockHint(string key, Func<string, string> names)
     {
         if (IsUnlocked(key) || !Cfg.Unlocks.TryGetValue(key, out var rule)) return null;
-        var hint = rule.Hint ?? "尚未解鎖";
-        if (rule.Cost is { } cost) return $"{hint}（💎 {cost}）";
+        var hint = rule.Hint ?? I18n.T("lock.default");
+        if (rule.Cost is { } cost) return I18n.T("lock.cost", hint, cost);
         var a = rule.Affection!;
-        return $"{hint}（{names(a.Char)} ❤ Lv{Level(a.Char).Level} / {a.Level}）";
+        return I18n.T("lock.affection", hint, names(a.Char), Level(a.Char).Level, a.Level);
     }
 
     // ---------- 開發者模式 ----------

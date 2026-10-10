@@ -103,7 +103,7 @@ public partial class VolleySession : Node2D
     void ShowScore(int rally, int best)
     {
         var icon = rally >= VolleyConfig.FireAt ? "🔥" : "🏐";
-        hud.Text = $"{icon} 來回 {rally}（最佳 {best}）· {pet.Rig.Name}：{VolleySkills.For(pet.Rig.Id).Title}";
+        hud.Text = I18n.T("volley.hud", icon, rally, best, pet.Rig.Name, VolleySkills.For(pet.Rig.Id).Title);
     }
 
     // 殺球時整個畫面抖一下

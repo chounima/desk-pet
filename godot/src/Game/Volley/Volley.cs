@@ -4,6 +4,7 @@
 //       游標碰到高速球（防守殺球）→ 自動接起
 // 寵物：每顆來球決定一次打法 —— 能殺就三步助跑殺球、來得及就低手接球、來不及就魚躍救球
 // 連續來回 10 次以上，球會燒起來
+using DeskPet.Content;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -144,7 +145,7 @@ public sealed class Volley
         else if (lastHitter == "pet" && ball.Speed > VolleyConfig.DigSpeed)
         {
             LobToPet();
-            PlayerHit("接到了！");
+            PlayerHit(I18n.T("volley.saved"));
         }
     }
 
@@ -458,7 +459,7 @@ public sealed class Volley
         var on = rally >= VolleyConfig.FireAt;
         if (on && !onFire)
         {
-            Popped?.Invoke($"🔥 {VolleyConfig.FireAt} 連發！", ball.Position - new Vector2(0, 40 * U));
+            Popped?.Invoke(I18n.T("volley.fire", VolleyConfig.FireAt), ball.Position - new Vector2(0, 40 * U));
             SayKey("fire");
             Sounded?.Invoke("chime", 1.2f);
         }

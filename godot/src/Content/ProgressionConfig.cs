@@ -100,7 +100,9 @@ public sealed class ProgressionConfig
         // 說明欄位（"_說明"，值是字串）放在字典裡會反序列化失敗，先全部拿掉
         var node = JsonNode.Parse(json) ?? throw new JsonException("空的 JSON");
         StripNotes(node);
-        return node.Deserialize<ProgressionConfig>(Options) ?? new();
+        var cfg = node.Deserialize<ProgressionConfig>(Options) ?? new();
+        I18n.LocalizeProgression(cfg);
+        return cfg;
     }
 
     static void StripNotes(JsonNode node)

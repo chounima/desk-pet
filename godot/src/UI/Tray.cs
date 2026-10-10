@@ -54,29 +54,29 @@ public partial class Tray : Node
         // 型態子選單：只有多種型態的角色可以用（見 SetForms）
         formMenu = new PopupMenu();
         formMenu.IdPressed += id => { if (id - IdForm < formIds.Count) FormChosen?.Invoke(formIds[(int)(id - IdForm)]); };
-        menu.AddSubmenuNodeItem("🔁 型態", formMenu, IdForm - 1);
+        menu.AddSubmenuNodeItem(I18n.T("menu.forms"), formMenu, IdForm - 1);
         menu.AddSeparator();
-        menu.AddItem("👗 衣櫃", IdWardrobe);
-        menu.AddItem("📖 收藏", IdCollection);
-        menu.AddItem("🛒 商店", IdShop);
-        menu.AddItem("⚙ 設定…", IdSettings);
-        menu.AddSeparator("大小");
+        menu.AddItem(I18n.T("tab.wardrobe"), IdWardrobe);
+        menu.AddItem(I18n.T("tab.collection"), IdCollection);
+        menu.AddItem(I18n.T("tab.shop"), IdShop);
+        menu.AddItem(I18n.T("menu.settings"), IdSettings);
+        menu.AddSeparator(I18n.T("settings.size"));
         for (var i = 0; i < Tuning.Sizes.Length; i++)
-            menu.AddRadioCheckItem(Tuning.Sizes[i].Label, IdSize + i);
+            menu.AddRadioCheckItem(I18n.T(Tuning.Sizes[i].Label), IdSize + i);
         menu.AddSeparator();
-        menu.AddItem("🍅 開始專注", IdFocus);
-        menu.AddItem("🎸 彈吉他", IdGuitar);
-        menu.AddCheckItem("🏐 排球對打", IdVolley);
-        menu.AddCheckItem("自動行為", IdAuto);
-        menu.AddCheckItem("🔊 音效", IdSound);
-        menu.AddCheckItem("全螢幕時自動隱藏", IdFullscreen);
-        menu.AddCheckItem("大小跟著螢幕高度", IdFit);
-        menu.AddItem("😴 暫時隱藏", IdHide);
-        menu.AddCheckItem("開機時自動啟動", IdAutostart);
+        menu.AddItem(I18n.T("menu.focusStart"), IdFocus);
+        menu.AddItem(I18n.T("menu.guitar"), IdGuitar);
+        menu.AddCheckItem(I18n.T("menu.volley"), IdVolley);
+        menu.AddCheckItem(I18n.T("menu.auto"), IdAuto);
+        menu.AddCheckItem(I18n.T("settings.sound"), IdSound);
+        menu.AddCheckItem(I18n.T("menu.fullscreenHide"), IdFullscreen);
+        menu.AddCheckItem(I18n.T("menu.fitScreen"), IdFit);
+        menu.AddItem(I18n.T("menu.hide"), IdHide);
+        menu.AddCheckItem(I18n.T("settings.autostart"), IdAutostart);
         menu.AddSeparator();
         menu.AddItem("", IdToday);
         menu.SetItemDisabled(menu.GetItemIndex(IdToday), true);
-        menu.AddItem("結束", IdQuit);
+        menu.AddItem(I18n.T("menu.quit"), IdQuit);
         menu.IdPressed += OnId;
         MenuStyle.Apply(menu, DesktopWindow.UiScale);
         MenuStyle.Apply(formMenu, DesktopWindow.UiScale);
@@ -126,7 +126,7 @@ public partial class Tray : Node
             formIds.Add(name);
         }
         var label = forms is { Count: > 1 } && current != null && forms.TryGetValue(current, out var cur)
-            ? $"🔁 型態：{cur.Label}" : "🔁 型態";
+            ? I18n.T("menu.formCurrent", cur.Label) : I18n.T("menu.forms");
         var index = menu.GetItemIndex(IdForm - 1);
         menu.SetItemText(index, label);
         menu.SetItemDisabled(index, formIds.Count < 2);
@@ -142,17 +142,17 @@ public partial class Tray : Node
     {
         if (count == shownKeys) return;
         shownKeys = count;
-        menu.SetItemText(menu.GetItemIndex(IdToday), $"今天打了 {count:N0} 下");
-        indicator.Tooltip = $"Desk Pet — 今天 {count:N0} 下";
+        menu.SetItemText(menu.GetItemIndex(IdToday), I18n.T("menu.todayKeys", count));
+        indicator.Tooltip = I18n.T("menu.tooltip", count);
     }
 
     void SetChecked(int id, bool on) => menu.SetItemChecked(menu.GetItemIndex(id), on);
 
     public void SetVolley(bool on) => SetChecked(IdVolley, on);
 
-    public void SetFocusing(bool on) => menu.SetItemText(menu.GetItemIndex(IdFocus), on ? "⏹ 結束專注" : "🍅 開始專注");
+    public void SetFocusing(bool on) => menu.SetItemText(menu.GetItemIndex(IdFocus), I18n.T(on ? "menu.focusStop" : "menu.focusStart"));
 
-    public void SetPerforming(bool on) => menu.SetItemText(menu.GetItemIndex(IdGuitar), on ? "⏹ 停止演奏" : "🎸 彈吉他");
+    public void SetPerforming(bool on) => menu.SetItemText(menu.GetItemIndex(IdGuitar), I18n.T(on ? "menu.guitarStop" : "menu.guitar"));
 
     /// <summary>設定視窗改了選項時同步勾選狀態（key 同 SettingsTab）</summary>
     public void SetOption(string key, bool on)
@@ -173,7 +173,7 @@ public partial class Tray : Node
 
     /// <summary>暫時隱藏中，選單改成「叫她出來」</summary>
     public void SetHidden(bool hidden) =>
-        menu.SetItemText(menu.GetItemIndex(IdHide), hidden ? "🙋 叫她出來" : "😴 暫時隱藏");
+        menu.SetItemText(menu.GetItemIndex(IdHide), I18n.T(hidden ? "menu.callBack" : "menu.hide"));
 
     void OnId(long id)
     {

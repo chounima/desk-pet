@@ -46,6 +46,7 @@ Godot 4.7 .NET（C#）。直接讀取專案根目錄的 `art/` 與 `data/`，和
 | 依正在用的程式反應 | 設定勾選才開（預設關）：只看前景程式的執行檔名稱（`Platform/ActiveApp.cs`），依 `data/apps.json` 分類，說一句話並讓相關動作更常出現（`Game/AppAwareness.cs`）。`--selftest=apps` 檢查分類 |
 | 測試沙盒 | `--sandbox`：收集進度從空白開始、不存檔，測試不會動到真正的進度 |
 | 自訂內容 | `文件\DeskPetccessories\<名稱>ccessory.json`＋圖片、`outfits\<名稱>\outfit.json`＋圖片、`characters\<名稱>\character.json`＋部件與表情圖片（`Content/CustomContent.cs`，格式見檔頭；自訂角色複製範本角色的 rig，id 為 `custom_<名稱>`）。自訂配件是免費商品；衣服在「👗 衣櫃」分頁選。圖片支援 PNG／JPG／WebP／SVG。測試可用環境變數 `DESKPET_CUSTOM` 換資料夾、`--test=outfit:<名稱>` |
+| 多國語言 | 介面文字用 `I18n.T("key")`，翻譯表 `data/i18n/<語言>.json`（找不到用 zh-TW）；資料名稱（角色、動作、商品、成就、曲子…）載入後用 `char.<id>.name`、`anim.<名稱>`、`item.<id>` 等 key 換成目前語言；台詞與排球台詞放 `data/i18n/<語言>/lines/<角色>.json`、`volley.json`，只蓋過有翻的 key。`--lang=en` 測試用 |
 | 成就 | 15 個（`data/achievements.json`），依統計數字自動解鎖並送點數；收藏分頁最下面看進度。之後接 Steam 見「接上 Steam」 |
 | 多螢幕 | 設定分頁「螢幕」選要顯示在哪個螢幕（`DesktopWindow.Screen`）；角色不會跨螢幕走 |
 | 開機自動啟動 | `HKCU\Software\Microsoft\Windows\CurrentVersion\Run\DeskPet`（`--autostart=on/off` 也可設定） |

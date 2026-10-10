@@ -54,6 +54,13 @@ public partial class Main
         hub.Dev.Changed += () => { InjectCustomItems(); RefreshLocks(); ApplyCosmetics(); };
         hub.Settings.Toggled += SetOption;
         hub.Settings.SizeChosen += SetSize;
+        hub.Settings.LanguageChosen += lang =>
+        {
+            if (lang == settings.Language) return;
+            settings.Language = lang;
+            settings.Save();
+            Restart();
+        };
         hub.Settings.ScreenChosen += screen =>
         {
             settings.Screen = screen;
@@ -130,21 +137,21 @@ public partial class Main
                 return;
             case "levelUp":
                 if (e.Char == pet.Rig.Id) fx.Burst($"❤ Lv{e.Level}!", pet.HeadTop(), new Color("#ff6b8a"), 28);
-                bubble.Say($"❤ {NameOf(e.Char!)} 好感度 Lv{e.Level}！", 3.5f);
+                bubble.Say(I18n.T("bubble.levelUp", NameOf(e.Char!), e.Level), 3.5f);
                 sfx.Play("chime");
                 break;
             case "unlock":
                 var parts = e.Key!.Split(':', 2);
                 var target = parts[1].Split('/');
                 var text = parts[0] == "character"
-                    ? $"🔓 解鎖新角色：{NameOf(target[0])}！"
-                    : $"🔓 解鎖 {NameOf(target[0])} 的{rigs[target[0]].Forms?.GetValueOrDefault(target[1])?.Label ?? target[1]}型態！";
+                    ? I18n.T("bubble.unlockChar", NameOf(target[0]))
+                    : I18n.T("bubble.unlockForm", NameOf(target[0]), rigs[target[0]].Forms?.GetValueOrDefault(target[1])?.Label ?? target[1]);
                 bubble.Say(text, 4.5f);
                 sfx.Play("chime");
                 RefreshLocks();
                 break;
             case "buy":
-                bubble.Say($"🛒 買到「{shop.Item(e.ItemId!)?.Label}」！", 3f);
+                bubble.Say(I18n.T("bubble.buy", shop.Item(e.ItemId!)?.Label ?? ""), 3f);
                 ApplyCosmetics();
                 RefreshLocks();
                 break;
@@ -153,7 +160,7 @@ public partial class Main
                 break;
             case "achievement":
                 var a = achievements.All.Find(x => x.Id == e.Key);
-                bubble.Say($"🏆 成就解鎖：{a?.Name}！", 4f);
+                bubble.Say(I18n.T("bubble.achievement", a?.Name ?? ""), 4f);
                 sfx.Play("chime");
                 break;
             case "wear":
@@ -168,7 +175,7 @@ public partial class Main
     // ---------- 鎖定 ----------
 
     string? ActionLockHint(string action) =>
-        shop.ActionItem(action) is { } id && !shop.Owns(id) ? $"商店商品：💎 {shop.Item(id)!.Price}（選了打開商店）" : null;
+        shop.ActionItem(action) is { } id && !shop.Owns(id) ? I18n.T("lock.shopAction", shop.Item(id)!.Price) : null;
 
     string? FormLockHint(string id, string form) =>
         progress.FormUnlocked(id, form, ContentLoader.DefaultForm(rigs[id])) ? null : progress.LockHint($"form:{id}/{form}", NameOf);
@@ -180,6 +187,17 @@ public partial class Main
         tray.SetForms(rigs[cur].Forms, FormOf(cur), form => FormLockHint(cur, form));
         // 正在用的型態被鎖住（開發者重置進度）：換回預設型態
         if (FormOf(cur) is { } f && FormLockHint(cur, f) != null && ContentLoader.DefaultForm(rigs[cur]) is { } def) ChooseForm(def);
+    }
+
+    /// <summary>重新啟動（換語言用）：先放掉單一實例鎖，新的才不會以為已經有一隻在跑</summary>
+    void Restart()
+    {
+        FlushProgress();
+        settings.Save();
+        GlobalInput.Stop();
+        SingleInstance.Release();
+        OS.CreateProcess(OS.GetExecutablePath(), OS.GetCmdlineArgs());
+        GetTree().Quit();
     }
 
     void SwitchCharacter(string id)

@@ -51,7 +51,7 @@ public partial class Main
         foreach (var (id, name) in customAccessoryNames)
             items[id] = new ProgressionConfig.ShopItem
             {
-                Category = "acc", Label = $"{name}（自訂）", Price = 0, Accessory = id, Slot = accessories[id].Slot,
+                Category = "acc", Label = I18n.T("custom.suffix", name), Price = 0, Accessory = id, Slot = accessories[id].Slot,
             };
     }
 
