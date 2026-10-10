@@ -1,0 +1,21 @@
+{
+  "_說明": "角色右鍵選單的「動作」清單（依序顯示）。商店商品沒買會顯示 🔒",
+  "actions": [
+    "wave",
+    "cheer",
+    "peace",
+    "dance",
+    "jump",
+    "stretch",
+    "think",
+    "shy",
+    "salute",
+    "sit",
+    "sitEdge",
+    "sleep",
+    "typing",
+    "volleyball",
+    "read",
+    "coffee"
+  ]
+}

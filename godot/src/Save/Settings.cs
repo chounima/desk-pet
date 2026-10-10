@@ -26,6 +26,10 @@ public sealed class Settings
     public float Size { get; set; } = 1f;
     public bool Auto { get; set; } = true;
     public bool Sound { get; set; } = true;
+    /// <summary>其他程式全螢幕時自動隱藏</summary>
+    public bool AutoHideFullscreen { get; set; } = true;
+    /// <summary>大小跟著螢幕高度（否則跟著 Windows 縮放比例）</summary>
+    public bool FitScreen { get; set; }
     /// <summary>每日按鍵次數 { "2026-10-10": 1234 }，保留最近 30 天</summary>
     public SortedDictionary<string, int> DailyKeys { get; set; } = new();
 

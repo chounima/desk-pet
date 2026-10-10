@@ -7,7 +7,7 @@
 //   --say=greet        一開始就顯示某句台詞（截圖用）
 //   --look=x,y         固定看某一點而不是游標（截圖用）
 //   --test=face*4,Save 模擬點擊部位或特殊按鍵（測試互動規則）
-//                      do:climb 強制做某件事、wait 空一拍
+//                      do:climb 強制做某件事、wait 空一拍、menu 叫出右鍵選單、hide:3 隱藏 3 秒、remind 久坐提醒
 //   --zones            印出身體各點判定成哪個部位
 //   --volley / --volley-bot  直接開始排球對打（bot = 模擬完美玩家自動回球）
 using System.Collections.Generic;
@@ -34,6 +34,10 @@ public partial class Main : Node2D
     }
 
     const float SaveEvery = 30;       // 統計每 30 秒存一次檔
+
+    Dictionary<string, RigData> rigs = null!;
+    Dictionary<string, string> args = null!;
+    string startId = "";
 
     Pet pet = null!;
     Behavior behavior = null!;
@@ -65,20 +69,17 @@ public partial class Main : Node2D
         DesktopWindow.Setup();
         settings = Settings.Load();
 
-        var (ids, rigs) = ContentLoader.LoadCharacters();
+        daily = DailyConfig.Load();
+        var (ids, loadedRigs) = ContentLoader.LoadCharacters();
+        rigs = loadedRigs;
         var bodies = rigs.Values.SelectMany(r => (r.Forms?.Values.Select(f => f.Data) ?? new[] { r }).Append(r)).Select(r => r.Body);
         var (_, clips) = ContentLoader.LoadAnimations(bodies);
         var props = ContentLoader.LoadProps();
-        var args = ParseArgs();
+        args = ParseArgs();
         // 起始角色：命令列 > 上次選的 > 第一個
-        var startId = args.GetValueOrDefault("char", rigs.ContainsKey(settings.Character) ? settings.Character : ids[0]);
+        startId = args.GetValueOrDefault("char", rigs.ContainsKey(settings.Character) ? settings.Character : ids[0]);
         // 命令列指定的角色（測試用）不寫回設定，才不會蓋掉使用者在系統匣選的角色
         if (!args.ContainsKey("char")) settings.Character = startId;
-        // 型態：命令列（測試用，不存檔）> 這個角色上次選的
-        string? FormOf(string id) =>
-            id == startId && args.TryGetValue("form", out var f) ? f
-            : settings.Forms.TryGetValue(id, out var saved) ? saved : ContentLoader.DefaultForm(rigs[id]);
-        RigData RigOf(string id) => ContentLoader.FormRig(rigs[id], FormOf(id));
         dumpState = args.ContainsKey("dump");
 
         pet = new Pet(this, RigOf(startId), clips, props, PetScale(settings.Size));
@@ -133,16 +134,7 @@ public partial class Main : Node2D
             settings.Character = id;
             settings.Save();
         };
-        tray.FormChosen += form =>
-        {
-            var id = pet.Rig.Id;
-            settings.Forms[id] = form;
-            settings.Save();
-            args.Remove("form");
-            pet.SetCharacter(RigOf(id));
-            tray.SetForms(rigs[id].Forms, form);
-            fx.Burst("💨", pet.HeadTop(), Colors.White);
-        };
+        tray.FormChosen += ChooseForm;
         tray.SizeChosen += size => { pet.SetScale(PetScale(size)); settings.Size = size; settings.Save(); };
         tray.AutoToggled += on => { behavior.Auto = on; settings.Auto = on; settings.Save(); };
         tray.AutostartToggled += Autostart.Set;
@@ -154,12 +146,29 @@ public partial class Main : Node2D
             tray.SetVolley(true);
         }
         tray.QuitRequested += () => GetTree().Quit();
+        SetupDaily();
 
         GD.Print($"[DeskPet] content={ContentLoader.Root} characters={string.Join(",", ids)} " +
                  $"clips={clips["humanoid"].Count} bodies={string.Join(",", clips.Keys)} form={FormOf(startId)} area={DesktopWindow.Area} uiScale={DesktopWindow.UiScale} start={startId} autostart={Autostart.IsEnabled()}");
     }
 
-    static float PetScale(float size) => Tuning.Scale * DesktopWindow.UiScale * size;
+    // 型態：命令列（測試用，不存檔）> 這個角色上次選的
+    string? FormOf(string id) =>
+        id == startId && args.TryGetValue("form", out var f) ? f
+        : settings.Forms.TryGetValue(id, out var saved) ? saved : ContentLoader.DefaultForm(rigs[id]);
+
+    RigData RigOf(string id) => ContentLoader.FormRig(rigs[id], FormOf(id));
+
+    void ChooseForm(string form)
+    {
+        var id = pet.Rig.Id;
+        settings.Forms[id] = form;
+        settings.Save();
+        args.Remove("form");
+        pet.SetCharacter(RigOf(id));
+        tray.SetForms(rigs[id].Forms, form);
+        fx.Burst("💨", pet.HeadTop(), Colors.White);
+    }
 
     // 重新掃描桌面上的視窗（角色可以站的平台）
     const float WindowRefresh = 0.25f;
@@ -186,6 +195,7 @@ public partial class Main : Node2D
         }
         RunTestScript();
         keyCount += newKeys;
+        if (newKeys > 0) dailyLife.OnActivity();
         settings.AddKeys(newKeys);
         tray.SetTodayKeys(settings.TodayKeys);
 
@@ -203,6 +213,7 @@ public partial class Main : Node2D
             RefreshWindows();
         }
 
+        UpdateDaily(dt);
         UpdateDrag();
         pet.Gaze.Target = lookOverride ?? DesktopWindow.CursorInWindow();
         behavior.Update(dt);
@@ -226,6 +237,9 @@ public partial class Main : Node2D
         if (testSteps.Count == 0 || frame < 120 || frame % 12 != 0) return;
         var step = testSteps.Dequeue();
         if (step.StartsWith("do:")) behavior.Force(step[3..]);          // do:climb、do:hopDown…
+        else if (step == "menu") OpenPetMenu();                          // 叫出右鍵選單（不用真的點）
+        else if (step.StartsWith("hide:")) presence.HideFor(float.Parse(step[5..]) / 60f);   // hide:3 = 隱藏 3 秒
+        else if (step == "remind") behavior.Remind("stretchRemind", "stretch");
         else if (step == "wait") { }                                     // 空一拍
         else if (System.Enum.TryParse<GlobalInput.KeyKind>(step, out var kind)) behavior.OnKey(kind);
         else behavior.OnPetClick(step);
@@ -259,7 +273,7 @@ public partial class Main : Node2D
 
     void DumpState() =>
         GD.Print($"[state] keys={keyCount} input={GlobalInput.Running} action={pet.Action} " +
-                 $"t={pet.Animator.LocalTime:0.00} facing={pet.Facing} x={pet.X:0} char={pet.Rig.Id} scale={pet.Scale:0.00} today={settings.TodayKeys} y={pet.Y:0} surface={behavior.SurfaceInfo} windows=[{WindowTracker.Stats}]" + (volley.Active ? $" volley[{volley.DebugInfo}]" : "") + $" sfx[{string.Join(",", sfx.Played.Select(kv => $"{kv.Key}={kv.Value}"))}]");
+                 $"t={pet.Animator.LocalTime:0.00} facing={pet.Facing} x={pet.X:0} char={pet.Rig.Id} scale={pet.Scale:0.00} today={settings.TodayKeys} y={pet.Y:0} surface={behavior.SurfaceInfo} windows=[{WindowTracker.Stats}]" + (volley.Active ? $" volley[{volley.DebugInfo}]" : "") + $" hidden={presence.Hidden}" + $" sfx[{string.Join(",", sfx.Played.Select(kv => $"{kv.Key}={kv.Value}"))}]");
 
     // ---------- 滑鼠：點擊與拖曳 ----------
 
@@ -274,7 +288,12 @@ public partial class Main : Node2D
             return;
         }
         if (e is InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: true } mb && ZoneAt(mb.Position) is { } zone)
+        {
             drag = new Drag { Start = mb.Position, Zone = zone };
+            dailyLife.OnActivity();
+        }
+        if (e is InputEventMouseButton { ButtonIndex: MouseButton.Right, Pressed: true } rb && ZoneAt(rb.Position) != null)
+            OpenPetMenu();
     }
 
     /// <summary>畫面上某點點到角色的哪個部位；沒點到角色回傳 null</summary>
@@ -307,6 +326,7 @@ public partial class Main : Node2D
     // 游標在角色不透明的像素上（或正在拖曳）才接收滑鼠，其他時候點擊穿透到桌面
     void UpdateClickThrough()
     {
+        if (presence.Hidden) return;       // 隱藏中一律穿透（OnPresenceChanged 已設好）
         var cursor = DesktopWindow.CursorInWindow();
         var over = drag != null || (volley.Active ? volley.HitBall(cursor) : pet.View.HitTest(cursor));
         DesktopWindow.SetClickThrough(!over);

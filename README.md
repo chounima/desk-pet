@@ -34,6 +34,10 @@ Godot 4.7 .NET（C#）。直接讀取專案根目錄的 `art/` 與 `data/`，和
 | 站在視窗上 | 每 0.25 秒用 `GetTopWindow/GetWindow` 走訪視窗（不用需要回呼的 `EnumWindows`），沒被擋住的頂邊當平台；會跳上去、跳下來、跟著視窗移動，視窗關閉或最小化時掉下來。測試：`tools/test_platform.ps1` + `run_pet.ps1 -Action idle` 搭配 `--test=do:climb` |
 | 排球對打 | 系統匣「🏐 排球對打」；邏輯在 `Game/Volley/`，球技與台詞在 `data/volley.json`（與網頁版共用）。游標用全域位置算揮動速度，游標在球上時才接收點擊。測試：`--volley-bot` |
 | 音效 | `Audio/Synth.cs` 程式合成（pop、boing、thud、squeak、fall、chime、bonk、bump、spike、whoosh），台詞 key 對應音效見 `Sfx.LineSounds`；系統匣「🔊 音效」 |
+| 右鍵選單 | 在角色身上按右鍵：動作（`data/menu.json`）、型態、排球、躲起來 N 分鐘（`UI/PetMenu.cs`；選單字型依螢幕縮放放大 `UI/MenuStyle.cs`） |
+| 全螢幕自動隱藏 | 前景視窗蓋滿整個螢幕（含工作列）時躲起來，結束後說「我回來了」（`Platform/FullscreenWatcher.cs`、`Game/Presence.cs`）；系統匣可關 |
+| 螢幕變化 | 每 2 秒檢查解析度／縮放比例／工作列，有變就重新鋪滿並調整大小（`DesktopWindow.RefreshDisplay`）；系統匣「大小跟著螢幕高度」改成依螢幕高度決定大小 |
+| 依時間反應 | 啟動時依時段打招呼、深夜提醒睡覺、連續使用 50 分鐘提醒起來動（`Game/DailyLife.cs`，參數 `data/daily.json`） |
 | 開機自動啟動 | `HKCU\Software\Microsoft\Windows\CurrentVersion\Run\DeskPet`（`--autostart=on/off` 也可設定） |
 
 ```

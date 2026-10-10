@@ -31,7 +31,14 @@ public sealed class Behavior
     /// <summary>想說話時發出台詞的 key（見 data/lines/）</summary>
     public event Action<string>? Said;
 
-    void Say(string key) => Said?.Invoke(key);
+    public void Say(string key) => Said?.Invoke(key);
+
+    /// <summary>提醒（例如久坐）：說一句話，站在地上又沒在玩小遊戲時順便做一個動作</summary>
+    public void Remind(string lineKey, string action)
+    {
+        Say(lineKey);
+        if (Current == State.Ground && !Suspended) Start(action);
+    }
 
     public Behavior(Pet pet, Func<Rect2> area, Interactions interactions, Surfaces surfaces)
     {

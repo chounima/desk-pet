@@ -18,5 +18,14 @@
   "save": ["存好了，安心！"],
   "windowGone": ["欸欸，地板呢！？"],
   "climb": ["這裡視野不錯～"],
-  "hopDown": ["Ollie！"]
+  "hopDown": ["Ollie！"],
+  "morning": ["早安～今天想畫什麼？"],
+  "noon": ["午安！"],
+  "afternoon": ["下午適合去滑板～"],
+  "evening": ["晚上好～"],
+  "lateNight": ["還不睡呀？"],
+  "goSleep": ["靈感明天還會來的，去睡吧～"],
+  "stretchRemind": ["來，跟我一起伸展～", "眼睛休息一下吧！"],
+  "back": ["回來啦～"],
+  "hide": ["我先去旁邊晃晃～"]
 }

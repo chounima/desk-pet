@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using DeskPet.Content;
 using DeskPet.Game;
+using DeskPet.Platform;
 using DeskPet.Save;
 using Godot;
 
@@ -11,7 +12,8 @@ namespace DeskPet.UI;
 public partial class Tray : Node
 {
     // 選單項目 id：角色用 0..n-1，大小用 IdSize + i
-    const int IdSize = 100, IdForm = 200, IdAuto = 1000, IdAutostart = 1001, IdToday = 1002, IdQuit = 1003, IdVolley = 1004, IdSound = 1005;
+    const int IdSize = 100, IdForm = 200, IdAuto = 1000, IdAutostart = 1001, IdToday = 1002, IdQuit = 1003, IdVolley = 1004, IdSound = 1005,
+        IdFullscreen = 1006, IdFit = 1007, IdHide = 1008;
 
     readonly List<string> ids = new();
     readonly List<string> formIds = new();
@@ -28,6 +30,9 @@ public partial class Tray : Node
     public event Action<bool>? VolleyToggled;
     public event Action<bool>? SoundToggled;
     public event Action? QuitRequested;
+    public event Action<bool>? FullscreenToggled;
+    public event Action<bool>? FitScreenToggled;
+    public event Action? HideToggled;
 
     public void Build(IList<RigData> characters, Settings settings, bool autostart, Texture2D icon)
     {
@@ -50,12 +55,17 @@ public partial class Tray : Node
         menu.AddCheckItem("🏐 排球對打", IdVolley);
         menu.AddCheckItem("自動行為", IdAuto);
         menu.AddCheckItem("🔊 音效", IdSound);
+        menu.AddCheckItem("全螢幕時自動隱藏", IdFullscreen);
+        menu.AddCheckItem("大小跟著螢幕高度", IdFit);
+        menu.AddItem("😴 暫時隱藏", IdHide);
         menu.AddCheckItem("開機時自動啟動", IdAutostart);
         menu.AddSeparator();
         menu.AddItem("", IdToday);
         menu.SetItemDisabled(menu.GetItemIndex(IdToday), true);
         menu.AddItem("結束", IdQuit);
         menu.IdPressed += OnId;
+        MenuStyle.Apply(menu, DesktopWindow.UiScale);
+        MenuStyle.Apply(formMenu, DesktopWindow.UiScale);
 
         SetCharacter(settings.Character);
         SetSize(settings.Size);
@@ -110,6 +120,16 @@ public partial class Tray : Node
 
     public void SetVolley(bool on) => SetChecked(IdVolley, on);
 
+    public void SetDaily(bool autoHideFullscreen, bool fitScreen)
+    {
+        SetChecked(IdFullscreen, autoHideFullscreen);
+        SetChecked(IdFit, fitScreen);
+    }
+
+    /// <summary>暫時隱藏中，選單改成「叫她出來」</summary>
+    public void SetHidden(bool hidden) =>
+        menu.SetItemText(menu.GetItemIndex(IdHide), hidden ? "🙋 叫她出來" : "😴 暫時隱藏");
+
     void OnId(long id)
     {
         switch (id)
@@ -131,6 +151,19 @@ public partial class Tray : Node
                 var volley = !menu.IsItemChecked(menu.GetItemIndex(IdVolley));
                 SetChecked(IdVolley, volley);
                 VolleyToggled?.Invoke(volley);
+                break;
+            case IdFullscreen:
+                var fs = !menu.IsItemChecked(menu.GetItemIndex(IdFullscreen));
+                SetChecked(IdFullscreen, fs);
+                FullscreenToggled?.Invoke(fs);
+                break;
+            case IdFit:
+                var fit = !menu.IsItemChecked(menu.GetItemIndex(IdFit));
+                SetChecked(IdFit, fit);
+                FitScreenToggled?.Invoke(fit);
+                break;
+            case IdHide:
+                HideToggled?.Invoke();
                 break;
             case IdAutostart:
                 var start = !menu.IsItemChecked(menu.GetItemIndex(IdAutostart));

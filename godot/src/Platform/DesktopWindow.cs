@@ -25,20 +25,32 @@ public static class DesktopWindow
 
     public static void Setup()
     {
-        var screen = DisplayServer.GetPrimaryScreen();
-        UiScale = Mathf.Max(1f, DisplayServer.ScreenGetDpi(screen) / 96f);
-        // 高度少 1px：無邊框視窗和螢幕一樣大時，顯示卡驅動會把它當成獨佔全螢幕，透明視窗畫面就不會更新
-        var usable = DisplayServer.ScreenGetUsableRect(screen);
-        Area = new Rect2I(usable.Position, usable.Size - new Vector2I(0, 1));
-        DisplayServer.WindowSetPosition(Area.Position);
-        DisplayServer.WindowSetSize(Area.Size);
-
+        RefreshDisplay();
         if (!OperatingSystem.IsWindows()) return;
         hwnd = (IntPtr)DisplayServer.WindowGetNativeHandle(DisplayServer.HandleType.WindowHandle);
         // 不出現在工作列；加上 layered 才能用 WS_EX_TRANSPARENT 讓滑鼠穿透
         UpdateExStyle(s => (s | WS_EX_TOOLWINDOW | WS_EX_LAYERED) & ~WS_EX_APPWINDOW);
         SetLayeredWindowAttributes(hwnd, 0, 255, LWA_ALPHA);
         SetClickThrough(true);
+    }
+
+    /// <summary>
+    /// 重新讀取螢幕解析度、縮放比例與工作列位置，有變化就把視窗重新鋪滿工作區。
+    /// 回傳 true 表示有變化（呼叫端要重新計算角色大小與位置）。
+    /// </summary>
+    public static bool RefreshDisplay()
+    {
+        var screen = DisplayServer.GetPrimaryScreen();
+        var ui = Mathf.Max(1f, DisplayServer.ScreenGetDpi(screen) / 96f);
+        // 高度少 1px：無邊框視窗和螢幕一樣大時，顯示卡驅動會把它當成獨佔全螢幕，透明視窗畫面就不會更新
+        var usable = DisplayServer.ScreenGetUsableRect(screen);
+        var area = new Rect2I(usable.Position, usable.Size - new Vector2I(0, 1));
+        if (area == Area && Mathf.IsEqualApprox(ui, UiScale) && hwnd != IntPtr.Zero) return false;
+        UiScale = ui;
+        Area = area;
+        DisplayServer.WindowSetPosition(Area.Position);
+        DisplayServer.WindowSetSize(Area.Size);
+        return true;
     }
 
     /// <summary>true = 滑鼠點擊穿透到底下的程式；false = 這個視窗接收滑鼠</summary>
