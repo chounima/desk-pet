@@ -50,9 +50,15 @@ public partial class VolleySession : Node2D
         volley.Said += text => bubble.Say(text, 2f);
         volley.Popped += (text, at) => fx.Burst(text, at, Colors.White);
         volley.Scored += ShowScore;
+        volley.Scored += (rally, _) => Rallied?.Invoke(rally);
         volley.Shook += () => shakeLeft = 0.28f;
         volley.Sounded += (name, pitch) => sfx.Play(name, pitch);
     }
+
+    /// <summary>來回次數變化（收集系統用來給點數）</summary>
+    public event Action<int>? Rallied;
+
+    public void SetBallSkin(PropData prop) => ball.SetSkin(prop);
 
     public void SetActive(bool on)
     {

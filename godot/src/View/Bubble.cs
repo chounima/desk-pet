@@ -12,22 +12,19 @@ public partial class Bubble : Node2D
     readonly Label label;
     readonly Polygon2D tail;
     float timeLeft;
+    bool muted;
+
+    /// <summary>角色隱藏中：不顯示任何台詞</summary>
+    public bool Muted
+    {
+        get => muted;
+        set { muted = value; if (value) Visible = false; }
+    }
 
     public Bubble()
     {
         var u = DesktopWindow.UiScale;
-        var style = new StyleBoxFlat
-        {
-            BgColor = new Color(1, 1, 1, 0.96f),
-            BorderColor = new Color("#3a3d4f"),
-            ContentMarginLeft = 12 * u, ContentMarginRight = 12 * u,
-            ContentMarginTop = 6 * u, ContentMarginBottom = 7 * u,
-        };
-        style.SetBorderWidthAll((int)(2 * u));
-        style.SetCornerRadiusAll((int)(12 * u));
-
         panel = new PanelContainer { MouseFilter = Control.MouseFilterEnum.Ignore };
-        panel.AddThemeStyleboxOverride("panel", style);
         label = new Label
         {
             MouseFilter = Control.MouseFilterEnum.Ignore,
@@ -44,11 +41,22 @@ public partial class Bubble : Node2D
         AddChild(tail);
         AddChild(panel);
         Visible = false;
+        SetStyle("classic");
+    }
+
+    /// <summary>泡泡款式（商店商品），見 BubbleStyles</summary>
+    public void SetStyle(string style)
+    {
+        var (box, text, tailColor, rotation) = BubbleStyles.Make(style, DesktopWindow.UiScale);
+        panel.AddThemeStyleboxOverride("panel", box);
+        label.LabelSettings.FontColor = text;
+        tail.Color = tailColor;
+        panel.Rotation = rotation;
     }
 
     public void Say(string? text, float seconds = 2.8f)
     {
-        if (string.IsNullOrEmpty(text)) return;
+        if (string.IsNullOrEmpty(text) || muted) return;
         label.Text = text;
         panel.ResetSize();
         timeLeft = seconds;

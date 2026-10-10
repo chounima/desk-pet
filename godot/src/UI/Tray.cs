@@ -13,7 +13,8 @@ public partial class Tray : Node
 {
     // 選單項目 id：角色用 0..n-1，大小用 IdSize + i
     const int IdSize = 100, IdForm = 200, IdAuto = 1000, IdAutostart = 1001, IdToday = 1002, IdQuit = 1003, IdVolley = 1004, IdSound = 1005,
-        IdFullscreen = 1006, IdFit = 1007, IdHide = 1008;
+        IdFullscreen = 1006, IdFit = 1007, IdHide = 1008,
+        IdCollection = 1009, IdShop = 1010, IdSettings = 1011;
 
     readonly List<string> ids = new();
     readonly List<string> formIds = new();
@@ -33,6 +34,9 @@ public partial class Tray : Node
     public event Action<bool>? FullscreenToggled;
     public event Action<bool>? FitScreenToggled;
     public event Action? HideToggled;
+    /// <summary>打開 Desk Pet 視窗的某個分頁：collection | shop | settings</summary>
+    public event Action<string>? HubRequested;
+    readonly List<string> charLabels = new();
 
     public void Build(IList<RigData> characters, Settings settings, bool autostart, Texture2D icon)
     {
@@ -42,12 +46,17 @@ public partial class Tray : Node
         for (var i = 0; i < characters.Count; i++)
         {
             ids.Add(characters[i].Id);
-            menu.AddRadioCheckItem($"{characters[i].Name}  {characters[i].Description}", i);
+            charLabels.Add($"{characters[i].Name}  {characters[i].Description}");
+            menu.AddRadioCheckItem(charLabels[i], i);
         }
         // 型態子選單：只有多種型態的角色可以用（見 SetForms）
         formMenu = new PopupMenu();
         formMenu.IdPressed += id => { if (id - IdForm < formIds.Count) FormChosen?.Invoke(formIds[(int)(id - IdForm)]); };
         menu.AddSubmenuNodeItem("🔁 型態", formMenu, IdForm - 1);
+        menu.AddSeparator();
+        menu.AddItem("📖 收藏", IdCollection);
+        menu.AddItem("🛒 商店", IdShop);
+        menu.AddItem("⚙ 設定…", IdSettings);
         menu.AddSeparator("大小");
         for (var i = 0; i < Tuning.Sizes.Length; i++)
             menu.AddRadioCheckItem(Tuning.Sizes[i].Label, IdSize + i);
@@ -79,20 +88,36 @@ public partial class Tray : Node
         SetTodayKeys(settings.TodayKeys);
     }
 
+    /// <summary>鎖住的角色：顯示 🔒、不能選；lockedHint 回傳提示文字表示鎖住</summary>
+    public void SetCharacterLocks(Func<string, string?> lockedHint)
+    {
+        for (var i = 0; i < ids.Count; i++)
+        {
+            var hint = lockedHint(ids[i]);
+            var index = menu.GetItemIndex(i);
+            menu.SetItemText(index, hint == null ? charLabels[i] : $"🔒 {charLabels[i]}");
+            menu.SetItemDisabled(index, hint != null);
+            menu.SetItemTooltip(index, hint ?? "");
+        }
+    }
+
     public void SetCharacter(string id)
     {
         for (var i = 0; i < ids.Count; i++) SetChecked(i, ids[i] == id);
     }
 
     /// <summary>更新型態子選單；forms 為 null 或只有一種時停用</summary>
-    public void SetForms(Dictionary<string, FormData>? forms, string? current)
+    public void SetForms(Dictionary<string, FormData>? forms, string? current, Func<string, string?>? lockedHint = null)
     {
         formMenu.Clear();
         formIds.Clear();
         foreach (var (name, f) in forms ?? new())
         {
-            formMenu.AddRadioCheckItem(f.Label, IdForm + formIds.Count);
+            var hint = lockedHint?.Invoke(name);
+            formMenu.AddRadioCheckItem(hint == null ? f.Label : $"🔒 {f.Label}", IdForm + formIds.Count);
             formMenu.SetItemChecked(formIds.Count, name == current);
+            formMenu.SetItemDisabled(formIds.Count, hint != null);
+            formMenu.SetItemTooltip(formIds.Count, hint ?? "");
             formIds.Add(name);
         }
         var label = forms is { Count: > 1 } && current != null && forms.TryGetValue(current, out var cur)
@@ -119,6 +144,17 @@ public partial class Tray : Node
     void SetChecked(int id, bool on) => menu.SetItemChecked(menu.GetItemIndex(id), on);
 
     public void SetVolley(bool on) => SetChecked(IdVolley, on);
+
+    /// <summary>設定視窗改了選項時同步勾選狀態（key 同 SettingsTab）</summary>
+    public void SetOption(string key, bool on)
+    {
+        int? id = key switch
+        {
+            "auto" => IdAuto, "sound" => IdSound, "autostart" => IdAutostart,
+            "fullscreenHide" => IdFullscreen, "fitScreen" => IdFit, _ => null,
+        };
+        if (id is { } i) SetChecked(i, on);
+    }
 
     public void SetDaily(bool autoHideFullscreen, bool fitScreen)
     {
@@ -164,6 +200,15 @@ public partial class Tray : Node
                 break;
             case IdHide:
                 HideToggled?.Invoke();
+                break;
+            case IdCollection:
+                HubRequested?.Invoke("collection");
+                break;
+            case IdShop:
+                HubRequested?.Invoke("shop");
+                break;
+            case IdSettings:
+                HubRequested?.Invoke("settings");
                 break;
             case IdAutostart:
                 var start = !menu.IsItemChecked(menu.GetItemIndex(IdAutostart));

@@ -23,7 +23,13 @@ public partial class Main
 
         petMenu = new PetMenu(MenuConfig.Load());
         AddChild(petMenu);
-        petMenu.ActionChosen += name => behavior.Force(name);
+        // 還沒買的動作：打開商店的動作分類
+        petMenu.ActionChosen += name =>
+        {
+            if (shop.ActionOwned(name)) behavior.Force(name);
+            else hub.Open("shop", "action");
+        };
+        petMenu.HubRequested += tab => hub.Open(tab);
         petMenu.FormChosen += ChooseForm;
         petMenu.VolleyToggled += () =>
         {
@@ -67,7 +73,7 @@ public partial class Main
     {
         pet.View.Visible = !hidden;
         fx.Visible = !hidden;
-        bubble.Visible = !hidden;
+        bubble.Muted = hidden;
         tray.SetHidden(presence.ManualHidden);
         if (hidden)
         {
@@ -100,7 +106,7 @@ public partial class Main
     void OpenPetMenu()
     {
         var id = pet.Rig.Id;
-        petMenu.Open(DisplayServer.MouseGetPosition(), pet.Clips, _ => null,
-                     rigs[id].Forms, FormOf(id), _ => null, volley.Active, daily.HideMinutes, DesktopWindow.UiScale);
+        petMenu.Open(DisplayServer.MouseGetPosition(), pet.Clips, ActionLockHint,
+                     rigs[id].Forms, FormOf(id), form => FormLockHint(id, form), volley.Active, daily.HideMinutes, DesktopWindow.UiScale);
     }
 }

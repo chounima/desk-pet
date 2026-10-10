@@ -33,5 +33,7 @@ public static class Tuning
         ["climb"] = (2, null),          // 跳到附近的視窗上（附近沒有視窗就改成待機）
         ["hopDown"] = (2, null),        // 從視窗上跳下來（站在地面時改成待機）
         ["volleyball"] = (1, new[] { 4f, 7f }),
+        ["coffee"] = (1, new[] { 5f, 8f }),        // 商店商品，買了才會出現（Behavior.Allowed）
+        ["read"] = (1, new[] { 6f, 10f }),
     };
 }

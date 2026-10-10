@@ -56,6 +56,14 @@ public partial class Main : Node2D
 
     public override void _Ready()
     {
+        // --selftest=progress：只跑收集系統的規則測試就結束（不需要單一實例、不開畫面）
+        if (OS.GetCmdlineUserArgs().Contains("--selftest=progress"))
+        {
+            duplicate = true;
+            var code = Game.Progression.ProgressSelfTest.Run();
+            GetTree().Quit(code);
+            return;
+        }
         if (!SingleInstance.TryAcquire())
         {
             GD.Print("[DeskPet] 已經有一隻桌寵在執行，結束這個實例");
@@ -131,6 +139,7 @@ public partial class Main : Node2D
         {
             pet.SetCharacter(RigOf(id));
             tray.SetForms(rigs[id].Forms, FormOf(id));
+            if (progress != null) RefreshLocks();
             settings.Character = id;
             settings.Save();
         };
@@ -146,6 +155,7 @@ public partial class Main : Node2D
             tray.SetVolley(true);
         }
         tray.QuitRequested += () => GetTree().Quit();
+        SetupProgress(ids, props);
         SetupDaily();
 
         GD.Print($"[DeskPet] content={ContentLoader.Root} characters={string.Join(",", ids)} " +
@@ -167,6 +177,7 @@ public partial class Main : Node2D
         args.Remove("form");
         pet.SetCharacter(RigOf(id));
         tray.SetForms(rigs[id].Forms, form);
+        if (progress != null) RefreshLocks();
         fx.Burst("💨", pet.HeadTop(), Colors.White);
     }
 
@@ -195,7 +206,11 @@ public partial class Main : Node2D
         }
         RunTestScript();
         keyCount += newKeys;
-        if (newKeys > 0) dailyLife.OnActivity();
+        if (newKeys > 0)
+        {
+            dailyLife.OnActivity();
+            progress.OnKeys(newKeys);
+        }
         settings.AddKeys(newKeys);
         tray.SetTodayKeys(settings.TodayKeys);
 
@@ -214,6 +229,7 @@ public partial class Main : Node2D
         }
 
         UpdateDaily(dt);
+        UpdateProgress(dt);
         UpdateDrag();
         pet.Gaze.Target = lookOverride ?? DesktopWindow.CursorInWindow();
         behavior.Update(dt);
@@ -311,7 +327,12 @@ public partial class Main : Node2D
         if (!DesktopWindow.LeftButtonDown())
         {
             if (drag.Moved) behavior.Release();
-            else behavior.OnPetClick(drag.Zone);
+            else
+            {
+                behavior.OnPetClick(drag.Zone);
+                progress.OnInteraction(pet.Rig.Id);
+                fx.Heart(pet.HeadTop());
+            }
             drag = null;
             return;
         }
@@ -337,6 +358,7 @@ public partial class Main : Node2D
         if (settings == null) return;    // 重複啟動、還沒初始化就結束的實例
         GlobalInput.Stop();
         settings.Save();
+        progressState?.Save();
         SingleInstance.Release();
     }
 

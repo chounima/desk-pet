@@ -47,6 +47,10 @@ public partial class BallView : Node2D
         Visible = false;
     }
 
+    /// <summary>換外觀（商店的排球外觀）</summary>
+    public void SetSkin(PropData prop) =>
+        ball.Texture = SvgTextures.Load(prop.Path, radius / VolleyConfig.ArtRadius * Oversample).Texture;
+
     public void Show(VolleyBall b, bool onFire)
     {
         Visible = true;

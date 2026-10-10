@@ -38,6 +38,8 @@ Godot 4.7 .NET（C#）。直接讀取專案根目錄的 `art/` 與 `data/`，和
 | 全螢幕自動隱藏 | 前景視窗蓋滿整個螢幕（含工作列）時躲起來，結束後說「我回來了」（`Platform/FullscreenWatcher.cs`、`Game/Presence.cs`）；系統匣可關 |
 | 螢幕變化 | 每 2 秒檢查解析度／縮放比例／工作列，有變就重新鋪滿並調整大小（`DesktopWindow.RefreshDisplay`）；系統匣「大小跟著螢幕高度」改成依螢幕高度決定大小 |
 | 依時間反應 | 啟動時依時段打招呼、深夜提醒睡覺、連續使用 50 分鐘提醒起來動（`Game/DailyLife.cs`，參數 `data/daily.json`） |
+| 收集系統 | 點數、好感度、解鎖、商店（`Game/Progression/`，規則同網頁版），存檔 `user://progress.json`。`--selftest=progress` 跑規則測試 |
+| Desk Pet 視窗 | 系統匣或右鍵選單「📖 收藏／🛒 商店／⚙ 設定」：獨立的系統視窗（`UI/Hub/`）。設定勾「開發者模式」多一個分頁，可改參數（存成 `user://progression.override.json`）、作弊、模擬隔天。`--hub=shop` 啟動時直接打開 |
 | 開機自動啟動 | `HKCU\Software\Microsoft\Windows\CurrentVersion\Run\DeskPet`（`--autostart=on/off` 也可設定） |
 
 ```

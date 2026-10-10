@@ -9,7 +9,7 @@ namespace DeskPet.UI;
 
 public partial class PetMenu : Node
 {
-    const int IdVolley = 1, IdHide = 2, IdAction = 100, IdForm = 200;
+    const int IdVolley = 1, IdHide = 2, IdCollection = 3, IdShop = 4, IdAction = 100, IdForm = 200;
 
     readonly MenuConfig config;
     PopupMenu menu = null!, actions = null!, forms = null!;
@@ -19,6 +19,7 @@ public partial class PetMenu : Node
     public event Action<string>? FormChosen;
     public event Action? VolleyToggled;
     public event Action? HideRequested;
+    public event Action<string>? HubRequested;
 
     public PetMenu(MenuConfig config) => this.config = config;
 
@@ -34,6 +35,8 @@ public partial class PetMenu : Node
         {
             if (id == IdVolley) VolleyToggled?.Invoke();
             else if (id == IdHide) HideRequested?.Invoke();
+            else if (id == IdCollection) HubRequested?.Invoke("collection");
+            else if (id == IdShop) HubRequested?.Invoke("shop");
         };
     }
 
@@ -56,11 +59,7 @@ public partial class PetMenu : Node
             var hint = lockedHint(name);
             actions.AddItem(hint == null ? clip.Label : $"🔒 {clip.Label}", IdAction + i);
             var index = actions.GetItemIndex(IdAction + i);
-            if (hint != null)
-            {
-                actions.SetItemDisabled(index, true);
-                actions.SetItemTooltip(index, hint);
-            }
+            if (hint != null) actions.SetItemTooltip(index, hint);     // 鎖住的仍可選：選了會打開商店
         }
         menu.AddSubmenuNodeItem("🎭 動作", actions);
 
@@ -80,6 +79,9 @@ public partial class PetMenu : Node
         menu.AddSeparator();
         menu.AddItem(volleyOn ? "🏐 結束對打" : "🏐 排球對打", IdVolley);
         menu.AddItem($"😴 躲起來 {hideMinutes:0} 分鐘", IdHide);
+        menu.AddSeparator();
+        menu.AddItem("📖 收藏", IdCollection);
+        menu.AddItem("🛒 商店", IdShop);
 
         foreach (var m in new[] { menu, actions, forms }) MenuStyle.Apply(m, uiScale);
         menu.Popup(new Rect2I(screenPos, Vector2I.Zero));

@@ -24,6 +24,18 @@ public partial class Fx : Node2D
     Label? mark;
     string? markKind;
     float timer;
+    string heartSymbol = "♥";
+    Color heartColor = new("#ff6b8a");
+
+    /// <summary>愛心特效的款式（商店的特效樣式）</summary>
+    public void SetHeartStyle(string symbol, Color color)
+    {
+        heartSymbol = symbol;
+        heartColor = color;
+    }
+
+    /// <summary>點擊、被摸頭時冒出的愛心（依款式）</summary>
+    public void Heart(Vector2 at) => Burst(heartSymbol, at, heartColor);
 
     /// <param name="kind">目前動作的特效名稱</param>
     /// <param name="anchor">頭頂位置</param>
@@ -34,7 +46,8 @@ public partial class Fx : Node2D
         timer -= dt;
         if (timer > 0) return;
         timer = e.every;
-        Burst(e.text(), anchor, e.color);
+        if (kind == "hearts") Heart(anchor);
+        else Burst(e.text(), anchor, e.color);
     }
 
     void SetMark(string? kind, Vector2 anchor)

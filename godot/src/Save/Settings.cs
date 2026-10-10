@@ -30,6 +30,8 @@ public sealed class Settings
     public bool AutoHideFullscreen { get; set; } = true;
     /// <summary>大小跟著螢幕高度（否則跟著 Windows 縮放比例）</summary>
     public bool FitScreen { get; set; }
+    /// <summary>開發者模式：設定視窗多一個「開發者」分頁</summary>
+    public bool DevMode { get; set; }
     /// <summary>每日按鍵次數 { "2026-10-10": 1234 }，保留最近 30 天</summary>
     public SortedDictionary<string, int> DailyKeys { get; set; } = new();
 

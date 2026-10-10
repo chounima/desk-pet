@@ -26,6 +26,8 @@ public sealed class Behavior
     readonly System.Collections.Generic.List<double> taps = new();
 
     public bool Auto { get; set; } = true;
+    /// <summary>自動行為可以挑的動作（商店的動作買了才可以）</summary>
+    public Func<string, bool> Allowed { get; set; } = _ => true;
     public State Current { get; private set; } = State.Ground;
 
     /// <summary>想說話時發出台詞的 key（見 data/lines/）</summary>
@@ -374,11 +376,12 @@ public sealed class Behavior
         return x;
     }
 
-    static string WeightedPick()
+    string WeightedPick()
     {
-        var total = Tuning.Auto.Values.Sum(v => v.Weight);
+        var table = Tuning.Auto.Where(kv => Allowed(kv.Key)).ToList();
+        var total = table.Sum(kv => kv.Value.Weight);
         var r = GD.Randf() * total;
-        foreach (var (name, v) in Tuning.Auto)
+        foreach (var (name, v) in table)
             if ((r -= v.Weight) <= 0) return name;
         return "idle";
     }
