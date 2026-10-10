@@ -9,7 +9,7 @@ namespace DeskPet.UI;
 
 public partial class PetMenu : Node
 {
-    const int IdVolley = 1, IdHide = 2, IdCollection = 3, IdShop = 4, IdGuitar = 5, IdFocus = 6, IdAction = 100, IdForm = 200;
+    const int IdVolley = 1, IdHide = 2, IdCollection = 3, IdShop = 4, IdGuitar = 5, IdFocus = 6, IdWardrobe = 7, IdAction = 100, IdForm = 200;
 
     readonly MenuConfig config;
     PopupMenu menu = null!, actions = null!, forms = null!;
@@ -42,6 +42,7 @@ public partial class PetMenu : Node
             if (id == IdVolley) VolleyToggled?.Invoke();
             else if (id == IdHide) HideRequested?.Invoke();
             else if (id == IdCollection) HubRequested?.Invoke("collection");
+            else if (id == IdWardrobe) HubRequested?.Invoke("wardrobe");
             else if (id == IdGuitar) GuitarToggled?.Invoke();
             else if (id == IdFocus) FocusToggled?.Invoke();
             else if (id == IdShop) HubRequested?.Invoke("shop");
@@ -90,6 +91,7 @@ public partial class PetMenu : Node
         menu.AddItem(volleyOn ? "🏐 結束對打" : "🏐 排球對打", IdVolley);
         menu.AddItem($"😴 躲起來 {hideMinutes:0} 分鐘", IdHide);
         menu.AddSeparator();
+        menu.AddItem("👗 衣櫃", IdWardrobe);
         menu.AddItem("📖 收藏", IdCollection);
         menu.AddItem("🛒 商店", IdShop);
 

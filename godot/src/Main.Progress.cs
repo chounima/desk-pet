@@ -49,7 +49,7 @@ public partial class Main
         AddChild(hub);
         hub.SetDevMode(settings.DevMode || args.ContainsKey("dev"));
         hub.Shop.Previewed += PreviewItem;
-        hub.Dev.Changed += () => { RefreshLocks(); ApplyCosmetics(); };
+        hub.Dev.Changed += () => { InjectCustomItems(); RefreshLocks(); ApplyCosmetics(); };
         hub.Settings.Toggled += SetOption;
         hub.Settings.SizeChosen += SetSize;
         tray.HubRequested += tab => hub.Open(tab);
@@ -163,6 +163,7 @@ public partial class Main
     {
         pet.SetCharacter(RigOf(id));
         ApplyAccessories();
+        if (outfits != null) ApplyOutfit();
         settings.Character = id;
         tray.SetCharacter(id);
         settings.Save();

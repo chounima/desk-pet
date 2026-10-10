@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>Desk Pet 編輯器</title>
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/editor.css">
+</head>
+<body>
+  <aside id="side">
+    <h1>🧵 編輯器</h1>
+    <div class="buttons" data-modes>
+      <button data-mode="accessory" class="on">🎩 配件</button>
+      <button data-mode="outfit">👕 衣服</button>
+    </div>
+
+    <h2>角色</h2>
+    <div class="row">
+      <select data-char></select>
+      <select data-form></select>
+    </div>
+    <div class="row">
+      <select data-action></select>
+      <label><input type="checkbox" data-pause> 暫停</label>
+    </div>
+
+    <!-- 配件 -->
+    <section data-panel="accessory">
+      <h2>配件</h2>
+      <label class="field">名稱 <input data-acc-name value="我的配件"></label>
+      <label class="field">部位
+        <select data-acc-slot>
+          <option value="head">頭（帽子、髮飾）</option>
+          <option value="face">臉（眼鏡）</option>
+          <option value="neck">脖子（圍巾、領結）</option>
+          <option value="back">背（翅膀、背包）</option>
+        </select>
+      </label>
+      <label class="field">圖片 <input type="file" accept=".png,.svg,.webp,.jpg" data-acc-file></label>
+    </section>
+
+    <!-- 衣服 -->
+    <section data-panel="outfit" hidden>
+      <h2>衣服</h2>
+      <label class="field">名稱 <input data-outfit-name value="我的衣服"></label>
+      <label class="field">部件 <select data-part></select></label>
+      <label class="field">圖片 <input type="file" accept=".png,.svg,.webp,.jpg" data-part-file></label>
+      <label><input type="checkbox" data-ghost checked> 顯示原本的部件（半透明對齊用）</label>
+      <div class="parts" data-part-list></div>
+    </section>
+
+    <h2>位置與大小 <span class="muted">（也可以在右邊直接拖曳）</span></h2>
+    <label class="field">X <input type="number" step="0.5" data-x></label>
+    <label class="field">Y <input type="number" step="0.5" data-y></label>
+    <label class="field">縮放 <input type="range" min="0.1" max="4" step="0.01" data-scale> <span data-scale-text></span></label>
+    <div class="buttons">
+      <button data-reset>↺ 重設位置</button>
+      <button data-remove>🗑 移除這張圖</button>
+    </div>
+
+    <h2>匯出</h2>
+    <div class="buttons"><button data-export class="on">⬇ 下載 json</button></div>
+    <p class="hint" data-hint></p>
+  </aside>
+
+  <main id="stage">
+    <svg id="canvas"><line data-ground></line><g id="pets"></g></svg>
+  </main>
+
+  <script type="module" src="js/editor/main.js"></script>
+</body>
+</html>

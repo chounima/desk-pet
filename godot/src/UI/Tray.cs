@@ -14,7 +14,7 @@ public partial class Tray : Node
     // 選單項目 id：角色用 0..n-1，大小用 IdSize + i
     const int IdSize = 100, IdForm = 200, IdAuto = 1000, IdAutostart = 1001, IdToday = 1002, IdQuit = 1003, IdVolley = 1004, IdSound = 1005,
         IdFullscreen = 1006, IdFit = 1007, IdHide = 1008,
-        IdCollection = 1009, IdShop = 1010, IdSettings = 1011, IdGuitar = 1012, IdFocus = 1013;
+        IdCollection = 1009, IdShop = 1010, IdSettings = 1011, IdGuitar = 1012, IdFocus = 1013, IdWardrobe = 1014;
 
     readonly List<string> ids = new();
     readonly List<string> formIds = new();
@@ -56,6 +56,7 @@ public partial class Tray : Node
         formMenu.IdPressed += id => { if (id - IdForm < formIds.Count) FormChosen?.Invoke(formIds[(int)(id - IdForm)]); };
         menu.AddSubmenuNodeItem("🔁 型態", formMenu, IdForm - 1);
         menu.AddSeparator();
+        menu.AddItem("👗 衣櫃", IdWardrobe);
         menu.AddItem("📖 收藏", IdCollection);
         menu.AddItem("🛒 商店", IdShop);
         menu.AddItem("⚙ 設定…", IdSettings);
@@ -214,6 +215,9 @@ public partial class Tray : Node
                 break;
             case IdGuitar:
                 GuitarToggled?.Invoke();
+                break;
+            case IdWardrobe:
+                HubRequested?.Invoke("wardrobe");
                 break;
             case IdCollection:
                 HubRequested?.Invoke("collection");

@@ -1,0 +1,18 @@
+{
+  "head": {
+    "anchor": "hat",
+    "z": 15.5
+  },
+  "face": {
+    "anchor": "eyes",
+    "z": 14.6
+  },
+  "neck": {
+    "anchor": "neck",
+    "z": 12.6
+  },
+  "back": {
+    "anchor": "back",
+    "z": 0.3
+  }
+}

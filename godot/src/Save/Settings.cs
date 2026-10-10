@@ -41,6 +41,8 @@ public sealed class Settings
     public float? FocusBreak { get; set; }
     /// <summary>偵測正在用的程式（預設關閉，使用者同意才開）</summary>
     public bool AppAwareness { get; set; }
+    /// <summary>每個角色穿的自訂衣服 { 角色: 衣服資料夾名 }</summary>
+    public Dictionary<string, string> Outfits { get; set; } = new();
     /// <summary>每日按鍵次數 { "2026-10-10": 1234 }，保留最近 30 天</summary>
     public SortedDictionary<string, int> DailyKeys { get; set; } = new();
 

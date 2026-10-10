@@ -103,6 +103,8 @@ def build_accessories(out: Path) -> None:
         anchor, z = ACCESSORY_SLOTS[slot]
         meta[name] = {"file": f"{name}.svg", "box": part.box, "slot": slot, "anchor": anchor, "z": z}
     _write(out / "accessories.json", json.dumps(meta, ensure_ascii=False, indent=2))
+    # 部位 → 錨點與圖層（自訂配件也照這個掛）
+    _write(out / "slots.json", json.dumps({s: {"anchor": a, "z": z} for s, (a, z) in ACCESSORY_SLOTS.items()}, indent=2))
 
 
 def build(art_root: Path) -> list[str]:

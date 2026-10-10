@@ -20,6 +20,7 @@ public partial class HubWindow : Window
     public DevTab Dev { get; }
     public MusicTab Music { get; private set; } = null!;
     public FocusTab Focus { get; private set; } = null!;
+    public WardrobeTab Wardrobe { get; private set; } = null!;
 
     public HubWindow(Progress progress, Shop shop, Settings settings, List<RigData> characters,
                      Dictionary<string, PropData> props, Dictionary<string, AccessoryData> accessories,
@@ -73,13 +74,21 @@ public partial class HubWindow : Window
         tabs.MoveChild(Focus, Music.GetIndex() + 1);
     }
 
+    /// <summary>衣櫃分頁（放在收藏後面）</summary>
+    public void AddWardrobeTab(WardrobeTab tab)
+    {
+        Wardrobe = tab;
+        tabs.AddChild(tab);
+        tabs.MoveChild(tab, Collection.GetIndex() + 1);
+    }
+
     /// <summary>開發者分頁只在開發者模式顯示</summary>
     public void SetDevMode(bool on) => tabs.SetTabHidden(tabs.GetTabIdxFromControl(Dev), !on);
 
     /// <summary>tab：collection | shop | music | settings | dev；shopCategory 指定商店分類</summary>
     public void Open(string tab, string? shopCategory = null)
     {
-        Control target = tab switch { "shop" => Shop, "music" => (Control?)Music ?? Shop, "focus" => (Control?)Focus ?? Collection, "settings" => Settings, "dev" => Dev, _ => Collection };
+        Control target = tab switch { "shop" => Shop, "music" => (Control?)Music ?? Shop, "focus" => (Control?)Focus ?? Collection, "wardrobe" => (Control?)Wardrobe ?? Collection, "settings" => Settings, "dev" => Dev, _ => Collection };
         tabs.CurrentTab = tabs.GetTabIdxFromControl(target);
         if (shopCategory != null) Shop.ShowCategory(shopCategory);
         RefreshAll();
@@ -96,6 +105,7 @@ public partial class HubWindow : Window
         else if (current == Shop) Shop.Refresh();
         else if (current == Music) Music.Refresh();
         else if (current == Focus) Focus.Refresh();
+        else if (current == Wardrobe) Wardrobe.Refresh();
         else if (current == Settings) Settings.Refresh();
         else if (current == Dev) Dev.Refresh();
     }

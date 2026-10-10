@@ -77,7 +77,7 @@ public partial class PetView : Node2D
 
     Item MakeItem(string path, float[] box, string bone, Transform2D? offset)
     {
-        var tex = SvgTextures.Load(path, res);
+        var tex = SvgTextures.Load(path, res, box);
         return new Item
         {
             Sprite = new Sprite2D { Texture = tex.Texture, Centered = false, TextureFilter = TextureFilterEnum.Linear },
@@ -87,7 +87,7 @@ public partial class PetView : Node2D
 
     void SetImage(Item item, string path, float[] box)
     {
-        var tex = SvgTextures.Load(path, res);
+        var tex = SvgTextures.Load(path, res, box);
         item.Sprite.Texture = tex.Texture;
         item.Image = tex.Image;
         item.Box = box;
@@ -130,6 +130,30 @@ public partial class PetView : Node2D
         for (var i = 0; i < items.Count; i++) MoveChild(items[i].Sprite, i);
     }
 
+    Dictionary<string, OutfitPart>? outfit;
+
+    /// <summary>部件圖名（parts/torso.svg → torso）</summary>
+    static string ArtOf(SlotData slot) => System.IO.Path.GetFileNameWithoutExtension(slot.File ?? "");
+
+    /// <summary>衣服：把同名部件換成自訂圖片（近側、遠側的手腳都會換）；null = 換回原本的</summary>
+    public void SetOutfit(Dictionary<string, OutfitPart>? parts)
+    {
+        outfit = parts;
+        foreach (var item in items)
+        {
+            if (item.Slot?.File == null || item.Slot.Variants != null) continue;
+            item.CurrentAlt = null;
+            RestoreImage(item);
+        }
+    }
+
+    /// <summary>部件的基本圖：有穿衣服就用衣服的圖，否則用角色原本的</summary>
+    void RestoreImage(Item item)
+    {
+        if (outfit != null && outfit.TryGetValue(ArtOf(item.Slot!), out var part)) SetImage(item, part.Path, part.Box);
+        else SetImage(item, rig.BasePath + item.Slot!.File, item.Slot.Box);
+    }
+
     public void SetProps(IReadOnlyList<string> list)
     {
         var key = string.Join(",", list);
@@ -147,7 +171,7 @@ public partial class PetView : Node2D
             var want = map.TryGetValue(item.Slot.Name, out var w) && alts.ContainsKey(w) ? w : null;
             if (want == item.CurrentAlt) continue;
             if (want != null) SetImage(item, rig.BasePath + alts[want].File, alts[want].Box);
-            else SetImage(item, rig.BasePath + item.Slot.File, item.Slot.Box);
+            else RestoreImage(item);
             item.CurrentAlt = want;
         }
     }

@@ -149,7 +149,7 @@ public partial class Main : Node2D
         tray.CharacterChosen += id =>
         {
             pet.SetCharacter(RigOf(id));
-            if (progress != null) ApplyAccessories();
+            if (progress != null) { ApplyAccessories(); ApplyOutfit(); }
             tray.SetForms(rigs[id].Forms, FormOf(id));
             if (progress != null) RefreshLocks();
             settings.Character = id;
@@ -171,6 +171,7 @@ public partial class Main : Node2D
         SetupDaily();
         SetupMusic();
         SetupFocus();
+        SetupCustom();
         if (args.TryGetValue("hub", out var hubTab)) hub.Open(hubTab);     // --hub=shop：一開始就打開視窗（截圖用）
 
         GD.Print($"[DeskPet] content={ContentLoader.Root} characters={string.Join(",", ids)} " +
@@ -275,6 +276,8 @@ public partial class Main : Node2D
         else if (step == "remind") behavior.Remind("stretchRemind", "stretch");
         else if (step == "guitar") StartPerformance(force: true);
         else if (step == "focus") StartFocus();
+        else if (step.StartsWith("outfit:"))                             // outfit:<資料夾名> 直接穿上自訂衣服（不存設定）
+            pet.SetOutfit(outfits.FirstOrDefault(o => o.Id == step[7..])?.Parts);
         else if (step.StartsWith("wear:") && sandbox)                    // wear:acc:strawhat（只在 --sandbox）直接送並穿上
         {
             progress.State.Owned.Add(step[5..]);

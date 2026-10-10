@@ -134,6 +134,7 @@
 5. ✅ 專注模式／番茄鐘、偵測正在用的程式（需同意）：參數 `data/focus.json`、`data/apps.json`
 6. 🔶 配件系統 → 自訂配件／衣服編輯器 → 自訂角色編輯器（PNG 部件）
    - ✅ 6a 配件系統：錨點（hat／eyes／neck／back）、8 個官方配件（商店「🎩 配件」）、每個角色分開穿戴
+   - ✅ 6b 自訂配件／衣服：編輯器 `preview/editor.html`（上傳圖片、拖曳對齊、匯出 json）；桌寵讀 `文件\DeskPetccessories`、`outfits`，「👗 衣櫃」分頁穿戴
 7. ⬜ 多國語言、多螢幕、Steam
 
 暫不做：同時放多隻角色（之後可能不只兩隻，再討論）

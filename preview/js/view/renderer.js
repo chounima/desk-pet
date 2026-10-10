@@ -44,7 +44,7 @@ export class PetView {
         this.altSlots.push({ slot, img, current: null });
         preload(Object.values(slot.alt).map(a => rig.base + a.file));
       }
-      items.push({ z: slot.z, bone: slot.bone, el });
+      items.push({ z: slot.z, bone: slot.bone, el, slot, img });
     }
 
     // 道具以 Q 版身材設計，依角色腿長等比放大
@@ -79,8 +79,8 @@ export class PetView {
     for (const a of this.altSlots) {
       const want = a.slot.alt[map[a.slot.name]] ? map[a.slot.name] : null;
       if (want === a.current) continue;
-      const src = want ? a.slot.alt[want] : a.slot;
-      setImage(a.img, this.rig.base + src.file, src.box);
+      if (want) setImage(a.img, this.rig.base + a.slot.alt[want].file, a.slot.alt[want].box);
+      else this.restoreImage(a.slot, a.img);
       a.current = want;
     }
   }
@@ -101,6 +101,24 @@ export class PetView {
     }
     this.items.sort((a, b) => a.z - b.z);
     for (const it of this.items) this.g.append(it.el);       // 依圖層順序重新排列
+  }
+
+  // 衣服：{ 部件圖名（torso、arm_u…）: { url, box } }，把同名部件換成自訂圖片；null = 換回原本的
+  setOutfit(map) {
+    this.outfit = map;
+    for (const it of this.items) {
+      if (!it.slot || it.slot.variants || !it.slot.file) continue;
+      this.restoreImage(it.slot, it.img);
+    }
+    for (const a of this.altSlots) a.current = null;
+  }
+
+  // 部件的基本圖：有穿衣服就用衣服的圖，否則用角色原本的
+  restoreImage(slot, img) {
+    const art = slot.file.split("/").pop().replace(/\.svg$/, "");
+    const part = this.outfit?.[art];
+    if (part) setImage(img, part.url, part.box);
+    else setImage(img, this.rig.base + slot.file, slot.box);
   }
 
   setProps(list) {

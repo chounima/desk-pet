@@ -77,6 +77,16 @@ public sealed class Pet
     {
         accessories = list.ToList();
         View.SetAccessories(accessories);
+        View.SetOutfit(outfit);
+    }
+
+    Dictionary<string, OutfitPart>? outfit;
+
+    /// <summary>身上的衣服（自訂部件圖）；換大小重建畫面時會重新套用</summary>
+    public void SetOutfit(Dictionary<string, OutfitPart>? parts)
+    {
+        outfit = parts;
+        View.SetOutfit(parts);
     }
 
     public void Play(string name, bool restart = false, Dictionary<string, float>? mods = null) =>

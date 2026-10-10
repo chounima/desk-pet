@@ -36,6 +36,13 @@ export class Pet {
     this.world = this.skeleton.compute(this.animator.pose);   // 第一幀前就能查詢骨骼位置
     this.view = new PetView(this.layer, rig, this.props);
     this.view.setAccessories(this.accessories ?? []);
+    this.view.setOutfit(this.outfit ?? null);
+  }
+
+  // 衣服 { 部件圖名: { url, box } }；換角色時會重新套用（不同角色通常要換掉）
+  setOutfit(map) {
+    this.outfit = map;
+    this.view.setOutfit(map);
   }
 
   // 配件 [{ url, box, anchor, z }]；換角色時會重新套用

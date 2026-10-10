@@ -45,6 +45,7 @@ Godot 4.7 .NET（C#）。直接讀取專案根目錄的 `art/` 與 `data/`，和
 | 專注模式 | 番茄鐘（`Game/Focus.cs`、`Main.Focus.cs`、`data/focus.json`）：專注中只做安靜動作、不講一般台詞，倒數顯示在頭旁邊；完成一輪送點數與好感度，休息時伸懶腰。右鍵選單／系統匣「🍅 開始專注」、Desk Pet 視窗「🍅 專注」分頁可改分鐘數。測試：`--sandbox --focus-minutes=0.1 --test=focus` |
 | 依正在用的程式反應 | 設定勾選才開（預設關）：只看前景程式的執行檔名稱（`Platform/ActiveApp.cs`），依 `data/apps.json` 分類，說一句話並讓相關動作更常出現（`Game/AppAwareness.cs`）。`--selftest=apps` 檢查分類 |
 | 測試沙盒 | `--sandbox`：收集進度從空白開始、不存檔，測試不會動到真正的進度 |
+| 自訂內容 | `文件\DeskPetccessories\<名稱>ccessory.json`＋圖片、`outfits\<名稱>\outfit.json`＋圖片（`Content/CustomContent.cs`，格式見檔頭）。自訂配件是免費商品；衣服在「👗 衣櫃」分頁選。圖片支援 PNG／JPG／WebP／SVG。測試可用環境變數 `DESKPET_CUSTOM` 換資料夾、`--test=outfit:<名稱>` |
 | 開機自動啟動 | `HKCU\Software\Microsoft\Windows\CurrentVersion\Run\DeskPet`（`--autostart=on/off` 也可設定） |
 
 ```
@@ -71,6 +72,7 @@ godot/src/
 除錯：`run_pet.ps1 -Dump` 每 2 秒印出狀態；`tools/send_f24.ps1` 送出 F24（沒有程式會用的鍵）測試全域鍵盤；
 `tools/screenshot.ps1` DPI 感知截圖；`tools/window_at.ps1` 查詢某點下方是哪個程式（驗證點擊穿透）。
 
+- 自訂配件／衣服編輯器：`/preview/editor.html`（上傳 PNG／SVG、在動起來的角色身上拖曳對齊、滾輪縮放、匯出 json；`?demo=accessory|outfit` 用現成圖示範）
 - 桌面預覽：`/preview/index.html`
 - 動作總覽：`/preview/gallery.html`（所有動作同時播放）
 - 截圖參數：`index.html?char=sera&action=walk&t=0.3&scale=2.4`、`gallery.html?char=tk01&t=0.3`
