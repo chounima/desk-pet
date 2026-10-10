@@ -55,6 +55,16 @@ export async function loadAnimations(bodies = []) {
   return { names, clips, sets };
 }
 
+// 收集系統的參數；開發者模式的暫存覆寫（JSON 字串）優先
+export async function loadProgression(override) {
+  const defaults = await getJSON(`${PATHS.data}/progression.json`);
+  let cfg = defaults;
+  if (override) {
+    try { cfg = JSON.parse(override); } catch { /* 覆寫壞掉就用預設 */ }
+  }
+  return { defaults, cfg };
+}
+
 export async function loadProps() {
   const props = await getJSON(`${PATHS.art}/props/props.json`);
   for (const p of Object.values(props)) p.url = `${PATHS.art}/props/${p.file}`;

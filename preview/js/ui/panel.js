@@ -9,7 +9,7 @@ function button(text, onClick, title = "") {
 }
 
 export class Panel {
-  constructor(root, { characters, actions, onCharacter, onForm, onAction, onAuto, onVolley }) {
+  constructor(root, { characters, actions, onCharacter, onForm, onAction, onAuto, onVolley, onCollection }) {
     this.charButtons = {};
     this.actionButtons = {};
     this.formsRow = root.querySelector("[data-forms]");
@@ -17,7 +17,7 @@ export class Panel {
 
     const chars = root.querySelector("[data-characters]");
     for (const rig of characters) {
-      const b = button(rig.name, () => onCharacter(rig.id), rig.description);
+      const b = button(rig.name, () => { if (!b.dataset.hint) onCharacter(rig.id); }, rig.description);
       chars.append(b);
       this.charButtons[rig.id] = b;
     }
@@ -35,6 +35,7 @@ export class Panel {
 
     this.volleyButton = button("🏐 排球對打", onVolley, "用游標揮球和她對打");
     root.querySelector("[data-games]").append(this.volleyButton);
+    root.querySelector("[data-collection]").append(button("📖 收藏", onCollection, "點數、好感度、解鎖"));
   }
 
   setVolley(on) {
@@ -46,15 +47,27 @@ export class Panel {
     for (const [k, b] of Object.entries(this.charButtons)) b.classList.toggle("on", k === id);
   }
 
-  // 型態按鈕：只有一種型態的角色不顯示
-  setForms(forms, current) {
+  // 型態按鈕：只有一種型態的角色不顯示；lockedHint(name) 回傳文字表示鎖住
+  setForms(forms, current, lockedHint = () => null) {
     const entries = Object.entries(forms ?? {});
     this.formsRow.hidden = entries.length < 2;
     this.formsRow.replaceChildren(...entries.map(([name, f]) => {
-      const b = button(f.label, () => this.onForm(name));
+      const hint = lockedHint(name);
+      const b = button(hint ? `🔒 ${f.label}` : f.label, () => { if (!hint) this.onForm(name); }, hint ?? "");
       b.classList.toggle("on", name === current);
+      b.classList.toggle("locked", !!hint);
       return b;
     }));
+  }
+
+  // 角色按鈕的鎖定狀態：lockedHint(id) 回傳文字表示鎖住
+  setLocks(lockedHint) {
+    for (const [id, b] of Object.entries(this.charButtons)) {
+      const hint = lockedHint(id);
+      b.classList.toggle("locked", !!hint);
+      b.dataset.hint = hint ?? "";
+      if (hint) b.title = hint;
+    }
   }
 
   setAction(name) {

@@ -5,6 +5,7 @@
 <title>Desk Pet Preview</title>
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/desktop.css">
+<link rel="stylesheet" href="css/collection.css">
 </head>
 <body>
   <!-- 模擬桌面 -->
@@ -12,7 +13,7 @@
   <svg id="world"><g id="pets"></g></svg>
   <div id="fx"></div>
   <div id="taskbar">
-    <span>⌨️ <b id="score">0</b> <span id="volleyHud"></span> <span id="debugHud"></span></span>
+    <span>⌨️ <b id="score">0</b>　<b id="points"></b> <span id="volleyHud"></span> <span id="debugHud"></span></span>
     <span id="clock"></span>
   </div>
 
@@ -26,6 +27,7 @@
     <div class="buttons" data-actions></div>
     <h2>小遊戲</h2>
     <div class="buttons" data-games></div>
+    <div class="buttons" data-collection></div>
     <label class="toggle"><input type="checkbox" data-auto checked> 自動行為</label>
     <p class="hint">
       打字 → 拿出筆電一起打<br>
@@ -36,6 +38,36 @@
     </p>
     <a href="gallery.html">→ 動作總覽</a>
   </aside>
+
+  <!-- 收藏視窗 -->
+  <section id="collection" class="window" hidden>
+    <header><b>📖 收藏</b><span data-points></span><button data-close>✕</button></header>
+    <h3>今日點數</h3>
+    <div data-today></div>
+    <h3>角色</h3>
+    <div class="cards" data-chars></div>
+  </section>
+
+  <!-- 解鎖提示 -->
+  <div id="toast" hidden></div>
+
+  <!-- 開發者模式（?dev=1） -->
+  <section id="dev" class="window" hidden>
+    <header><b>🛠 開發者模式</b></header>
+    <div class="buttons">
+      <button data-dev="points">💎 +100</button>
+      <button data-dev="xp">❤ +50（目前角色）</button>
+      <button data-dev="nextDay">⏭ 隔天</button>
+      <button data-dev="reset">🗑 重置進度</button>
+    </div>
+    <h3>參數（data/progression.json）</h3>
+    <textarea data-cfg spellcheck="false"></textarea>
+    <div class="buttons">
+      <button data-dev="apply">套用</button>
+      <button data-dev="restore">還原預設</button>
+      <span class="muted" data-status></span>
+    </div>
+  </section>
 
   <script type="module" src="js/main.js"></script>
 </body>

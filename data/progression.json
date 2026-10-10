@@ -1,0 +1,27 @@
+{
+  "_說明": "收集系統的所有數值。網頁預覽與 Godot 共用；開發者模式（網頁 ?dev=1）可以即時修改並暫存覆寫。",
+  "points": {
+    "_說明": "點數 💎：所有角色共用的貨幣",
+    "typing": { "every": 200, "gain": 1, "dailyMax": 50 },
+    "interaction": { "gain": 1, "dailyMax": 10 },
+    "volley": { "everyRally": 5, "gain": 1, "recordBonus": 5, "dailyMax": 30 },
+    "login": { "base": 10, "streakBonus": 2, "maxBonus": 20 },
+    "levelUp": 20
+  },
+  "affection": {
+    "_說明": "好感度 ❤：每個角色各自累積，只增不減。levels[i] = 升到 Lv(i+1) 需要的累積經驗",
+    "companionPerMinute": 1, "companionDailyMax": 120,
+    "interaction": 2, "interactionDailyMax": 30,
+    "volleyEveryRally": 5, "volleyGain": 1, "volleyDailyMax": 30,
+    "levels": [0, 60, 180, 400, 800, 1500]
+  },
+  "start": {
+    "_說明": "一開始就能用的角色（預設型態一律開放）",
+    "characters": ["tk01", "sera", "mira", "chouma"]
+  },
+  "unlocks": {
+    "_說明": "解鎖條件。key：character:<角色> 或 form:<角色>/<型態>。條件：affection（某角色好感度達到等級）或 cost（花點數購買）",
+    "character:choupaca": { "affection": { "char": "chouma", "level": 3 }, "hint": "Chouma 好感度 Lv3 時，他會變身…？" },
+    "form:choupaca/quadruped": { "affection": { "char": "choupaca", "level": 2 }, "hint": "Choupaca 好感度 Lv2 解鎖四足型態" }
+  }
+}

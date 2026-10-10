@@ -1,0 +1,47 @@
+/* 收藏視窗、開發者模式、解鎖提示 */
+.window {
+  position: fixed; top: 16px; right: 16px; width: 380px; max-height: calc(100vh - 100px); overflow: auto;
+  padding: 14px 16px; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; font-size: 13px;
+}
+.window header { display: flex; align-items: center; gap: 10px; }
+.window header button { margin-left: auto; }
+.window h3 { margin: 14px 0 6px; font-size: 13px; color: var(--muted); font-weight: normal; }
+#dev { top: auto; bottom: 64px; right: auto; left: 322px; width: 420px; }
+#dev header { cursor: pointer; }
+#dev header::after { content: "▾ 點這裡收合"; margin-left: auto; color: var(--muted); font-size: 12px; }
+#dev.collapsed header::after { content: "▸ 展開"; }
+#dev.collapsed > :not(header) { display: none; }
+#dev textarea {
+  width: 100%; height: 260px; box-sizing: border-box; margin-bottom: 8px; resize: vertical;
+  font: 12px/1.4 Consolas, monospace; color: inherit; background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--line); border-radius: 8px; padding: 8px;
+}
+
+.today-row { display: grid; grid-template-columns: 70px 1fr 70px; align-items: center; gap: 8px; margin: 4px 0; }
+.bar { height: 8px; border-radius: 4px; background: rgba(255, 255, 255, 0.1); overflow: hidden; }
+.bar .fill { display: block; height: 100%; background: linear-gradient(90deg, #ff6b8a, #ffb36b); }
+.num { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+
+.cards { display: grid; gap: 8px; }
+.card { padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; }
+.card.locked { opacity: 0.7; border-style: dashed; }
+.card-head { display: flex; gap: 8px; align-items: baseline; margin-bottom: 4px; }
+.card .hint { margin: 4px 0; }
+.forms { display: flex; gap: 6px; margin-top: 6px; }
+.tag { padding: 2px 8px; border-radius: 10px; border: 1px solid var(--line); }
+.tag.locked { opacity: 0.6; }
+
+/* 鎖住的角色／型態按鈕 */
+button.locked { opacity: 0.45; cursor: not-allowed; }
+
+.fx-points { color: #7fe0ff; font-size: 20px; }
+.fx-level { color: #ff6b8a; font-size: 28px; }
+
+#toast {
+  position: fixed; left: 50%; top: 30%; transform: translate(-50%, -50%);
+  padding: 16px 28px; border-radius: 14px; font-size: 22px; font-weight: bold;
+  background: var(--panel); border: 2px solid #ffd75e; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+  animation: toastIn 0.4s ease-out;
+}
+@keyframes toastIn { from { opacity: 0; transform: translate(-50%, -30%); } }

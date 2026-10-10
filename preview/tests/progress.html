@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head><meta charset="utf-8"><title>收集系統測試</title></head>
+<body>
+<pre id="out">running…</pre>
+<script>
+  // 把錯誤顯示在頁面上（無頭瀏覽器看不到 console）
+  const show = msg => { document.getElementById("out").textContent = "ERROR: " + msg; };
+  addEventListener("error", e => show(`${e.message} @ ${e.filename}:${e.lineno}`));
+  addEventListener("unhandledrejection", e => show(e.reason?.stack ?? e.reason));
+</script>
+<script type="module">
+// 用真實的 data/progression.json 跑一遍收集系統的規則（不存檔、不開畫面）
+import { loadProgression } from "../js/core/loader.js";
+import { Progress } from "../js/game/progress.js";
+
+const { cfg } = await loadProgression();
+const lines = [];
+let fails = 0;
+const check = (name, ok, detail = "") => {
+  if (!ok) fails++;
+  lines.push(`${ok ? "✓" : "✗"} ${name}${detail ? `　(${detail})` : ""}`);
+};
+
+const events = [];
+const p = new Progress(cfg, {}, () => {});
+p.onEvent = e => events.push(e);
+const day = n => `2026-01-${String(n).padStart(2, "0")}`;
+
+// 第 1 天登入
+p.checkDay(day(1));
+check("第一次登入送基本點數", p.state.points === cfg.points.login.base, `points=${p.state.points}`);
+check("連續登入 1 天", p.state.login.streak === 1);
+
+// 打字：每日上限
+const before = p.state.points;
+p.checkDay = (orig => d => orig.call(p, d ?? day(1)))(p.checkDay);
+p.onKey("chouma", 100000);
+check("打字點數有每日上限", p.state.points - before === cfg.points.typing.dailyMax, `+${p.state.points - before}`);
+
+// 互動：每日上限＋好感度
+const b2 = p.state.points;
+for (let i = 0; i < 50; i++) p.onInteraction("tk01");
+check("互動點數有每日上限", p.state.points - b2 - levelUpPoints() === cfg.points.interaction.dailyMax, `+${p.state.points - b2}`);
+check("互動好感度有每日上限", p.state.xp.tk01 === cfg.affection.interactionDailyMax, `xp=${p.state.xp.tk01}`);
+function levelUpPoints() { return events.filter(e => e.type === "levelUp").length * cfg.points.levelUp; }
+
+// 鎖定狀態
+check("一開始 Chouma 開放", p.characterUnlocked("chouma"));
+check("一開始 Choupaca 鎖住", !p.characterUnlocked("choupaca"));
+check("預設型態一律開放", p.formUnlocked("choupaca", "upright", "upright"));
+check("四足型態鎖住", !p.formUnlocked("choupaca", "quadruped", "upright"));
+
+// Chouma 好感度升到 Lv3 → 解鎖 Choupaca
+const need = cfg.unlocks["character:choupaca"].affection;
+p.addXp("chouma", cfg.affection.levels[need.level - 1]);
+check(`Chouma 升到 Lv${need.level}`, p.level("chouma").level >= need.level, `Lv${p.level("chouma").level}`);
+check("解鎖 Choupaca", p.characterUnlocked("choupaca"));
+check("發出解鎖事件", events.some(e => e.type === "unlock" && e.key === "character:choupaca"));
+check("升級有送點數", events.filter(e => e.type === "points" && e.reason === "levelUp").length >= need.level - 1);
+
+// Choupaca 升級 → 解鎖四足
+const nf = cfg.unlocks["form:choupaca/quadruped"].affection;
+p.addXp("choupaca", cfg.affection.levels[nf.level - 1]);
+check("解鎖四足型態", p.formUnlocked("choupaca", "quadruped", "upright"));
+
+// 排球：每 N 次來回給點數，破紀錄獎勵
+const b3 = p.state.points;
+for (let r = 1; r <= 12; r++) p.onVolley("sera", r);
+check("排球第一次玩不算破紀錄", !events.some(e => e.reason === "record"), `+${p.state.points - b3}`);
+for (let r = 1; r <= 13; r++) p.onVolley("sera", r);
+check("排球破紀錄有獎勵", events.filter(e => e.reason === "record").length === 1);
+
+// 陪伴時間
+const xp0 = p.state.xp.mira ?? 0;
+p.tick(59, "mira");
+check("陪伴不滿一分鐘不加", (p.state.xp.mira ?? 0) === xp0);
+p.tick(2, "mira");
+check("陪伴滿一分鐘加好感度", p.state.xp.mira === xp0 + cfg.affection.companionPerMinute);
+
+// 隔天：連續登入
+const q = new Progress(cfg, {}, () => {});
+q.checkDay(day(1));
+q.checkDay(day(2));
+check("隔天連續登入 2 天", q.state.login.streak === 2);
+const pts = q.state.points;
+q.checkDay(day(2));
+check("同一天不重複送", q.state.points === pts);
+q.checkDay(day(5));
+check("中斷後重新計算", q.state.login.streak === 1);
+check("換日重置每日上限", q.state.day.pts.typing === 0 && q.state.day.date === day(5));
+
+lines.push("", fails ? `✗ ${fails} 項失敗` : "全部通過");
+document.getElementById("out").textContent = lines.join("\n");
+document.title = fails ? `FAIL ${fails}` : "PASS";
+</script>
+</body>
+</html>
