@@ -1,7 +1,7 @@
 // 讀取角色、動作、道具資料
 //
 // 開發時直接讀專案根目錄（godot/ 的上一層）的 art/ 與 data/，網頁預覽和桌寵共用同一份資料；
-// 匯出後則讀 res://content/（由 tools/sync_godot.py 複製進來）。
+// 匯出後則讀 res://content/（打包前由 tools/sync_content.py 複製進來）。
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
@@ -17,6 +17,9 @@ public static class ContentLoader
 
     static string ResolveRoot()
     {
+        if (OS.HasFeature("template")) return "res://content";     // 匯出後的版本
+        var forced = OS.GetEnvironment("DESKPET_CONTENT");          // 測試用：開發版也強制讀 res://content
+        if (!string.IsNullOrEmpty(forced)) return forced;
         var project = ProjectSettings.GlobalizePath("res://").TrimEnd('/', '\\');
         var parent = Path.GetDirectoryName(project);
         if (parent != null && Directory.Exists(Path.Combine(parent, "art")) && Directory.Exists(Path.Combine(parent, "data")))

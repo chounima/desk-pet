@@ -47,6 +47,16 @@ godot/src/
 └── UI/                Tray（系統匣）
 ```
 
+### 打包成 .exe
+
+`powershell -File tools/build_release.ps1` → `build/DeskPet/`（`DeskPet.exe` + `data_DeskPet_windows_x86_64/`，兩個要放在一起）與 `build/DeskPet-<日期>.zip`。
+
+- `tools/sync_content.py` 先把 `art/`、`data/` 複製到 `godot/content/`（不進 git），SVG 用 `importer="keep"` 原樣打包，執行時一樣即時轉貼圖
+- `ContentLoader` 找資料的順序：環境變數 `DESKPET_CONTENT` → 匯出版用 `res://content` → 開發時用上層的 `art/`、`data/`
+- 需要 Godot 匯出模板（版本要和編輯器一致，放在 `%APPDATA%\Godot\export_templates\<版本>`）與 `godot/DeskPet.sln`（Godot 匯出 C# 時一定要有）
+- 匯出記錄在 `build/import.log`、`build/export.log`，有 `ERROR:` 就判定失敗
+- 圖示：`godot/icon.ico`（16～256 六種尺寸，用 `tools/make_icon.py` 從 PNG 組成）
+
 除錯：`run_pet.ps1 -Dump` 每 2 秒印出狀態；`tools/send_f24.ps1` 送出 F24（沒有程式會用的鍵）測試全域鍵盤；
 `tools/screenshot.ps1` DPI 感知截圖；`tools/window_at.ps1` 查詢某點下方是哪個程式（驗證點擊穿透）。
 
@@ -162,4 +172,5 @@ desk-pet/
 ## 開發環境
 
 - Python 3（產生美術、本機伺服器）
-- Godot 4.7 .NET 版 + .NET 8 SDK（遊戲本體，尚未建立）
+- Godot 4.7 .NET 版 + .NET 8 SDK（遊戲本體）
+- Godot 匯出模板 4.7.2.stable.mono（只有打包時需要）

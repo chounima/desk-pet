@@ -16,3 +16,7 @@ obj/
 Thumbs.db
 .DS_Store
 .vs/
+
+# 打包產物（tools/sync_content.py、tools/build_release.ps1 產生）
+godot/content/
+build/
