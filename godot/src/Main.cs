@@ -6,6 +6,8 @@
 //   --autostart=on|off 設定開機自動啟動
 //   --say=greet        一開始就顯示某句台詞（截圖用）
 //   --look=x,y         固定看某一點而不是游標（截圖用）
+//   --test=face*4,Save 模擬點擊部位或特殊按鍵（測試互動規則）
+//   --zones            印出身體各點判定成哪個部位
 using System.Collections.Generic;
 using System.Linq;
 using DeskPet.Content;
@@ -23,6 +25,7 @@ public partial class Main : Node2D
     sealed class Drag
     {
         public Vector2 Start;
+        public string Zone = "body";     // 按下時點到的部位
         public bool Moved;
     }
 
@@ -66,7 +69,7 @@ public partial class Main : Node2D
         var area = Area();
         pet.X = area.Size.X / 2;
         pet.Y = area.End.Y;
-        behavior = new Behavior(pet, Area) { Auto = settings.Auto };
+        behavior = new Behavior(pet, Area, new Interactions(InteractionData.Load())) { Auto = settings.Auto };
         fx = new Fx();
         AddChild(fx);
         lines = Lines.Load(ids);
@@ -82,6 +85,9 @@ public partial class Main : Node2D
         if (args.TryGetValue("say", out var sayKey)) bubble.Say(lines.Pick(startId, sayKey), 999);
         if (args.TryGetValue("look", out var look) && look.Split(',') is [var lx, var ly])
             lookOverride = new Vector2(float.Parse(lx), float.Parse(ly));
+        if (args.TryGetValue("test", out var test))
+            foreach (var step in ParseTestSteps(test)) testSteps.Enqueue(step);
+        zoneProbe = args.ContainsKey("zones");
 
         if (args.TryGetValue("autostart", out var auto)) Autostart.Set(auto == "on");
 
@@ -109,11 +115,12 @@ public partial class Main : Node2D
         var dt = Mathf.Min((float)delta, 0.05f);
 
         var newKeys = 0;
-        while (GlobalInput.TryDequeue(out _))
+        while (GlobalInput.TryDequeue(out var kind))
         {
             newKeys++;
-            behavior.OnKey();
+            behavior.OnKey(kind);
         }
+        RunTestScript();
         keyCount += newKeys;
         settings.AddKeys(newKeys);
         tray.SetTodayKeys(settings.TodayKeys);
@@ -135,6 +142,44 @@ public partial class Main : Node2D
         if (dumpState && Engine.GetProcessFrames() % 120 == 0) DumpState();
     }
 
+    // ---------- 測試用 ----------
+
+    // --test=face*4,Backspace*6,Save：開始後每 0.2 秒模擬一次點擊部位或特殊按鍵
+    readonly Queue<string> testSteps = new();
+
+    void RunTestScript()
+    {
+        var frame = Engine.GetProcessFrames();
+        if (frame == 60 && zoneProbe) ProbeZones();
+        if (testSteps.Count == 0 || frame < 120 || frame % 12 != 0) return;
+        var step = testSteps.Dequeue();
+        if (System.Enum.TryParse<GlobalInput.KeyKind>(step, out var kind)) behavior.OnKey(kind);
+        else behavior.OnPetClick(step);
+        GD.Print($"[test] {step} -> action={pet.Action} face={pet.FaceOverride ?? pet.Animator.Face}");
+    }
+
+    static IEnumerable<string> ParseTestSteps(string spec) =>
+        spec.Split(',').SelectMany(s => s.Split('*') is [var name, var n] ? Enumerable.Repeat(name, int.Parse(n)) : new[] { s });
+
+    // --zones：印出身體各點判定成哪個部位
+    bool zoneProbe;
+
+    void ProbeZones()
+    {
+        var top = pet.Rig.HeadTop;
+        var points = new Dictionary<string, Vector2>
+        {
+            ["頭頂"] = pet.BoneToScreen("head", new Vector2(top[0], top[1] * 0.8f)),
+            ["臉"] = pet.BoneToScreen("head", new Vector2(top[0], top[1] * 0.3f)),
+            ["胸口"] = pet.BoneToScreen("torso", new Vector2(0, -30 * pet.Rig.RootScale)),
+            ["手"] = pet.BoneToScreen("handNear", new Vector2(0, 8)),
+            ["腳"] = pet.BoneToScreen("footNear", new Vector2(4, 2)),
+            ["尾巴"] = pet.BoneToScreen("tail", new Vector2(-30, 60)),
+        };
+        foreach (var (name, p) in points)
+            GD.Print($"[zone] {name} -> {pet.View.HitSlot(p) ?? "(沒點到)"} / {ZoneAt(p) ?? "-"}");
+    }
+
     // --dump：每 2 秒印出狀態，除錯用
     bool dumpState;
 
@@ -146,8 +191,15 @@ public partial class Main : Node2D
 
     public override void _Input(InputEvent e)
     {
-        if (e is InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: true } mb && pet.View.HitTest(mb.Position))
-            drag = new Drag { Start = mb.Position };
+        if (e is InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: true } mb && ZoneAt(mb.Position) is { } zone)
+            drag = new Drag { Start = mb.Position, Zone = zone };
+    }
+
+    /// <summary>畫面上某點點到角色的哪個部位；沒點到角色回傳 null</summary>
+    string? ZoneAt(Vector2 point)
+    {
+        if (pet.View.HitSlot(point) is not { } slot) return null;
+        return Interactions.ZoneOf(slot, pet.ToBoneLocal("head", point).Y, pet.Rig.HeadTop[1]);
     }
 
     // 拖曳中游標可能離開可點擊區域，所以改用全域查詢游標位置與按鍵狀態
@@ -158,11 +210,7 @@ public partial class Main : Node2D
         if (!DesktopWindow.LeftButtonDown())
         {
             if (drag.Moved) behavior.Release();
-            else
-            {
-                behavior.OnPetClick();
-                fx.Burst("♥", pet.HeadTop(), new Color("#ff6b8a"), 24);
-            }
+            else behavior.OnPetClick(drag.Zone);
             drag = null;
             return;
         }
