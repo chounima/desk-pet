@@ -59,6 +59,7 @@ public sealed class Volley
     public event Action<string, Vector2>? Popped;       // 飄字（Nice!、連發…）
     public event Action<int, int>? Scored;              // 來回次數、最佳紀錄
     public event Action? Shook;                         // 殺球時畫面震動
+    public event Action<string, float>? Sounded;        // 音效（名稱、音高）
 
     public Volley(Pet pet, Func<Rect2> area)
     {
@@ -164,7 +165,11 @@ public sealed class Volley
     public void Update(float dt)
     {
         if (!Active) return;
-        if (ball.Step(dt, Width, Ground) && state == "play") EndRally();
+        if (ball.Step(dt, Width, Ground) && state == "play")
+        {
+            Sounded?.Invoke("thud", 1.2f);
+            EndRally();
+        }
         if (state == "play")
         {
             CheckCursorHit();
@@ -333,6 +338,7 @@ public sealed class Volley
             p.From = pet.X;
             pet.Facing = p.Dir;
             pet.Play("vbDive", true);
+            Sounded?.Invoke("whoosh", 1);
         }
         // 撲出的前衝：在碰到球之前滑完
         var kd = Math.Min(1, (float)((t - p.StartAt) / VolleyConfig.DiveContact));
@@ -383,6 +389,7 @@ public sealed class Volley
         if (petWillMiss || ball.Vy <= 0 || ball.Position.DistanceTo(hp) >= ball.R + VolleyConfig.HitTolerance) return;
         pet.Facing = AimDir();
         pet.Play("vbBump", true);
+        Sounded?.Invoke("bump", 1);
         var c = AimTarget();
         ball.Launch(c.X, Math.Min(c.Y, Ground - 120 * U), VolleyConfig.Arc);
         AfterPetHit();
@@ -402,6 +409,7 @@ public sealed class Volley
         ball.Vx = (tx - ball.X) / T;
         ball.Vy = (ty - ball.Y - 0.5f * g * T * T) / T;
         Spikes++;
+        Sounded?.Invoke("spike", 1);
         SayKey("spike");
         Shook?.Invoke();
         AfterPetHit();
@@ -412,6 +420,7 @@ public sealed class Volley
         var c = AimTarget();
         ball.Launch(c.X, Math.Min(c.Y, Ground - 120 * U), VolleyConfig.LobArc);
         Dives++;
+        Sounded?.Invoke("bump", 0.9f);
         SayKey("dive");
         AfterPetHit();
     }
@@ -436,6 +445,7 @@ public sealed class Volley
         // 漏接時故意站偏一點，讓球從手邊擦過，而不是穿過身體
         missOffset = petWillMiss ? (ball.R + VolleyConfig.HitTolerance + 20 * U) * (GD.Randf() < 0.5f ? 1 : -1) : 0;
         Popped?.Invoke(text, ball.Position - new Vector2(0, ball.R));
+        Sounded?.Invoke("bump", 1.2f);
         Scored?.Invoke(rally, best);
         CheckFire();
     }
@@ -449,6 +459,7 @@ public sealed class Volley
         {
             Popped?.Invoke($"🔥 {VolleyConfig.FireAt} 連發！", ball.Position - new Vector2(0, 40 * U));
             SayKey("fire");
+            Sounded?.Invoke("chime", 1.2f);
         }
         onFire = on;
     }

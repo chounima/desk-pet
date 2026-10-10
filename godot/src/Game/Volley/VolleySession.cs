@@ -23,7 +23,7 @@ public partial class VolleySession : Node2D
 
     public bool Active => volley.Active;
 
-    public void Init(Pet pet, Behavior behavior, Func<Rect2> area, PropData ballProp, Bubble bubble, Fx fx, Node2D shakeTarget)
+    public void Init(Pet pet, Behavior behavior, Func<Rect2> area, PropData ballProp, Bubble bubble, Fx fx, Audio.Sfx sfx, Node2D shakeTarget)
     {
         this.pet = pet;
         this.behavior = behavior;
@@ -51,6 +51,7 @@ public partial class VolleySession : Node2D
         volley.Popped += (text, at) => fx.Burst(text, at, Colors.White);
         volley.Scored += ShowScore;
         volley.Shook += () => shakeLeft = 0.28f;
+        volley.Sounded += (name, pitch) => sfx.Play(name, pitch);
     }
 
     public void SetActive(bool on)

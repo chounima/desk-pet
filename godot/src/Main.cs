@@ -12,6 +12,7 @@
 //   --volley / --volley-bot  直接開始排球對打（bot = 模擬完美玩家自動回球）
 using System.Collections.Generic;
 using System.Linq;
+using DeskPet.Audio;
 using DeskPet.Content;
 using DeskPet.Game;
 using DeskPet.Game.Minigames;
@@ -39,6 +40,7 @@ public partial class Main : Node2D
     Fx fx = null!;
     Bubble bubble = null!;
     VolleySession volley = null!;
+    Sfx sfx = null!;
     Lines lines = null!;
     Tray tray = null!;
     Settings settings = null!;
@@ -82,12 +84,18 @@ public partial class Main : Node2D
         lines = Lines.Load(ids);
         bubble = new Bubble();
         AddChild(bubble);
-        behavior.Said += key => bubble.Say(lines.Pick(pet.Rig.Id, key));
+        sfx = new Sfx { Enabled = settings.Sound };
+        AddChild(sfx);
+        behavior.Said += key =>
+        {
+            bubble.Say(lines.Pick(pet.Rig.Id, key));
+            sfx.PlayForLine(key);
+        };
 
         VolleySkills.Load();
         volley = new VolleySession { Bot = args.ContainsKey("volley-bot") };
         AddChild(volley);
-        volley.Init(pet, behavior, Area, props["volleyball"], bubble, fx, this);
+        volley.Init(pet, behavior, Area, props["volleyball"], bubble, fx, sfx, this);
 
         if (args.TryGetValue("action", out var action))
         {
@@ -113,6 +121,7 @@ public partial class Main : Node2D
         tray.AutoToggled += on => { behavior.Auto = on; settings.Auto = on; settings.Save(); };
         tray.AutostartToggled += Autostart.Set;
         tray.VolleyToggled += volley.SetActive;
+        tray.SoundToggled += on => { sfx.Enabled = on; settings.Sound = on; settings.Save(); };
         if (args.ContainsKey("volley") || volley.Bot)
         {
             volley.SetActive(true);
@@ -223,7 +232,7 @@ public partial class Main : Node2D
 
     void DumpState() =>
         GD.Print($"[state] keys={keyCount} input={GlobalInput.Running} action={pet.Action} " +
-                 $"t={pet.Animator.LocalTime:0.00} facing={pet.Facing} x={pet.X:0} char={pet.Rig.Id} scale={pet.Scale:0.00} today={settings.TodayKeys} y={pet.Y:0} surface={behavior.SurfaceInfo} windows=[{WindowTracker.Stats}]" + (volley.Active ? $" volley[{volley.DebugInfo}]" : ""));
+                 $"t={pet.Animator.LocalTime:0.00} facing={pet.Facing} x={pet.X:0} char={pet.Rig.Id} scale={pet.Scale:0.00} today={settings.TodayKeys} y={pet.Y:0} surface={behavior.SurfaceInfo} windows=[{WindowTracker.Stats}]" + (volley.Active ? $" volley[{volley.DebugInfo}]" : "") + $" sfx[{string.Join(",", sfx.Played.Select(kv => $"{kv.Key}={kv.Value}"))}]");
 
     // ---------- 滑鼠：點擊與拖曳 ----------
 

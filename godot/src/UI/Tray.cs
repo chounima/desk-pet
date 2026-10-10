@@ -11,7 +11,7 @@ namespace DeskPet.UI;
 public partial class Tray : Node
 {
     // 選單項目 id：角色用 0..n-1，大小用 IdSize + i
-    const int IdSize = 100, IdAuto = 1000, IdAutostart = 1001, IdToday = 1002, IdQuit = 1003, IdVolley = 1004;
+    const int IdSize = 100, IdAuto = 1000, IdAutostart = 1001, IdToday = 1002, IdQuit = 1003, IdVolley = 1004, IdSound = 1005;
 
     readonly List<string> ids = new();
     PopupMenu menu = null!;
@@ -23,6 +23,7 @@ public partial class Tray : Node
     public event Action<bool>? AutoToggled;
     public event Action<bool>? AutostartToggled;
     public event Action<bool>? VolleyToggled;
+    public event Action<bool>? SoundToggled;
     public event Action? QuitRequested;
 
     public void Build(IList<RigData> characters, Settings settings, bool autostart, Texture2D icon)
@@ -41,6 +42,7 @@ public partial class Tray : Node
         menu.AddSeparator();
         menu.AddCheckItem("🏐 排球對打", IdVolley);
         menu.AddCheckItem("自動行為", IdAuto);
+        menu.AddCheckItem("🔊 音效", IdSound);
         menu.AddCheckItem("開機時自動啟動", IdAutostart);
         menu.AddSeparator();
         menu.AddItem("", IdToday);
@@ -51,6 +53,7 @@ public partial class Tray : Node
         SetCharacter(settings.Character);
         SetSize(settings.Size);
         SetChecked(IdAuto, settings.Auto);
+        SetChecked(IdSound, settings.Sound);
         SetChecked(IdAutostart, autostart);
 
         indicator = new StatusIndicator { Icon = icon, Tooltip = "Desk Pet" };
@@ -93,6 +96,11 @@ public partial class Tray : Node
                 var on = !menu.IsItemChecked(menu.GetItemIndex(IdAuto));
                 SetChecked(IdAuto, on);
                 AutoToggled?.Invoke(on);
+                break;
+            case IdSound:
+                var sound = !menu.IsItemChecked(menu.GetItemIndex(IdSound));
+                SetChecked(IdSound, sound);
+                SoundToggled?.Invoke(sound);
                 break;
             case IdVolley:
                 var volley = !menu.IsItemChecked(menu.GetItemIndex(IdVolley));

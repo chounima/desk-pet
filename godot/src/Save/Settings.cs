@@ -23,6 +23,7 @@ public sealed class Settings
     /// <summary>大小倍率（見 Tuning.Sizes）</summary>
     public float Size { get; set; } = 1f;
     public bool Auto { get; set; } = true;
+    public bool Sound { get; set; } = true;
     /// <summary>每日按鍵次數 { "2026-10-10": 1234 }，保留最近 30 天</summary>
     public SortedDictionary<string, int> DailyKeys { get; set; } = new();
 
