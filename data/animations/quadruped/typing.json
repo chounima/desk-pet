@@ -1,6 +1,6 @@
 {"label": "打字", "duration": 0.36, "loop": true, "face": "focus", "props": ["keyboard"],
   "tracks": {
-    "root.y": [[0, 29]],
+    "root.y": [[0, 25]],
     "armNear_u": [[0, -70]],
     "armNear_l": [[0, 0], [0.09, 45], [0.18, 0], [0.36, 0]],
     "armFar_u": [[0, -66]],

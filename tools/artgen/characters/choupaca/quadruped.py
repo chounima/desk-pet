@@ -11,26 +11,26 @@ from .palette import OL, WOOL, WOOL_HL, WOOL_SHADE, cloud, fluff
 LABEL = "四足"
 
 PROPORTIONS = QuadProportions(
-    hip=50, body=26, neck=(18, -14),
+    hip=50, body=26, neck=(18, -24),
     front=(6, 14, 6), back=(-30, -22, 6), leg=(20, 18),
     tail=(-46, -12), head_top=(6, -114),
 )
 
 # 排球：一般接球用頭頂（Q 版單位 × 身體縮放；四足的 rootScale = 1）
-VOLLEY = {"reach": 48, "hitHeight": 176, "spike": False, "dive": False}
+VOLLEY = {"reach": 48, "hitHeight": 186, "spike": False, "dive": False}
 
 
 def hips() -> Part:
     """整個身體是一大團毛，掛在身體中心。前半身骨頭（torso）不畫圖，只讓前腳和脖子接在上面。"""
     curls = "".join(f'<path d="M{x},{y} q4,-5 8,0" fill="none" stroke="{OL}" stroke-width="1.8" '
-                    f'stroke-linecap="round" opacity="0.55"/>' for x, y in ((-30, -14), (-8, 2), (22, -16)))
+                    f'stroke-linecap="round" opacity="0.55"/>' for x, y in ((-30, -20), (-8, 0), (22, -24), (-24, 8)))
     return Part(
-        fluff(cloud(3, -4, 51, 26, 17, 0.1, 0.3))
-        + f'<ellipse cx="24" cy="-2" rx="20" ry="15" fill="{WOOL_HL}" opacity="0.55"/>'
+        fluff(cloud(3, -10, 49, 34, 18, 0.09, 0.3))
+        + f'<ellipse cx="22" cy="-8" rx="22" ry="20" fill="{WOOL_HL}" opacity="0.55"/>'
         + curls
-        + f'<path d="M-38,10 Q-8,24 30,16" fill="none" stroke="{WOOL_SHADE}" stroke-width="5" '
+        + f'<path d="M-38,12 Q-8,28 32,16" fill="none" stroke="{WOOL_SHADE}" stroke-width="5" '
           f'stroke-linecap="round" opacity="0.7"/>',
-        (-56, -36, 62, 30))
+        (-56, -52, 62, 34))
 
 
 def neck() -> Part:

@@ -8,7 +8,7 @@
     6,
     -114
   ],
-  "height": 178,
+  "height": 188,
   "trackScale": {},
   "bones": [
     {
@@ -39,7 +39,7 @@
       "name": "head",
       "parent": "torso",
       "x": 18,
-      "y": -14
+      "y": -24
     },
     {
       "name": "tail",
@@ -277,9 +277,9 @@
       "file": "parts/hips.svg",
       "box": [
         -56,
-        -36,
+        -52,
         62,
-        30
+        34
       ],
       "far": false
     },
@@ -372,7 +372,7 @@
   ],
   "volley": {
     "reach": 48,
-    "hitHeight": 176,
+    "hitHeight": 186,
     "spike": false,
     "dive": false
   }

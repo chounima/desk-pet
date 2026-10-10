@@ -1,6 +1,6 @@
 {"label": "趴下", "duration": 3, "loop": true, "face": "idle",
   "tracks": {
-    "root.y": [[0, 29]],
+    "root.y": [[0, 25]],
     "armNear_u": [[0, -80]],
     "armNear_l": [[0, 160]],
     "armFar_u": [[0, -80]],
