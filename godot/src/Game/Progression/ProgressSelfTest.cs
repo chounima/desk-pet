@@ -81,6 +81,19 @@ public static class ProgressSelfTest
         shop.Buy("action:coffee");
         Check("動作買了就能用", shop.ActionOwned("coffee"));
 
+        // 配件
+        Check("配件沒買不能穿", !shop.Wear("acc:strawhat", "tk01"));
+        shop.Buy("acc:strawhat");
+        Check("配件買了可以穿", shop.Wear("acc:strawhat", "tk01") && shop.IsWorn("acc:strawhat", "tk01"));
+        Check("配件每個角色分開", !shop.IsWorn("acc:strawhat", "sera"));
+        shop.Buy("acc:catears");
+        shop.Wear("acc:catears", "tk01");
+        Check("同一部位換成新的", shop.IsWorn("acc:catears", "tk01") && !shop.IsWorn("acc:strawhat", "tk01"));
+        shop.Buy("acc:scarf");
+        shop.Wear("acc:scarf", "tk01");
+        Check("不同部位可以同時穿", shop.Worn("tk01").Count() == 2);
+        Check("可以脫下", shop.TakeOff("acc:scarf", "tk01") && shop.Worn("tk01").Count() == 1);
+
         GD.Print(fails == 0 ? "全部通過" : $"✗ {fails} 項失敗");
         return fails;
     }

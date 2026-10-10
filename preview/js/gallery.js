@@ -7,7 +7,7 @@ const CELL = { w: 230, h: 300, ground: 250, scale: 0.7, fitHeight: 270 };
 const NS = "http://www.w3.org/2000/svg";
 const $ = id => document.getElementById(id);
 
-const [{ ids, rigs }, { names, sets }, props] = await loadAll();
+const [{ ids, rigs }, { names, sets }, props, accessories] = await loadAll();
 const q = new URLSearchParams(location.search);
 let charId = q.get("char") ?? ids[0];
 const rig = formRig(rigs[charId], q.get("form"));
@@ -61,6 +61,8 @@ const pets = names.map((name, i) => {
   pet.x = cx + CELL.w / 2;
   pet.y = cy + CELL.ground;
   pet.play(name, true);
+  // ?acc=strawhat,roundglasses：所有格子都戴上這些配件（檢查錨點位置用）
+  if (q.has("acc")) pet.setAccessories(q.get("acc").split(",").map(a => accessories[a]).filter(Boolean));
   pet.animator.seek(freezeAt ?? 0);
   return pet;
 });

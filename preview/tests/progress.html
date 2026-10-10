@@ -112,6 +112,15 @@ check("不是商品的動作可以用", shop.actionOwned("wave"));
 shop.buy("action:coffee");
 check("動作買了就能用", shop.actionOwned("coffee"));
 check("動作不能「換上」", !shop.equip("action:coffee"));
+check("配件沒買不能穿", !shop.wear("acc:strawhat", "tk01"));
+shop.buy("acc:strawhat");
+check("配件買了可以穿", shop.wear("acc:strawhat", "tk01") && shop.isWorn("acc:strawhat", "tk01"));
+check("配件每個角色分開", !shop.isWorn("acc:strawhat", "sera"));
+shop.buy("acc:catears"); shop.wear("acc:catears", "tk01");
+check("同一部位換成新的", shop.isWorn("acc:catears", "tk01") && !shop.isWorn("acc:strawhat", "tk01"));
+shop.buy("acc:scarf"); shop.wear("acc:scarf", "tk01");
+check("不同部位可以同時穿", shop.worn("tk01").length === 2);
+check("可以脫下", shop.takeOff("acc:scarf", "tk01") && shop.worn("tk01").length === 1);
 
 lines.push("", fails ? `✗ ${fails} 項失敗` : "全部通過");
 document.getElementById("out").textContent = lines.join("\n");

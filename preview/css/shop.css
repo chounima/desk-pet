@@ -6,7 +6,7 @@
   border: 1px solid var(--line); border-radius: 10px; text-align: center; }
 .item.equipped { border-color: #ffd75e; box-shadow: 0 0 0 1px #ffd75e inset; }
 .item .preview { height: 56px; display: flex; align-items: center; justify-content: center; }
-.item .preview img { width: 48px; height: 48px; }
+.item .preview img { width: 48px; height: 48px; object-fit: contain; }
 .item .preview .symbol { font-size: 34px; }
 .item-actions { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; align-items: center; min-height: 28px; }
 .item-actions button { font-size: 12px; padding: 3px 8px; }

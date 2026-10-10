@@ -16,7 +16,7 @@ import { BallView } from "./view/ball.js";
 import { Fx } from "./view/fx.js";
 
 const $ = id => document.getElementById(id);
-const [{ ids, rigs }, { names, clips, sets }, props] = await loadAll();
+const [{ ids, rigs }, { names, clips, sets }, props, accessories] = await loadAll();
 await loadSkills();
 const q = new URLSearchParams(location.search);
 
@@ -55,6 +55,11 @@ const fx = new Fx($("fx"));
 const bubble = new Bubble(document.body, await loadLines(ids));
 
 // 套用商店的外觀（特效、泡泡；球在開始對打時套用）
+// 目前角色身上的配件
+function applyAccessories() {
+  pet.setAccessories(shop.worn(charId).map(id => accessories[shop.item(id).accessory]).filter(Boolean));
+}
+
 function applyCosmetics() {
   fx.setStyle(shop.equippedItem("fx"));
   bubble.setStyle(shop.equippedItem("bubble").style);
@@ -79,6 +84,7 @@ progress.onEvent = e => {
     bubble.say(charId, "highFive");
   }
   if (e.type === "buy" || e.type === "equip") { applyCosmetics(); refreshLocks(); shopWindow.render(); }
+  if (e.type === "wear") { applyAccessories(); shopWindow.render(); }
   if (e.type === "unlock") {
     const [kind, what] = e.key.split(":");
     const [id, form] = what.split("/");
@@ -135,7 +141,7 @@ const panel = new Panel($("panel"), {
   onShop: () => shopWindow.toggle(),
 });
 const shopWindow = new ShopWindow($("shop"), {
-  shop, props, names: id => rigs[id]?.name ?? id,
+  shop, props, accessories, getChar: () => charId, names: id => rigs[id]?.name ?? id,
   // 預覽：動作直接播一次、特效冒出來、泡泡講一句、球顯示在頭上
   onPreview: (id, it) => {
     if (it.action) behavior.force(it.action);
@@ -143,6 +149,11 @@ const shopWindow = new ShopWindow($("shop"), {
     else if (it.style) { bubble.setStyle(it.style); bubble.say(charId, "greet"); setTimeout(applyCosmetics, 3000); }
     else if (it.prop) fx.burst(`${it.label}`, pet.headTop());
     else if (it.song) bubble.show("🎵 曲子要在桌面版彈吉他時播放");
+    else if (it.accessory) {
+      // 先戴上看看，3 秒後換回原本的
+      pet.setAccessories([...pet.accessories.filter(a => a.slot !== accessories[it.accessory].slot), accessories[it.accessory]]);
+      setTimeout(applyAccessories, 3000);
+    }
   },
 });
 const collection = new Collection($("collection"), { progress, ids, rigs });
@@ -168,6 +179,7 @@ function refreshLocks() {
 }
 function switchRig() {
   pet.setCharacter(currentRig());
+  applyAccessories();
   panel.setCharacter(charId);
   refreshLocks();
 }

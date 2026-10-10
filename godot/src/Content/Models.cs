@@ -23,11 +23,32 @@ public sealed class RigData
     public Dictionary<string, float> TrackScale { get; set; } = new();
     /// <summary>個別道具的位置／大小修正（Q 版單位）</summary>
     public Dictionary<string, PropOverride> PropOverrides { get; set; } = new();
+    /// <summary>配件錨點：hat、eyes、neck、back</summary>
+    public Dictionary<string, AnchorData> Anchors { get; set; } = new();
     public List<BoneData> Bones { get; set; } = new();
     public List<SlotData> Slots { get; set; } = new();
 
     /// <summary>角色資料夾路徑（載入後設定），部件圖檔以此為基準。</summary>
     public string BasePath { get; set; } = "";
+}
+
+public sealed class AnchorData
+{
+    public string Bone { get; set; } = "head";
+    public float X { get; set; }
+    public float Y { get; set; }
+    public float Scale { get; set; } = 1;
+}
+
+/// <summary>art/accessories/accessories.json</summary>
+public sealed class AccessoryData
+{
+    public string File { get; set; } = "";
+    public float[] Box { get; set; } = { 0, 0, 1, 1 };
+    public string Slot { get; set; } = "";
+    public string Anchor { get; set; } = "";
+    public float Z { get; set; }
+    public string Path { get; set; } = "";
 }
 
 public sealed class PropOverride

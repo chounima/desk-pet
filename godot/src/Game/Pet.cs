@@ -1,5 +1,6 @@
 ﻿// 寵物本體：位置、朝向、骨架、動作、表情（移植自 preview/js/game/pet.js）
 using System.Collections.Generic;
+using System.Linq;
 using DeskPet.Content;
 using DeskPet.Core;
 using DeskPet.View;
@@ -56,6 +57,7 @@ public sealed class Pet
         skeleton = new Skeleton(rig.Bones, rig.RootScale, rig.TrackScale);
         world = skeleton.Compute(Animator.Pose);
         View = new PetView(rig, props, Scale);
+        View.SetAccessories(accessories);
         parent.AddChild(View);
         parent.MoveChild(View, 0);       // 特效等其他節點畫在角色上面
     }
@@ -66,6 +68,15 @@ public sealed class Pet
         if (Mathf.IsEqualApprox(scale, Scale)) return;
         Scale = scale;
         SetCharacter(Rig);
+    }
+
+    List<AccessoryData> accessories = new();
+
+    /// <summary>身上的配件；換角色、換大小重建畫面時會重新套用</summary>
+    public void SetAccessories(IEnumerable<AccessoryData> list)
+    {
+        accessories = list.ToList();
+        View.SetAccessories(accessories);
     }
 
     public void Play(string name, bool restart = false, Dictionary<string, float>? mods = null) =>

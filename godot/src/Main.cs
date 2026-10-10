@@ -149,6 +149,7 @@ public partial class Main : Node2D
         tray.CharacterChosen += id =>
         {
             pet.SetCharacter(RigOf(id));
+            if (progress != null) ApplyAccessories();
             tray.SetForms(rigs[id].Forms, FormOf(id));
             if (progress != null) RefreshLocks();
             settings.Character = id;
@@ -274,6 +275,11 @@ public partial class Main : Node2D
         else if (step == "remind") behavior.Remind("stretchRemind", "stretch");
         else if (step == "guitar") StartPerformance(force: true);
         else if (step == "focus") StartFocus();
+        else if (step.StartsWith("wear:") && sandbox)                    // wear:acc:strawhat（只在 --sandbox）直接送並穿上
+        {
+            progress.State.Owned.Add(step[5..]);
+            shop.Wear(step[5..], pet.Rig.Id);
+        }
         else if (step.StartsWith("focusSkip")) focus.Skip();                   // 開始彈吉他（不檢查有沒有買，測試用）
         else if (step == "wait") { }                                     // 空一拍
         else if (System.Enum.TryParse<GlobalInput.KeyKind>(step, out var kind)) behavior.OnKey(kind);

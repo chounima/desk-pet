@@ -14,6 +14,8 @@ public sealed class ProgressState
     public List<string> Unlocked { get; set; } = new();
     public List<string> Owned { get; set; } = new();
     public Dictionary<string, string> Equipped { get; set; } = new();
+    /// <summary>配件：{ 角色: { 部位: 商品 id } }</summary>
+    public Dictionary<string, Dictionary<string, string>> Wear { get; set; } = new();
     public Dictionary<string, int> Best { get; set; } = new();
     public LoginInfo Login { get; set; } = new();
     public DayInfo Day { get; set; } = new();

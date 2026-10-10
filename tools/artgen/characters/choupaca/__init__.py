@@ -27,6 +27,14 @@ PARTS = {
 
 FACES = faces.make()
 
+# 配件錨點：羊駝的頭型和人形不同，直接指定（骨骼, x, y, 縮放）
+ANCHORS = {
+    "hat": ("head", 6, -108, 0.72),
+    "eyes": ("head", 7.5, -80.5, 0.7),
+    "neck": ("torso", 4, -66, 0.9),
+    "back": ("torso", -30, -30, 1),
+}
+
 # 可切換的型態：預設直立，四足的動作放在 data/animations/quadruped/
 FORM_LABEL = "直立"
 FORMS = {"quadruped": quadruped}

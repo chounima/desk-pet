@@ -98,6 +98,13 @@ public static class ContentLoader
         return (names, sets);
     }
 
+    public static Dictionary<string, AccessoryData> LoadAccessories()
+    {
+        var acc = ReadJson<Dictionary<string, AccessoryData>>($"{Root}/art/accessories/accessories.json");
+        foreach (var a in acc.Values) a.Path = $"{Root}/art/accessories/{a.File}";
+        return acc;
+    }
+
     public static Dictionary<string, PropData> LoadProps()
     {
         var props = ReadJson<Dictionary<string, PropData>>($"{Root}/art/props/props.json");

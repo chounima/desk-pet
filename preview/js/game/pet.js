@@ -35,6 +35,13 @@ export class Pet {
     this.skeleton = new Skeleton(rig.bones, rig.rootScale ?? 1, rig.trackScale ?? {});
     this.world = this.skeleton.compute(this.animator.pose);   // 第一幀前就能查詢骨骼位置
     this.view = new PetView(this.layer, rig, this.props);
+    this.view.setAccessories(this.accessories ?? []);
+  }
+
+  // 配件 [{ url, box, anchor, z }]；換角色時會重新套用
+  setAccessories(list) {
+    this.accessories = list;
+    this.view.setAccessories(list);
   }
 
   play(name, restart = false, mods) { this.animator.play(name, restart, mods); }

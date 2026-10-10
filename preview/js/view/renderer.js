@@ -85,6 +85,24 @@ export class PetView {
     }
   }
 
+  // 配件：[{ url, box, anchor, z }]，掛在角色的錨點上（rig.anchors），依錨點的 scale 縮放
+  setAccessories(list) {
+    for (const it of this.accItems ?? []) it.el.remove();
+    this.items = this.items.filter(it => !it.accessory);
+    this.accItems = [];
+    for (const acc of list) {
+      const a = this.rig.anchors?.[acc.anchor];
+      if (!a) continue;                      // 這個角色沒有這個錨點
+      const el = document.createElementNS(NS, "g");
+      el.append(makeImage(acc.url, acc.box));
+      const it = { z: acc.z, bone: a.bone, el, accessory: true, offset: [a.scale, 0, 0, a.scale, a.x, a.y] };
+      this.accItems.push(it);
+      this.items.push(it);
+    }
+    this.items.sort((a, b) => a.z - b.z);
+    for (const it of this.items) this.g.append(it.el);       // 依圖層順序重新排列
+  }
+
   setProps(list) {
     const key = list.join(",");
     if (key === this.propsKey) return;

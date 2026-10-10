@@ -7,6 +7,7 @@ export class Shop {
     const s = progress.state;
     s.owned ??= [];
     s.equipped ??= {};
+    s.wear ??= {};          // 配件：{ 角色: { 部位: 商品 id } }
   }
 
   get cfg() { return this.progress.cfg.shop; }
@@ -68,6 +69,34 @@ export class Shop {
     this.progress.onEvent({ type: "equip", id, item: it });
     this.progress.commit();
     return true;
+  }
+
+  // ---------- 配件（每個角色分開穿戴，同一部位一次一個）----------
+
+  isWearable(id) { return !!this.item(id)?.accessory; }
+
+  isWorn(id, char) { return this.state.wear[char]?.[this.item(id)?.slot] === id; }
+
+  wear(id, char) {
+    const it = this.item(id);
+    if (!it?.accessory || !this.owns(id)) return false;
+    (this.state.wear[char] ??= {})[it.slot] = id;
+    this.progress.onEvent({ type: "wear", id, item: it, char });
+    this.progress.commit();
+    return true;
+  }
+
+  takeOff(id, char) {
+    if (!this.isWorn(id, char)) return false;
+    delete this.state.wear[char][this.item(id).slot];
+    this.progress.onEvent({ type: "wear", id, item: this.item(id), char });
+    this.progress.commit();
+    return true;
+  }
+
+  // 角色身上的配件商品 id
+  worn(char) {
+    return Object.values(this.state.wear[char] ?? {}).filter(id => this.owns(id));
   }
 
   // 動作是否可以使用：不是商品的動作一律可以

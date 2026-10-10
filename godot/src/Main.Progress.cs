@@ -19,6 +19,7 @@ public partial class Main
     Shop shop = null!;
     HubWindow hub = null!;
     Dictionary<string, PropData> allProps = null!;
+    Dictionary<string, AccessoryData> accessories = null!;
     bool progressDirty;
     bool sandbox;
     float progressSaveTimer = ProgressSaveEvery;
@@ -28,6 +29,7 @@ public partial class Main
     void SetupProgress(List<string> ids, Dictionary<string, PropData> props)
     {
         allProps = props;
+        accessories = ContentLoader.LoadAccessories();
         // --sandbox：測試用，從空白進度開始、不存檔（不動到使用者真正的進度）
         sandbox = args.ContainsKey("sandbox");
         var isNewSave = !sandbox && !File.Exists(ProjectSettings.GlobalizePath("user://progress.json"));
@@ -43,7 +45,7 @@ public partial class Main
         volley.Rallied += rally => progress.OnVolley(pet.Rig.Id, rally);
 
         var characters = ids.Select(id => rigs[id]).ToList();
-        hub = new HubWindow(progress, shop, settings, characters, props, Autostart.IsEnabled, () => pet.Rig.Id);
+        hub = new HubWindow(progress, shop, settings, characters, props, accessories, Autostart.IsEnabled, () => pet.Rig.Id);
         AddChild(hub);
         hub.SetDevMode(settings.DevMode || args.ContainsKey("dev"));
         hub.Shop.Previewed += PreviewItem;
@@ -57,7 +59,13 @@ public partial class Main
             SwitchCharacter(fallback);
         RefreshLocks();
         ApplyCosmetics();
+        ApplyAccessories();
     }
+
+    /// <summary>目前角色身上的配件</summary>
+    void ApplyAccessories() =>
+        pet.SetAccessories(shop.Worn(pet.Rig.Id).Select(id => shop.Item(id)?.Accessory)
+                               .Where(a => a != null && accessories.ContainsKey(a)).Select(a => accessories[a!]));
 
     // 收集系統上線前就在用的角色與型態直接算解鎖，不要因為更新就把使用者正在用的鎖起來
     void KeepWhatWasInUse(List<string> ids)
@@ -125,6 +133,9 @@ public partial class Main
             case "equip":
                 ApplyCosmetics();
                 break;
+            case "wear":
+                ApplyAccessories();
+                break;
         }
         progressDirty = true;
         FlushProgress();         // 重要事件立刻存檔
@@ -151,6 +162,7 @@ public partial class Main
     void SwitchCharacter(string id)
     {
         pet.SetCharacter(RigOf(id));
+        ApplyAccessories();
         settings.Character = id;
         tray.SetCharacter(id);
         settings.Save();
@@ -181,6 +193,15 @@ public partial class Main
             GetTree().CreateTimer(3).Timeout += ApplyCosmetics;
         }
         else if (it.Prop != null) fx.Burst(it.Label, pet.HeadTop(), Colors.White);
+        else if (it.Accessory != null && accessories.TryGetValue(it.Accessory, out var acc))
+        {
+            // 先戴上看看，3 秒後換回原本的
+            var worn = shop.Worn(pet.Rig.Id).Select(w => shop.Item(w)!).Where(w => w.Slot != it.Slot)
+                           .Select(w => accessories.GetValueOrDefault(w.Accessory!)).Where(a => a != null).Select(a => a!).ToList();
+            worn.Add(acc);
+            pet.SetAccessories(worn);
+            GetTree().CreateTimer(3).Timeout += ApplyAccessories;
+        }
     }
 
     // ---------- 設定（系統匣與設定視窗共用）----------

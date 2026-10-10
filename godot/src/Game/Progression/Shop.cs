@@ -75,6 +75,37 @@ public sealed class Shop
         return true;
     }
 
+    // ---------- 配件（每個角色分開穿戴，同一部位一次一個）----------
+
+    public bool IsWearable(string id) => Item(id)?.Accessory != null;
+
+    public bool IsWorn(string id, string ch) =>
+        Item(id)?.Slot is { } slot && State.Wear.TryGetValue(ch, out var w) && w.GetValueOrDefault(slot) == id;
+
+    public bool Wear(string id, string ch)
+    {
+        var it = Item(id);
+        if (it?.Accessory == null || it.Slot == null || !Owns(id)) return false;
+        if (!State.Wear.TryGetValue(ch, out var w)) State.Wear[ch] = w = new();
+        w[it.Slot] = id;
+        progress.Emit(new ProgressEvent("wear", ItemId: id, Char: ch));
+        progress.Commit();
+        return true;
+    }
+
+    public bool TakeOff(string id, string ch)
+    {
+        if (!IsWorn(id, ch)) return false;
+        State.Wear[ch].Remove(Item(id)!.Slot!);
+        progress.Emit(new ProgressEvent("wear", ItemId: id, Char: ch));
+        progress.Commit();
+        return true;
+    }
+
+    /// <summary>角色身上的配件商品 id</summary>
+    public IEnumerable<string> Worn(string ch) =>
+        State.Wear.TryGetValue(ch, out var w) ? w.Values.Where(Owns) : Enumerable.Empty<string>();
+
     /// <summary>動作商品 id（不是商品時為 null）</summary>
     public string? ActionItem(string action) => Items("action").FirstOrDefault(x => x.Item.Action == action).Id;
 

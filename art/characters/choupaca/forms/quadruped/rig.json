@@ -11,6 +11,32 @@
   "height": 192,
   "trackScale": {},
   "propOverrides": {},
+  "anchors": {
+    "hat": {
+      "bone": "head",
+      "x": 6,
+      "y": -108,
+      "scale": 0.72
+    },
+    "eyes": {
+      "bone": "head",
+      "x": 7.5,
+      "y": -80.5,
+      "scale": 0.7
+    },
+    "neck": {
+      "bone": "head",
+      "x": 6,
+      "y": -40,
+      "scale": 0.75
+    },
+    "back": {
+      "bone": "hips",
+      "x": -6,
+      "y": -36,
+      "scale": 1
+    }
+  },
   "bones": [
     {
       "name": "root",

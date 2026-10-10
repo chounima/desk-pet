@@ -16,6 +16,7 @@ NAME = "Mira"
 DESCRIPTION = "蒸汽龐克的塗鴉滑板師"
 PROPORTIONS = TALL
 PROP_OVERRIDES = {"guitar": {"dx": 2, "dy": 12, "scale": 1.12}}
+HEAD_TRANSFORM = (0.46, -10)     # 同 HEAD_SCALE / HEAD_DY
 
 OL = "#2a1e1a"
 HAIR, HAIR_SHADE, HAIR_LIGHT = "#ecebf0", "#c3c0cc", "#ffffff"

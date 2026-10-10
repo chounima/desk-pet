@@ -13,6 +13,7 @@ PROPORTIONS = MALE
 
 # 正常頭身的腰比較高，抱吉他的位置要往下、稍微放大
 PROP_OVERRIDES = {"guitar": {"dx": 2, "dy": 12, "scale": 1.12}}
+HEAD_TRANSFORM = (0.5, -11)      # 頭部圖以 Q 版大小繪製後縮小（同 palette.HEAD_SCALE / HEAD_DY），配件錨點跟著縮
 
 PARTS = {
     "back": body.back,

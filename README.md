@@ -186,6 +186,9 @@ desk-pet/
 - **非人形體型**：`PROPORTIONS` 用 `rig.QuadProportions`（四足）。骨骼名稱和人形相同（前腳 = arm、後腳 = leg），所以互動規則、台詞完全共用
   - 體型專屬動作放 `data/animations/<體型>/`，`index.json` 的 `clips` 列出有專屬版的動作，`alias` 讓其他動作借用相近的姿勢（名稱與 `next` 維持原本的）
   - 測試：`gallery.html?char=choupaca&form=quadruped`、`run_pet.ps1` 或 Godot 加 `--form=quadruped`
+- **新配件**：在 `tools/artgen/accessories.py` 畫圖並加進 `ACCESSORIES`（部位 head／face／neck／back），再到 `progression.json` 的 `shop.items` 加 `acc:<名稱>`
+  - 配件掛在角色的錨點上：預設依頭部大小算（`rig.default_anchors`），頭部圖有縮小的角色設 `HEAD_TRANSFORM`，特殊頭型直接寫 `ANCHORS`（參考 `choupaca`）
+  - 檢查位置：`gallery.html?char=chouma&acc=strawhat,roundglasses,scarf,wings`
 - **新表情**：在 `rig.EXPRESSIONS` 加名稱，並在 `faces.make_faces` 畫出來
 - **新道具**：在 `tools/artgen/props.py` 的 `PROPS` 加一筆，再在動作的 `props` 引用
 

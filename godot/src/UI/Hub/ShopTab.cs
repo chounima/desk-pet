@@ -14,6 +14,8 @@ public partial class ShopTab : VBoxContainer
     readonly Shop shop;
     readonly Progress progress;
     readonly Dictionary<string, PropData> props;
+    readonly Dictionary<string, AccessoryData> accessories;
+    readonly Func<string> currentChar;
     readonly Func<string, string> names;
     readonly HBoxContainer tabs = new();
     readonly GridContainer grid = new() { Columns = 3, SizeFlagsHorizontal = SizeFlags.ExpandFill };
@@ -23,11 +25,14 @@ public partial class ShopTab : VBoxContainer
     /// <summary>在角色身上預覽商品（Main 處理：播動作、冒特效、講一句話）</summary>
     public event Action<string, ProgressionConfig.ShopItem>? Previewed;
 
-    public ShopTab(Shop shop, Progress progress, Dictionary<string, PropData> props, Func<string, string> names)
+    public ShopTab(Shop shop, Progress progress, Dictionary<string, PropData> props, Dictionary<string, AccessoryData> accessories,
+                   Func<string> currentChar, Func<string, string> names)
     {
         this.shop = shop;
         this.progress = progress;
         this.props = props;
+        this.accessories = accessories;
+        this.currentChar = currentChar;
         this.names = names;
         Name = "🛒 商店";
         category = shop.Categories.Keys.FirstOrDefault() ?? "";
@@ -60,7 +65,18 @@ public partial class ShopTab : VBoxContainer
     Control Preview(ProgressionConfig.ShopItem it)
     {
         var box = new CenterContainer { CustomMinimumSize = new Vector2(0, Ui.Px(60)) };
-        if (it.Prop != null && props.TryGetValue(it.Prop, out var prop))
+        if (it.Accessory != null && accessories.TryGetValue(it.Accessory, out var acc))
+        {
+            var key = $"acc:{it.Accessory}";
+            if (!previews.TryGetValue(key, out var tex))
+            {
+                var w = acc.Box[2] - acc.Box[0];
+                previews[key] = tex = SvgTextures.Load(acc.Path, Ui.Px(52) / Math.Max(1, w) * 1.4f).Texture;
+            }
+            box.AddChild(new TextureRect { Texture = tex, StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+                                           CustomMinimumSize = new Vector2(Ui.Px(52), Ui.Px(52)), ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize });
+        }
+        else if (it.Prop != null && props.TryGetValue(it.Prop, out var prop))
         {
             if (!previews.TryGetValue(it.Prop, out var tex))
                 previews[it.Prop] = tex = SvgTextures.Load(prop.Path, Ui.Px(48) / 34f).Texture;
@@ -93,7 +109,14 @@ public partial class ShopTab : VBoxContainer
         body.AddChild(title);
 
         var actions = new HFlowContainer { Alignment = FlowContainer.AlignmentMode.Center };
-        if (owned)
+        if (owned && shop.IsWearable(id))
+        {
+            var ch = currentChar();
+            actions.AddChild(shop.IsWorn(id, ch)
+                ? Ui.Button("脫下", () => { shop.TakeOff(id, ch); Refresh(); })
+                : Ui.Button("穿上", () => { shop.Wear(id, ch); Refresh(); }));
+        }
+        else if (owned)
         {
             if (equipped) actions.AddChild(Ui.Text("使用中", Ui.Accent, 13));
             else if (shop.IsCosmetic(it.Category)) actions.AddChild(Ui.Button("使用", () => { shop.Equip(id); Refresh(); }));

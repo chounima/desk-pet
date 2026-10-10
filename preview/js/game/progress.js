@@ -9,7 +9,7 @@ function emptyDay(date) {
 }
 
 export function emptyState() {
-  return { points: 0, xp: {}, unlocked: [], owned: [], equipped: {}, best: {}, login: { last: null, streak: 0 }, day: emptyDay(today()) };
+  return { points: 0, xp: {}, unlocked: [], owned: [], equipped: {}, wear: {}, best: {}, login: { last: null, streak: 0 }, day: emptyDay(today()) };
 }
 
 export class Progress {

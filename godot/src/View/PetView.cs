@@ -21,6 +21,9 @@ public partial class PetView : Node2D
         public Image Image = null!;
         public SlotData? Slot;
         public string? CurrentAlt;
+        public float Z;
+        public bool Accessory;
+        public string? HitName;           // 配件被點到時算哪個部位（掛在哪根骨骼）
     }
 
     readonly RigData rig;
@@ -47,6 +50,7 @@ public partial class PetView : Node2D
             item.Slot = slot;
             if (slot.Far) item.Sprite.Modulate = FarTint;
             if (slot.Variants != null) faceItem = item;
+            item.Z = slot.Z;
             entries.Add((slot.Z, item));
         }
 
@@ -59,6 +63,7 @@ public partial class PetView : Node2D
             var offset = new Transform2D(new Vector2(k, 0), new Vector2(0, k), new Vector2((p.X + (o?.Dx ?? 0)) * s, (p.Y + (o?.Dy ?? 0)) * s));
             var item = MakeItem(p.Path, p.Box, p.Bone, offset);
             item.Sprite.Visible = false;
+            item.Z = p.Z;
             propItems[name] = item;
             entries.Add((p.Z, item));
         }
@@ -100,6 +105,30 @@ public partial class PetView : Node2D
 
     /// <summary>臉部在頭部骨骼座標中的位移（視線用）</summary>
     public void SetFaceOffset(Vector2 offset) => faceOffset = offset;
+
+    /// <summary>配件：掛在角色的錨點上，依錨點的 scale 縮放；換一組就重建</summary>
+    public void SetAccessories(IEnumerable<AccessoryData> list)
+    {
+        foreach (var old in items.Where(i => i.Accessory).ToList())
+        {
+            old.Sprite.QueueFree();
+            items.Remove(old);
+        }
+        foreach (var acc in list)
+        {
+            if (!rig.Anchors.TryGetValue(acc.Anchor, out var a)) continue;      // 這個角色沒有這個錨點
+            var offset = new Transform2D(new Vector2(a.Scale, 0), new Vector2(0, a.Scale), new Vector2(a.X, a.Y));
+            var item = MakeItem(acc.Path, acc.Box, a.Bone, offset);
+            item.Z = acc.Z;
+            item.Accessory = true;
+            item.HitName = a.Bone;
+            AddChild(item.Sprite);
+            items.Add(item);
+        }
+        // 依圖層順序重新排列
+        items.Sort((x, y) => x.Z.CompareTo(y.Z));
+        for (var i = 0; i < items.Count; i++) MoveChild(items[i].Sprite, i);
+    }
 
     public void SetProps(IReadOnlyList<string> list)
     {
@@ -151,7 +180,7 @@ public partial class PetView : Node2D
             var local = (Transform * item.Sprite.Transform).AffineInverse() * point;
             int x = (int)local.X, y = (int)local.Y;
             if (x < 0 || y < 0 || x >= item.Image.GetWidth() || y >= item.Image.GetHeight()) continue;
-            if (item.Image.GetPixel(x, y).A > 0.1f) return item.Slot?.Name ?? "prop";
+            if (item.Image.GetPixel(x, y).A > 0.1f) return item.Slot?.Name ?? item.HitName ?? "prop";
         }
         return null;
     }

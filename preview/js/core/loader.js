@@ -71,6 +71,12 @@ export async function loadProps() {
   return props;
 }
 
+export async function loadAccessories() {
+  const meta = await getJSON(`${PATHS.art}/accessories/accessories.json`);
+  for (const a of Object.values(meta)) a.url = `${PATHS.art}/accessories/${a.file}`;
+  return meta;
+}
+
 export async function loadAll() {
   const chars = await loadCharacters();
   const bodies = new Set();
@@ -78,6 +84,6 @@ export async function loadAll() {
     bodies.add(bodyOf(rig));
     for (const f of Object.values(rig.forms ?? {})) bodies.add(bodyOf(f.data));
   }
-  const [anims, props] = await Promise.all([loadAnimations(bodies), loadProps()]);
-  return [chars, anims, props];
+  const [anims, props, accessories] = await Promise.all([loadAnimations(bodies), loadProps(), loadAccessories()]);
+  return [chars, anims, props, accessories];
 }

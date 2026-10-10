@@ -1,0 +1,98 @@
+{
+  "strawhat": {
+    "file": "strawhat.svg",
+    "box": [
+      -62,
+      -28,
+      62,
+      18
+    ],
+    "slot": "head",
+    "anchor": "hat",
+    "z": 15.5
+  },
+  "catears": {
+    "file": "catears.svg",
+    "box": [
+      -46,
+      -32,
+      46,
+      14
+    ],
+    "slot": "head",
+    "anchor": "hat",
+    "z": 15.5
+  },
+  "ribbon": {
+    "file": "ribbon.svg",
+    "box": [
+      -30,
+      -18,
+      30,
+      16
+    ],
+    "slot": "head",
+    "anchor": "hat",
+    "z": 15.5
+  },
+  "crown": {
+    "file": "crown.svg",
+    "box": [
+      -30,
+      -28,
+      30,
+      10
+    ],
+    "slot": "head",
+    "anchor": "hat",
+    "z": 15.5
+  },
+  "roundglasses": {
+    "file": "roundglasses.svg",
+    "box": [
+      -48,
+      -16,
+      32,
+      14
+    ],
+    "slot": "face",
+    "anchor": "eyes",
+    "z": 14.6
+  },
+  "sunglasses": {
+    "file": "sunglasses.svg",
+    "box": [
+      -36,
+      -12,
+      34,
+      12
+    ],
+    "slot": "face",
+    "anchor": "eyes",
+    "z": 14.6
+  },
+  "scarf": {
+    "file": "scarf.svg",
+    "box": [
+      -28,
+      -12,
+      30,
+      38
+    ],
+    "slot": "neck",
+    "anchor": "neck",
+    "z": 12.6
+  },
+  "wings": {
+    "file": "wings.svg",
+    "box": [
+      -80,
+      -40,
+      4,
+      20
+    ],
+    "slot": "back",
+    "anchor": "back",
+    "z": 0.3
+  }
+}

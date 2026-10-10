@@ -9,10 +9,13 @@ const el = (tag, cls, text) => {
 
 export class ShopWindow {
   // props：art/props/props.json（含 url）；names(id)：角色名稱；onPreview(id, item)：在角色身上預覽
-  constructor(root, { shop, props, names, onPreview }) {
+  // accessories：art/accessories/accessories.json（含 url）；getChar()：目前角色（配件穿在誰身上）
+  constructor(root, { shop, props, accessories, getChar, names, onPreview }) {
     this.root = root;
     this.shop = shop;
     this.props = props;
+    this.accessories = accessories;
+    this.getChar = getChar;
     this.names = names;
     this.onPreview = onPreview;
     this.tab = Object.keys(shop.cfg.categories)[0];
@@ -46,7 +49,11 @@ export class ShopWindow {
 
   preview(it) {
     const box = el("div", "preview");
-    if (it.prop && this.props[it.prop]) {
+    if (it.accessory && this.accessories[it.accessory]) {
+      const img = el("img");
+      img.src = this.accessories[it.accessory].url;
+      box.append(img);
+    } else if (it.prop && this.props[it.prop]) {
       const img = el("img");
       img.src = this.props[it.prop].url;
       box.append(img);
@@ -75,7 +82,11 @@ export class ShopWindow {
       actions.append(b);
       return b;
     };
-    if (owned) {
+    if (owned && shop.isWearable(id)) {
+      const char = this.getChar();
+      if (shop.isWorn(id, char)) btn("脫下", () => shop.takeOff(id, char));
+      else btn("穿上", () => shop.wear(id, char), "buy");
+    } else if (owned) {
       if (equipped) actions.append(el("span", "tag", "使用中"));
       else if (shop.cfg.defaults[it.category]) btn("使用", () => shop.equip(id));
       else actions.append(el("span", "tag", "✓ 已擁有"));

@@ -147,4 +147,21 @@ SLOTS = [
 
 FACE_SLOT = ("face", "head", 14)
 
+
+def default_anchors(p, head=(1, 0)) -> dict:
+    """配件錨點 {名稱: (骨骼, x, y, 縮放)}。
+
+    頭部的點以 Q 版頭部座標計算（眼睛在 (-10,-42) 與 (26,-42)、頭頂約 -98），
+    頭部圖有縮小的角色（正常頭身）傳入 head = (縮放, 往上位移)。四足等特殊體型由角色自己指定 ANCHORS。
+    """
+    s, dy = head
+    anchors = {
+        "hat": ("head", 8 * s, -98 * s + dy, s),
+        "eyes": ("head", 8 * s, -42 * s + dy, s),
+    }
+    if not isinstance(p, QuadProportions):
+        anchors["neck"] = ("torso", 2, -p.neck + 6, 1)
+        anchors["back"] = ("torso", -16, round(-p.neck * 0.55), 1)
+    return anchors
+
 EXPRESSIONS = ("idle", "blink", "happy", "sleep", "surprised", "focus", "shy", "angry")

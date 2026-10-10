@@ -17,6 +17,32 @@
       "scale": 1.12
     }
   },
+  "anchors": {
+    "hat": {
+      "bone": "head",
+      "x": 3.7,
+      "y": -55.1,
+      "scale": 0.46
+    },
+    "eyes": {
+      "bone": "head",
+      "x": 3.7,
+      "y": -29.3,
+      "scale": 0.46
+    },
+    "neck": {
+      "bone": "torso",
+      "x": 2,
+      "y": -64,
+      "scale": 1
+    },
+    "back": {
+      "bone": "torso",
+      "x": -16,
+      "y": -38,
+      "scale": 1
+    }
+  },
   "bones": [
     {
       "name": "root",

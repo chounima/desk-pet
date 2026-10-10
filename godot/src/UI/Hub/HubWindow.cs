@@ -22,7 +22,8 @@ public partial class HubWindow : Window
     public FocusTab Focus { get; private set; } = null!;
 
     public HubWindow(Progress progress, Shop shop, Settings settings, List<RigData> characters,
-                     Dictionary<string, PropData> props, System.Func<bool> autostart, System.Func<string> currentChar)
+                     Dictionary<string, PropData> props, Dictionary<string, AccessoryData> accessories,
+                     System.Func<bool> autostart, System.Func<string> currentChar)
     {
         this.progress = progress;
         Title = "Desk Pet";
@@ -35,7 +36,7 @@ public partial class HubWindow : Window
 
         string NameOf(string id) => characters.Find(r => r.Id == id)?.Name ?? id;
         Collection = new CollectionTab(progress, characters);
-        Shop = new ShopTab(shop, progress, props, NameOf);
+        Shop = new ShopTab(shop, progress, props, accessories, currentChar, NameOf);
         Settings = new SettingsTab(settings, autostart);
         Dev = new DevTab(progress, currentChar);
 

@@ -12,6 +12,7 @@ import shutil
 from pathlib import Path
 
 from . import rig
+from .accessories import ACCESSORIES, SLOTS as ACCESSORY_SLOTS
 from .characters import ALL as CHARACTERS
 from .props import PROPS
 
@@ -65,6 +66,10 @@ def build_character(char, out: Path, form=None) -> dict:
         "trackScale": getattr(src, "TRACK_SCALE", {}),
         # 個別道具的位置／大小修正（Q 版單位）：{ 道具: { dx, dy, scale } }，例如高個子抱吉他要低一點
         "propOverrides": getattr(src, "PROP_OVERRIDES", {}),
+        # 配件錨點：預設依頭部大小計算，角色可用 ANCHORS 覆寫（例如四足、頭型特殊）
+        "anchors": {name: {"bone": b, "x": round(x, 1), "y": round(y, 1), "scale": round(sc, 3)}
+                    for name, (b, x, y, sc) in {**rig.default_anchors(prop, getattr(src, "HEAD_TRANSFORM", (1, 0))),
+                                                **getattr(src, "ANCHORS", {})}.items()},
         "bones": [{"name": n, "parent": p, "x": x, "y": y} for n, p, x, y in rig.bones(prop)],
         "slots": sorted(slots, key=lambda s: s["z"]),
     }
@@ -90,14 +95,25 @@ def build_props(out: Path) -> None:
     _write(out / "props.json", json.dumps(meta, ensure_ascii=False, indent=2))
 
 
+def build_accessories(out: Path) -> None:
+    meta = {}
+    for name, (fn, slot) in ACCESSORIES.items():
+        part = fn()
+        _write(out / f"{name}.svg", part.to_svg())
+        anchor, z = ACCESSORY_SLOTS[slot]
+        meta[name] = {"file": f"{name}.svg", "box": part.box, "slot": slot, "anchor": anchor, "z": z}
+    _write(out / "accessories.json", json.dumps(meta, ensure_ascii=False, indent=2))
+
+
 def build(art_root: Path) -> list[str]:
     """清空並重建 art/characters 與 art/props，回傳角色 id。"""
-    for sub in ("characters", "props"):
+    for sub in ("characters", "props", "accessories"):
         shutil.rmtree(art_root / sub, ignore_errors=True)
     ids = []
     for char in CHARACTERS:
         build_character(char, art_root / "characters" / char.ID)
         ids.append(char.ID)
     build_props(art_root / "props")
+    build_accessories(art_root / "accessories")
     _write(art_root / "characters" / "index.json", json.dumps(ids))
     return ids

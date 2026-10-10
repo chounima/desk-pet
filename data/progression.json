@@ -69,12 +69,13 @@
     }
   },
   "shop": {
-    "_說明": "商店：買了就永久擁有。price 0 = 預設就有。requires 同 unlocks 的 affection 條件，達成才能買。外觀類（ball/fx/bubble）可在商店切換使用中的款式。music 是彈吉他的內建曲（自訂音樂資料夾裡的歌免費）",
+    "_說明": "商店：買了就永久擁有。price 0 = 預設就有。requires 同 unlocks 的 affection 條件，達成才能買。外觀類（ball/fx/bubble）可在商店切換使用中的款式。music 是彈吉他的內建曲（自訂音樂資料夾裡的歌免費）。acc 是配件：每個角色分開穿戴，同一部位（slot：head/face/neck/back）一次一個",
     "categories": {
       "ball": "🏐 排球外觀",
       "fx": "✨ 特效樣式",
       "bubble": "💬 對話泡泡",
       "action": "🎭 動作",
+      "acc": "🎩 配件",
       "music": "🎵 曲子"
     },
     "defaults": {
@@ -219,6 +220,74 @@
         "price": 80,
         "song": "deskpet",
         "icon": "🎵"
+      },
+      "acc:strawhat": {
+        "category": "acc",
+        "label": "草帽",
+        "price": 80,
+        "accessory": "strawhat",
+        "slot": "head"
+      },
+      "acc:catears": {
+        "category": "acc",
+        "label": "貓耳髮箍",
+        "price": 100,
+        "accessory": "catears",
+        "slot": "head"
+      },
+      "acc:ribbon": {
+        "category": "acc",
+        "label": "蝴蝶結",
+        "price": 60,
+        "accessory": "ribbon",
+        "slot": "head"
+      },
+      "acc:crown": {
+        "category": "acc",
+        "label": "皇冠",
+        "price": 200,
+        "accessory": "crown",
+        "slot": "head",
+        "requires": {
+          "affection": {
+            "char": "chouma",
+            "level": 3
+          }
+        }
+      },
+      "acc:roundglasses": {
+        "category": "acc",
+        "label": "圓框眼鏡",
+        "price": 60,
+        "accessory": "roundglasses",
+        "slot": "face"
+      },
+      "acc:sunglasses": {
+        "category": "acc",
+        "label": "墨鏡",
+        "price": 80,
+        "accessory": "sunglasses",
+        "slot": "face"
+      },
+      "acc:scarf": {
+        "category": "acc",
+        "label": "紅圍巾",
+        "price": 70,
+        "accessory": "scarf",
+        "slot": "neck"
+      },
+      "acc:wings": {
+        "category": "acc",
+        "label": "天使翅膀",
+        "price": 250,
+        "accessory": "wings",
+        "slot": "back",
+        "requires": {
+          "affection": {
+            "char": "chouma",
+            "level": 4
+          }
+        }
       }
     }
   }
