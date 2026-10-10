@@ -73,6 +73,7 @@ public sealed class ProgressionConfig
         public string? Style { get; set; }
         public string? Action { get; set; }
         public string? Icon { get; set; }
+        public string? Song { get; set; }
         public UnlockRule? Requires { get; set; }
     }
 

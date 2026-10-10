@@ -9,7 +9,7 @@ namespace DeskPet.UI;
 
 public partial class PetMenu : Node
 {
-    const int IdVolley = 1, IdHide = 2, IdCollection = 3, IdShop = 4, IdAction = 100, IdForm = 200;
+    const int IdVolley = 1, IdHide = 2, IdCollection = 3, IdShop = 4, IdGuitar = 5, IdAction = 100, IdForm = 200;
 
     readonly MenuConfig config;
     PopupMenu menu = null!, actions = null!, forms = null!;
@@ -20,6 +20,9 @@ public partial class PetMenu : Node
     public event Action? VolleyToggled;
     public event Action? HideRequested;
     public event Action<string>? HubRequested;
+    public event Action? GuitarToggled;
+    /// <summary>正在彈吉他：選單顯示「停止演奏」</summary>
+    public bool Performing { get; set; }
 
     public PetMenu(MenuConfig config) => this.config = config;
 
@@ -36,6 +39,7 @@ public partial class PetMenu : Node
             if (id == IdVolley) VolleyToggled?.Invoke();
             else if (id == IdHide) HideRequested?.Invoke();
             else if (id == IdCollection) HubRequested?.Invoke("collection");
+            else if (id == IdGuitar) GuitarToggled?.Invoke();
             else if (id == IdShop) HubRequested?.Invoke("shop");
         };
     }
@@ -77,6 +81,7 @@ public partial class PetMenu : Node
         }
 
         menu.AddSeparator();
+        menu.AddItem(Performing ? "⏹ 停止演奏" : "🎸 彈吉他", IdGuitar);
         menu.AddItem(volleyOn ? "🏐 結束對打" : "🏐 排球對打", IdVolley);
         menu.AddItem($"😴 躲起來 {hideMinutes:0} 分鐘", IdHide);
         menu.AddSeparator();

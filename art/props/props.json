@@ -103,6 +103,19 @@
       15
     ]
   },
+  "guitar": {
+    "file": "guitar.svg",
+    "bone": "torso",
+    "x": 4,
+    "y": 0,
+    "z": 15.8,
+    "box": [
+      -34,
+      -70,
+      76,
+      10
+    ]
+  },
   "keyboard": {
     "file": "keyboard.svg",
     "bone": "root",

@@ -54,7 +54,9 @@ public partial class PetView : Node2D
         var s = rig.RootScale;
         foreach (var (name, p) in props)
         {
-            var offset = new Transform2D(new Vector2(s, 0), new Vector2(0, s), new Vector2(p.X * s, p.Y * s));
+            var o = rig.PropOverrides.GetValueOrDefault(name);      // 角色個別的位置／大小修正
+            var k = s * (o?.Scale ?? 1);
+            var offset = new Transform2D(new Vector2(k, 0), new Vector2(0, k), new Vector2((p.X + (o?.Dx ?? 0)) * s, (p.Y + (o?.Dy ?? 0)) * s));
             var item = MakeItem(p.Path, p.Box, p.Bone, offset);
             item.Sprite.Visible = false;
             propItems[name] = item;

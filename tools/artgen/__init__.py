@@ -63,6 +63,8 @@ def build_character(char, out: Path, form=None) -> dict:
         "headTop": prop.head_top,
         "height": prop.height,
         "trackScale": getattr(src, "TRACK_SCALE", {}),
+        # 個別道具的位置／大小修正（Q 版單位）：{ 道具: { dx, dy, scale } }，例如高個子抱吉他要低一點
+        "propOverrides": getattr(src, "PROP_OVERRIDES", {}),
         "bones": [{"name": n, "parent": p, "x": x, "y": y} for n, p, x, y in rig.bones(prop)],
         "slots": sorted(slots, key=lambda s: s["z"]),
     }

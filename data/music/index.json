@@ -1,0 +1,9 @@
+{
+  "_說明": "內建曲子：程式用撥弦合成（Karplus-Strong）演奏，沒有版權問題。melody 一個音一個 token：音名＋八度（C4、F#4、R=休止），冒號後是拍數（預設 1）；chords 每個和弦刷一拍一下",
+  "songs": [
+    "twinkle",
+    "ode",
+    "birthday",
+    "deskpet"
+  ]
+}

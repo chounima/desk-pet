@@ -21,11 +21,20 @@ public sealed class RigData
     /// <summary>依型態調整的排球參數</summary>
     public VolleyBody? Volley { get; set; }
     public Dictionary<string, float> TrackScale { get; set; } = new();
+    /// <summary>個別道具的位置／大小修正（Q 版單位）</summary>
+    public Dictionary<string, PropOverride> PropOverrides { get; set; } = new();
     public List<BoneData> Bones { get; set; } = new();
     public List<SlotData> Slots { get; set; } = new();
 
     /// <summary>角色資料夾路徑（載入後設定），部件圖檔以此為基準。</summary>
     public string BasePath { get; set; } = "";
+}
+
+public sealed class PropOverride
+{
+    public float Dx { get; set; }
+    public float Dy { get; set; }
+    public float Scale { get; set; } = 1;
 }
 
 public sealed class FormData

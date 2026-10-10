@@ -28,6 +28,12 @@ public sealed class Animator
         set => clips = value;
     }
 
+    /// <summary>播放速度倍率（彈吉他時依歌曲 BPM 調整）</summary>
+    public float Speed { get; set; } = 1;
+
+    /// <summary>把目前動作拉回開頭（不做淡化），讓刷弦對準拍點</summary>
+    public void Rephase() => time = 0;
+
     public Animator(Dictionary<string, ClipData> clips, float crossfade)
     {
         this.clips = clips;
@@ -65,7 +71,7 @@ public sealed class Animator
 
     public Dictionary<string, float> Update(float dt)
     {
-        time += dt;
+        time += dt * Speed;
         if (!Clip.Loop && time >= Clip.Duration) Finished = true;
 
         var t = LocalTime;

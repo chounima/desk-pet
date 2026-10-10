@@ -18,6 +18,7 @@ public partial class HubWindow : Window
     public ShopTab Shop { get; }
     public SettingsTab Settings { get; }
     public DevTab Dev { get; }
+    public MusicTab Music { get; private set; } = null!;
 
     public HubWindow(Progress progress, Shop shop, Settings settings, List<RigData> characters,
                      Dictionary<string, PropData> props, System.Func<bool> autostart, System.Func<string> currentChar)
@@ -54,13 +55,22 @@ public partial class HubWindow : Window
         AddChild(root);
     }
 
+    /// <summary>音樂分頁（播放器建立後才加進來，放在商店後面）</summary>
+    public void AddMusicTab(Audio.Music.MusicPlayer player, Shop shop, Settings settings)
+    {
+        Music = new MusicTab(player, shop, settings);
+        tabs.AddChild(Music);
+        tabs.MoveChild(Music, Shop.GetIndex() + 1);
+    }
+
     /// <summary>開發者分頁只在開發者模式顯示</summary>
     public void SetDevMode(bool on) => tabs.SetTabHidden(tabs.GetTabIdxFromControl(Dev), !on);
 
-    /// <summary>tab：collection | shop | settings | dev；shopCategory 指定商店分類</summary>
+    /// <summary>tab：collection | shop | music | settings | dev；shopCategory 指定商店分類</summary>
     public void Open(string tab, string? shopCategory = null)
     {
-        tabs.CurrentTab = tab switch { "shop" => 1, "settings" => 2, "dev" => 3, _ => 0 };
+        Control target = tab switch { "shop" => Shop, "music" => (Control?)Music ?? Shop, "settings" => Settings, "dev" => Dev, _ => Collection };
+        tabs.CurrentTab = tabs.GetTabIdxFromControl(target);
         if (shopCategory != null) Shop.ShowCategory(shopCategory);
         RefreshAll();
         if (!Visible) PopupCentered();
@@ -71,13 +81,12 @@ public partial class HubWindow : Window
     {
         if (!Visible && tabs.CurrentTab < 0) return;
         points.Text = $"💎 {progress.State.Points}";
-        switch (tabs.CurrentTab)
-        {
-            case 0: Collection.Refresh(); break;
-            case 1: Shop.Refresh(); break;
-            case 2: Settings.Refresh(); break;
-            case 3: Dev.Refresh(); break;
-        }
+        var current = tabs.GetCurrentTabControl();
+        if (current == Collection) Collection.Refresh();
+        else if (current == Shop) Shop.Refresh();
+        else if (current == Music) Music.Refresh();
+        else if (current == Settings) Settings.Refresh();
+        else if (current == Dev) Dev.Refresh();
     }
 
     public override void _Process(double delta)
@@ -85,7 +94,7 @@ public partial class HubWindow : Window
         if (!Visible) return;
         points.Text = $"💎 {progress.State.Points}";
         // 收藏分頁的進度條每秒更新一次（陪伴時間、打字點數會一直變）
-        if ((refreshTimer -= (float)delta) <= 0 && tabs.CurrentTab == 0)
+        if ((refreshTimer -= (float)delta) <= 0 && tabs.GetCurrentTabControl() == Collection)
         {
             refreshTimer = 1;
             Collection.Refresh();

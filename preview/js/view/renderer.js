@@ -54,7 +54,9 @@ export class PetView {
       const el = document.createElementNS(NS, "g");
       el.append(makeImage(p.url, p.box));
       el.style.display = "none";
-      items.push({ z: p.z, bone: p.bone, el, offset: [s, 0, 0, s, p.x * s, p.y * s] });
+      const o = rig.propOverrides?.[name] ?? {};      // 角色個別的位置／大小修正
+      const k = s * (o.scale ?? 1);
+      items.push({ z: p.z, bone: p.bone, el, offset: [k, 0, 0, k, (p.x + (o.dx ?? 0)) * s, (p.y + (o.dy ?? 0)) * s] });
       this.propEls[name] = el;
     }
 

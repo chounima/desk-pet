@@ -142,6 +142,7 @@ const shopWindow = new ShopWindow($("shop"), {
     else if (it.symbol) for (let i = 0; i < 4; i++) setTimeout(() => fx.burst(it.symbol, pet.headTop(), "fx-heart", it.color), i * 150);
     else if (it.style) { bubble.setStyle(it.style); bubble.say(charId, "greet"); setTimeout(applyCosmetics, 3000); }
     else if (it.prop) fx.burst(`${it.label}`, pet.headTop());
+    else if (it.song) bubble.show("🎵 曲子要在桌面版彈吉他時播放");
   },
 });
 const collection = new Collection($("collection"), { progress, ids, rigs });

@@ -10,6 +10,7 @@
   ],
   "height": 276,
   "trackScale": {},
+  "propOverrides": {},
   "bones": [
     {
       "name": "root",

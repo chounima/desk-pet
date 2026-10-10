@@ -11,6 +11,9 @@ NAME = "Chouma"
 DESCRIPTION = "愛打排球的資工系大學生"
 PROPORTIONS = MALE
 
+# 正常頭身的腰比較高，抱吉他的位置要往下、稍微放大
+PROP_OVERRIDES = {"guitar": {"dx": 2, "dy": 12, "scale": 1.12}}
+
 PARTS = {
     "back": body.back,
     "hair_back": head.hair_back, "head": head.head, "hair_front": head.hair_front,

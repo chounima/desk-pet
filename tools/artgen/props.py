@@ -1,6 +1,6 @@
 """可依動作顯示的道具。每個道具綁在某根骨骼上，有自己的位移與圖層順序。"""
 from .balls import BALLS
-from .handheld import book, mug
+from .handheld import book, guitar, mug
 from .shapes import stroke
 from .svg import Part
 
@@ -32,5 +32,6 @@ PROPS = {
     **{name: (fn, "prop", 0, 0, 19) for name, fn in BALLS.items()},      # 排球與商店的球外觀
     "mug": (mug, "handNear", 0, 10, 18.5),
     "book": (book, "handNear", 4, 12, 18.5),
+    "guitar": (guitar, "torso", 4, 0, 15.8),     # 畫在身體前面、近側手臂後面
     "keyboard": (keyboard, "root", 66, 0, 15.6),
 }

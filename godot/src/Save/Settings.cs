@@ -32,6 +32,10 @@ public sealed class Settings
     public bool FitScreen { get; set; }
     /// <summary>開發者模式：設定視窗多一個「開發者」分頁</summary>
     public bool DevMode { get; set; }
+    /// <summary>音樂音量 0～1、隨機播放、播完從頭</summary>
+    public float MusicVolume { get; set; } = 0.6f;
+    public bool MusicShuffle { get; set; }
+    public bool MusicLoop { get; set; } = true;
     /// <summary>每日按鍵次數 { "2026-10-10": 1234 }，保留最近 30 天</summary>
     public SortedDictionary<string, int> DailyKeys { get; set; } = new();
 

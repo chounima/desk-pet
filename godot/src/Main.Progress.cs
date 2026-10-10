@@ -54,7 +54,6 @@ public partial class Main
             SwitchCharacter(fallback);
         RefreshLocks();
         ApplyCosmetics();
-        if (args.TryGetValue("hub", out var tab)) hub.Open(tab);     // --hub=shop：一開始就打開視窗（截圖用）
     }
 
     // 收集系統上線前就在用的角色與型態直接算解鎖，不要因為更新就把使用者正在用的鎖起來

@@ -69,12 +69,13 @@
     }
   },
   "shop": {
-    "_說明": "商店：買了就永久擁有。price 0 = 預設就有。requires 同 unlocks 的 affection 條件，達成才能買。外觀類（ball/fx/bubble）可在商店切換使用中的款式",
+    "_說明": "商店：買了就永久擁有。price 0 = 預設就有。requires 同 unlocks 的 affection 條件，達成才能買。外觀類（ball/fx/bubble）可在商店切換使用中的款式。music 是彈吉他的內建曲（自訂音樂資料夾裡的歌免費）",
     "categories": {
       "ball": "🏐 排球外觀",
       "fx": "✨ 特效樣式",
       "bubble": "💬 對話泡泡",
-      "action": "🎭 動作"
+      "action": "🎭 動作",
+      "music": "🎵 曲子"
     },
     "defaults": {
       "ball": "ball:classic",
@@ -183,6 +184,41 @@
         "price": 100,
         "action": "read",
         "icon": "📖"
+      },
+      "action:guitar": {
+        "category": "action",
+        "label": "彈吉他",
+        "price": 120,
+        "action": "guitar",
+        "icon": "🎸"
+      },
+      "song:twinkle": {
+        "category": "music",
+        "label": "小星星",
+        "price": 0,
+        "song": "twinkle",
+        "icon": "🎵"
+      },
+      "song:ode": {
+        "category": "music",
+        "label": "歡樂頌",
+        "price": 60,
+        "song": "ode",
+        "icon": "🎵"
+      },
+      "song:birthday": {
+        "category": "music",
+        "label": "生日快樂",
+        "price": 60,
+        "song": "birthday",
+        "icon": "🎵"
+      },
+      "song:deskpet": {
+        "category": "music",
+        "label": "桌邊小調",
+        "price": 80,
+        "song": "deskpet",
+        "icon": "🎵"
       }
     }
   }

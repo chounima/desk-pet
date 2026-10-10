@@ -14,7 +14,7 @@ public partial class Tray : Node
     // 選單項目 id：角色用 0..n-1，大小用 IdSize + i
     const int IdSize = 100, IdForm = 200, IdAuto = 1000, IdAutostart = 1001, IdToday = 1002, IdQuit = 1003, IdVolley = 1004, IdSound = 1005,
         IdFullscreen = 1006, IdFit = 1007, IdHide = 1008,
-        IdCollection = 1009, IdShop = 1010, IdSettings = 1011;
+        IdCollection = 1009, IdShop = 1010, IdSettings = 1011, IdGuitar = 1012;
 
     readonly List<string> ids = new();
     readonly List<string> formIds = new();
@@ -36,6 +36,7 @@ public partial class Tray : Node
     public event Action? HideToggled;
     /// <summary>打開 Desk Pet 視窗的某個分頁：collection | shop | settings</summary>
     public event Action<string>? HubRequested;
+    public event Action? GuitarToggled;
     readonly List<string> charLabels = new();
 
     public void Build(IList<RigData> characters, Settings settings, bool autostart, Texture2D icon)
@@ -61,6 +62,7 @@ public partial class Tray : Node
         for (var i = 0; i < Tuning.Sizes.Length; i++)
             menu.AddRadioCheckItem(Tuning.Sizes[i].Label, IdSize + i);
         menu.AddSeparator();
+        menu.AddItem("🎸 彈吉他", IdGuitar);
         menu.AddCheckItem("🏐 排球對打", IdVolley);
         menu.AddCheckItem("自動行為", IdAuto);
         menu.AddCheckItem("🔊 音效", IdSound);
@@ -145,6 +147,8 @@ public partial class Tray : Node
 
     public void SetVolley(bool on) => SetChecked(IdVolley, on);
 
+    public void SetPerforming(bool on) => menu.SetItemText(menu.GetItemIndex(IdGuitar), on ? "⏹ 停止演奏" : "🎸 彈吉他");
+
     /// <summary>設定視窗改了選項時同步勾選狀態（key 同 SettingsTab）</summary>
     public void SetOption(string key, bool on)
     {
@@ -200,6 +204,9 @@ public partial class Tray : Node
                 break;
             case IdHide:
                 HideToggled?.Invoke();
+                break;
+            case IdGuitar:
+                GuitarToggled?.Invoke();
                 break;
             case IdCollection:
                 HubRequested?.Invoke("collection");
