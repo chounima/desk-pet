@@ -48,12 +48,15 @@ public partial class Main : Node2D
     int keyCount;
     float saveTimer = SaveEvery;
     Vector2? lookOverride;     // --look=x,y：固定看某一點（截圖用）
+    bool duplicate;            // 重複啟動的實例：什麼都沒初始化，等待結束
 
     public override void _Ready()
     {
         if (!SingleInstance.TryAcquire())
         {
             GD.Print("[DeskPet] 已經有一隻桌寵在執行，結束這個實例");
+            // SetProcess(false) 擋不住 Godot 在 _Ready 之後自動開啟的 _Process，所以另外用旗標擋
+            duplicate = true;
             SetProcess(false);
             SetProcessInput(false);
             GetTree().Quit();
@@ -172,6 +175,7 @@ public partial class Main : Node2D
 
     public override void _Process(double delta)
     {
+        if (duplicate) return;
         var dt = Mathf.Min((float)delta, 0.05f);
 
         var newKeys = 0;
@@ -261,6 +265,7 @@ public partial class Main : Node2D
 
     public override void _Input(InputEvent e)
     {
+        if (duplicate) return;
         // 對打中：點球回擊，角色不能點也不能拖
         if (volley.Active)
         {
