@@ -1,6 +1,6 @@
 {"label": "睡覺", "duration": 3.6, "loop": true, "face": "sleep", "fx": "zzz",
   "tracks": {
-    "root.y": [[0, 25]],
+    "root.y": [[0, 22]],
     "armNear_u": [[0, -80]],
     "armNear_l": [[0, 160]],
     "armFar_u": [[0, -80]],
