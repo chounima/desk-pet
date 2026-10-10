@@ -19,6 +19,15 @@ export function outfitJson(name, character, parts) {
   return out;
 }
 
+// 文件\DeskPet\characters\<名稱>\character.json：base 是當作身形與動作範本的角色
+export function characterJson(c, base) {
+  const { parts } = outfitJson(c.name, base, c.parts);
+  const faces = c.faces.place
+    ? { box: boxOf(c.faces.place), images: Object.fromEntries(Object.entries(c.faces.images).map(([k, v]) => [k, v.fileName])) }
+    : null;
+  return { name: c.name, description: c.desc, base, parts, faces, lines: c.greet ? { greet: [c.greet] } : {} };
+}
+
 export function download(fileName, data) {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
   const a = document.createElement("a");

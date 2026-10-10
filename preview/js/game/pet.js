@@ -37,6 +37,13 @@ export class Pet {
     this.view = new PetView(this.layer, rig, this.props);
     this.view.setAccessories(this.accessories ?? []);
     this.view.setOutfit(this.outfit ?? null);
+    this.view.setFaceImages(this.faces ?? null);
+  }
+
+  // 自訂表情 { box, images: { 表情: url } }（自訂角色編輯器用）
+  setFaceImages(faces) {
+    this.faces = faces;
+    this.view.setFaceImages(faces);
   }
 
   // 衣服 { 部件圖名: { url, box } }；換角色時會重新套用（不同角色通常要換掉）

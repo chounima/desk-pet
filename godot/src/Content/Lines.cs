@@ -26,6 +26,9 @@ public sealed class Lines
         return JsonSerializer.Deserialize<Dictionary<string, List<string>>>(ContentLoader.ReadText(path));
     }
 
+    /// <summary>自訂角色的台詞</summary>
+    public void Set(string characterId, Dictionary<string, List<string>> lines) => byCharacter[characterId] = lines;
+
     /// <summary>隨機挑一句；角色和預設都沒有這個 key 時回傳 null</summary>
     public string? Pick(string characterId, string key)
     {

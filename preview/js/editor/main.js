@@ -4,7 +4,7 @@ import { PATHS, TUNING } from "../config.js";
 import { formRig, loadAll } from "../core/loader.js";
 import { apply, mul } from "../core/math.js";
 import { Pet } from "../game/pet.js";
-import { accessoryJson, boxOf, download, folderName, outfitJson } from "./exporter.js";
+import { accessoryJson, boxOf, characterJson, download, folderName, outfitJson } from "./exporter.js";
 
 const $ = sel => document.querySelector(sel);
 const NS = "http://www.w3.org/2000/svg";
@@ -22,6 +22,8 @@ const state = {
   form: null,
   acc: { name: "我的配件", slot: "head", img: null },
   outfit: { name: "我的衣服", parts: {}, selected: null },
+  // 自訂角色：parts 同衣服；faces.place 是所有表情共用的位置，faces.images 每個表情一張圖
+  character: { name: "我的角色", desc: "自己做的角色", greet: "嗨！", parts: {}, selected: null, faces: { place: null, images: {} } },
   paused: false,
 };
 
@@ -63,9 +65,17 @@ function layout() {
   Object.entries({ x1: 0, x2: width, y1: pet.y, y2: pet.y }).forEach(([k, v]) => ground.setAttribute(k, v));
 }
 
+// 換部件的兩種模式（衣服、自訂角色）各有一份資料
+const EXPRESSIONS = { idle: "待機", blink: "眨眼", happy: "開心", sleep: "睡覺", surprised: "驚訝", focus: "專注", shy: "害羞", angry: "生氣" };
+const parts = () => (state.mode === "character" ? state.character : state.outfit);
+const faceOf = sel => (sel?.startsWith("face:") ? sel.slice(5) : null);
+const faceBox = () => rig().slots.find(s => s.variants).box;
+
 // ---------- 目前在編輯的圖 ----------
 function currentImg() {
-  return state.mode === "accessory" ? state.acc.img : state.outfit.parts[state.outfit.selected] ?? null;
+  if (state.mode === "accessory") return state.acc.img;
+  const ps = parts();
+  return faceOf(ps.selected) ? ps.faces?.place ?? null : ps.parts[ps.selected] ?? null;
 }
 
 // 圖片所在的座標系：骨骼世界矩陣（配件再乘上錨點的位移與縮放）
@@ -76,7 +86,8 @@ function frameOf() {
     if (!a) return null;
     return mul(pet.world[a.bone], [a.scale, 0, 0, a.scale, a.x, a.y]);
   }
-  const slot = partSlot(state.outfit.selected);
+  const sel = parts().selected;
+  const slot = faceOf(sel) ? r.slots.find(s => s.variants) : partSlot(sel);
   return slot ? pet.world[slot.bone] : null;
 }
 
@@ -90,9 +101,14 @@ function applyEdits() {
   const accImg = state.acc.img;
   pet.setAccessories(accImg ? [{ url: accImg.url, box: boxOf(accImg), anchor: slots[state.acc.slot].anchor, z: slots[state.acc.slot].z }] : []);
   const map = {};
-  for (const [art, img] of Object.entries(state.outfit.parts)) map[art] = { url: img.url, box: boxOf(img) };
+  if (state.mode !== "accessory") for (const [art, img] of Object.entries(parts().parts)) map[art] = { url: img.url, box: boxOf(img) };
   pet.setOutfit(Object.keys(map).length ? map : null);
-  ghostLayer.style.display = state.mode === "outfit" && $("[data-ghost]").checked ? "" : "none";
+  // 自訂角色的表情：共用一個位置；選到某個表情時讓角色擺出那個表情
+  const faces = state.character.faces, charMode = state.mode === "character";
+  const urls = Object.fromEntries(Object.entries(faces.images).map(([k, v]) => [k, v.url]));
+  pet.setFaceImages(charMode && faces.place ? { box: boxOf(faces.place), images: urls } : null);
+  pet.faceOverride = charMode ? faceOf(state.character.selected) : null;
+  ghostLayer.style.display = state.mode !== "accessory" && $("[data-ghost]").checked ? "" : "none";
   syncFields();
   updateHint();
 }
@@ -123,13 +139,18 @@ $("[data-acc-file]").onchange = async e => {
 
 $("[data-part-file]").onchange = async e => {
   const file = e.target.files[0];
-  const art = state.outfit.selected;
-  if (!file || !art) return;
+  const ps = parts(), sel = ps.selected;
+  if (!file || !sel) return;
   const pic = await readImage(file);
-  // 預設蓋在原本部件的範圍上（寬度相同、高度依圖片比例）
-  const [x0, y0, x1, y1] = partSlot(art).box;
+  const expr = faceOf(sel);
+  // 預設蓋在原本部件（或表情）的範圍上：寬度相同、高度依圖片比例
+  const [x0, y0, x1, y1] = expr ? faceBox() : partSlot(sel).box;
   const w = x1 - x0;
-  state.outfit.parts[art] = { ...pic, w, h: (w * pic.natH) / pic.natW, x: (x0 + x1) / 2, y: (y0 + y1) / 2, scale: 1 };
+  const place = { w, h: (w * pic.natH) / pic.natW, x: (x0 + x1) / 2, y: (y0 + y1) / 2, scale: 1 };
+  if (expr) {
+    ps.faces.images[expr] = { url: pic.url, fileName: pic.fileName };
+    ps.faces.place ??= place;            // 第一張表情決定位置，之後的表情共用
+  } else ps.parts[sel] = { ...pic, ...place };
   renderPartList();
   applyEdits();
 };
@@ -152,17 +173,28 @@ $("[data-reset]").onclick = () => {
   const img = currentImg();
   if (!img) return;
   if (state.mode === "accessory") Object.assign(img, { x: 0, y: 0, scale: 1 });
-  else { const [x0, y0, x1, y1] = partSlot(state.outfit.selected).box; Object.assign(img, { x: (x0 + x1) / 2, y: (y0 + y1) / 2, scale: 1 }); }
+  else {
+    const sel = parts().selected;
+    const [x0, y0, x1, y1] = faceOf(sel) ? faceBox() : partSlot(sel).box;
+    Object.assign(img, { x: (x0 + x1) / 2, y: (y0 + y1) / 2, scale: 1 });
+  }
   applyEdits();
 };
 $("[data-remove]").onclick = () => {
+  const ps = parts(), expr = faceOf(ps.selected);
   if (state.mode === "accessory") state.acc.img = null;
-  else delete state.outfit.parts[state.outfit.selected];
+  else if (expr) {
+    delete ps.faces.images[expr];
+    if (!Object.keys(ps.faces.images).length) ps.faces.place = null;
+  } else delete ps.parts[ps.selected];
   renderPartList();
   applyEdits();
 };
 $("[data-acc-name]").oninput = e => { state.acc.name = e.target.value; updateHint(); };
 $("[data-outfit-name]").oninput = e => { state.outfit.name = e.target.value; updateHint(); };
+$("[data-char-name]").oninput = e => { state.character.name = e.target.value; updateHint(); };
+$("[data-char-desc]").oninput = e => { state.character.desc = e.target.value; };
+$("[data-char-greet]").oninput = e => { state.character.greet = e.target.value; };
 $("[data-acc-slot]").onchange = e => { state.acc.slot = e.target.value; applyEdits(); };
 $("[data-ghost]").onchange = applyEdits;
 $("[data-pause]").onchange = e => { state.paused = e.target.checked; };
@@ -219,11 +251,19 @@ function renderCharacter() {
   fillSelect($("[data-form]"), forms.map(([k, f]) => [k, f.label]), state.form ?? forms[0]?.[0]);
   const clips = clipsFor(rig());
   fillSelect($("[data-action]"), names.filter(n => !clips[n]?.hidden).map(n => [n, clips[n].label]), "idle");
-  const arts = [...new Set(rig().slots.filter(s => s.file && !s.variants).map(s => s.file.split("/").pop().replace(".svg", "")))];
-  fillSelect($("[data-part]"), arts.map(a => [a, PART_LABELS[a] ?? a]), state.outfit.selected ?? "torso");
-  state.outfit.selected = $("[data-part]").value;
+  fillParts();
   buildPets();
   renderPartList();
+}
+
+// 部件選單：部件；自訂角色模式再加上各個表情
+function fillParts() {
+  const arts = [...new Set(rig().slots.filter(s => s.file && !s.variants).map(s => s.file.split("/").pop().replace(".svg", "")))];
+  const entries = arts.map(a => [a, PART_LABELS[a] ?? a]);
+  if (state.mode === "character") entries.push(...Object.entries(EXPRESSIONS).map(([k, v]) => [`face:${k}`, `表情：${v}`]));
+  const ps = parts();
+  fillSelect($("[data-part]"), entries, ps.selected ?? "torso");
+  ps.selected = $("[data-part]").value;
 }
 
 $("[data-char]").onchange = e => {
@@ -233,15 +273,17 @@ $("[data-char]").onchange = e => {
   renderCharacter();
 };
 $("[data-form]").onchange = e => { state.form = e.target.value; state.outfit.parts = {}; renderCharacter(); };
-$("[data-part]").onchange = e => { state.outfit.selected = e.target.value; renderPartList(); applyEdits(); };
+$("[data-part]").onchange = e => { parts().selected = e.target.value; renderPartList(); applyEdits(); };
 
 function renderPartList() {
-  const list = $("[data-part-list]");
-  list.replaceChildren(...Object.keys(state.outfit.parts).map(art => {
+  const ps = parts();
+  const done = Object.keys(ps.parts).map(a => [a, PART_LABELS[a] ?? a]);
+  if (state.mode === "character") done.push(...Object.keys(ps.faces.images).map(k => [`face:${k}`, `表情：${EXPRESSIONS[k]}`]));
+  $("[data-part-list]").replaceChildren(...done.map(([key, label]) => {
     const b = document.createElement("button");
-    b.textContent = `✓ ${PART_LABELS[art] ?? art}`;
-    b.classList.toggle("on", art === state.outfit.selected);
-    b.onclick = () => { state.outfit.selected = art; $("[data-part]").value = art; renderPartList(); applyEdits(); };
+    b.textContent = `✓ ${label}`;
+    b.classList.toggle("on", key === ps.selected);
+    b.onclick = () => { ps.selected = key; $("[data-part]").value = key; renderPartList(); applyEdits(); };
     return b;
   }));
 }
@@ -250,7 +292,13 @@ for (const b of document.querySelectorAll("[data-mode]")) {
   b.onclick = () => {
     state.mode = b.dataset.mode;
     for (const x of document.querySelectorAll("[data-mode]")) x.classList.toggle("on", x === b);
-    for (const p of document.querySelectorAll("[data-panel]")) p.hidden = p.dataset.panel !== state.mode;
+    const show = { accessory: ["accessory"], outfit: ["outfit"], character: ["character", "outfit"] }[state.mode];
+    for (const p of document.querySelectorAll("[data-panel]")) p.hidden = !show.includes(p.dataset.panel);
+    $("[data-parts-title]").textContent = state.mode === "character" ? "部件與表情" : "衣服";
+    $("[data-outfit-name-field]").hidden = state.mode === "character";
+    $("[data-form]").hidden = state.mode === "character" || Object.keys(rigs[state.charId].forms ?? {}).length < 2;
+    fillParts();
+    renderPartList();
     applyEdits();
   };
 }
@@ -263,6 +311,12 @@ function updateHint() {
     hint.textContent = img
       ? `把 accessory.json 和圖片「${img.fileName}」一起放進：\n文件\\DeskPet\\accessories\\${folderName(state.acc.name)}\\\n再到桌寵的「👗 衣櫃」按「🔄 重新讀取」，配件會出現在「配件」裡（免費）。`
       : "先選一張圖片（建議去背的 PNG）。";
+  } else if (state.mode === "character") {
+    const c = state.character;
+    const files = [...Object.values(c.parts).map(p => p.fileName), ...Object.values(c.faces.images).map(f => f.fileName)];
+    hint.textContent = files.length
+      ? `把 character.json 和這些圖片放進：\n文件\\DeskPet\\characters\\${folderName(c.name)}\\\n${files.join("、")}\n重新啟動桌寵後會出現在角色清單。沒換的部件和表情會沿用 ${rigs[state.charId].name} 的。`
+      : `以 ${rigs[state.charId].name} 的身形與動作為範本，把部件和表情一個個換成自己的圖。`;
   } else {
     const files = Object.values(state.outfit.parts).map(p => p.fileName);
     hint.textContent = files.length
@@ -275,6 +329,10 @@ $("[data-export]").onclick = () => {
   if (state.mode === "accessory") {
     if (!state.acc.img) return alert("還沒有圖片");
     download("accessory.json", accessoryJson(state.acc.name, state.acc.slot, state.acc.img));
+  } else if (state.mode === "character") {
+    const c = state.character;
+    if (!Object.keys(c.parts).length && !Object.keys(c.faces.images).length) return alert("還沒有任何部件或表情");
+    download("character.json", characterJson(c, state.charId));
   } else {
     if (!Object.keys(state.outfit.parts).length) return alert("還沒有任何部件");
     download("outfit.json", outfitJson(state.outfit.name, state.charId, state.outfit.parts));
@@ -291,7 +349,20 @@ if (q.has("demo")) {
     const blob = await (await fetch(url)).blob();
     return readImage(new File([blob], url.split("/").pop(), { type: blob.type }));
   };
-  if (q.get("demo") === "outfit") {
+  if (q.get("demo") === "character") {
+    document.querySelector('[data-mode="character"]').click();
+    const c = state.character;
+    const pic = await asData(`${PATHS.art}/props/book.svg`);
+    const [x0, y0, x1, y1] = partSlot("torso").box;
+    c.parts.torso = { ...pic, w: x1 - x0, h: ((x1 - x0) * pic.natH) / pic.natW, x: (x0 + x1) / 2, y: (y0 + y1) / 2, scale: 1 };
+    const face = await asData(`${PATHS.art}/accessories/sunglasses.svg`);
+    const [f0, g0, f1, g1] = faceBox();
+    c.faces.images.idle = { url: face.url, fileName: face.fileName };
+    c.faces.place = { w: f1 - f0, h: ((f1 - f0) * face.natH) / face.natW, x: (f0 + f1) / 2, y: (g0 + g1) / 2, scale: 0.6 };
+    c.selected = "face:idle";
+    fillParts();
+    renderPartList();
+  } else if (q.get("demo") === "outfit") {
     document.querySelector('[data-mode="outfit"]').click();
     const pic = await asData(`${PATHS.art}/props/book.svg`);
     const [x0, y0, x1, y1] = partSlot("torso").box;

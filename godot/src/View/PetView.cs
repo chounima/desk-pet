@@ -46,7 +46,7 @@ public partial class PetView : Node2D
         foreach (var slot in rig.Slots)
         {
             var file = slot.Variants != null ? slot.Variants["idle"] : slot.File!;
-            var item = MakeItem(rig.BasePath + file, slot.Box, slot.Bone, null);
+            var item = MakeItem(rig.Resolve(file), slot.Box, slot.Bone, null);
             item.Slot = slot;
             if (slot.Far) item.Sprite.Modulate = FarTint;
             if (slot.Variants != null) faceItem = item;
@@ -97,7 +97,7 @@ public partial class PetView : Node2D
     {
         if (faceItem?.Slot?.Variants is not { } variants || name == face) return;
         var file = variants.TryGetValue(name, out var f) ? f : variants["idle"];
-        SetImage(faceItem, rig.BasePath + file, faceItem.Slot.Box);
+        SetImage(faceItem, rig.Resolve(file), faceItem.Slot.Box);
         face = name;
     }
 
@@ -150,7 +150,9 @@ public partial class PetView : Node2D
     /// <summary>部件的基本圖：有穿衣服就用衣服的圖，否則用角色原本的</summary>
     void RestoreImage(Item item)
     {
-        if (outfit != null && outfit.TryGetValue(ArtOf(item.Slot!), out var part)) SetImage(item, part.Path, part.Box);
+        var art = ArtOf(item.Slot!);
+        if (outfit != null && outfit.TryGetValue(art, out var part)) SetImage(item, part.Path, part.Box);
+        else if (rig.DefaultOutfit != null && rig.DefaultOutfit.TryGetValue(art, out var own)) SetImage(item, own.Path, own.Box);
         else SetImage(item, rig.BasePath + item.Slot!.File, item.Slot.Box);
     }
 

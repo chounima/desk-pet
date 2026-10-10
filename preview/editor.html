@@ -12,6 +12,7 @@
     <div class="buttons" data-modes>
       <button data-mode="accessory" class="on">🎩 配件</button>
       <button data-mode="outfit">👕 衣服</button>
+      <button data-mode="character">🧍 角色</button>
     </div>
 
     <h2>角色</h2>
@@ -39,10 +40,18 @@
       <label class="field">圖片 <input type="file" accept=".png,.svg,.webp,.jpg" data-acc-file></label>
     </section>
 
-    <!-- 衣服 -->
+    <!-- 自訂角色：身體用選的角色當骨架，每個部件、表情換成自己的圖 -->
+    <section data-panel="character" hidden>
+      <h2>角色 <span class="muted">（上面選的角色當作身形與動作的範本）</span></h2>
+      <label class="field">名字 <input data-char-name value="我的角色"></label>
+      <label class="field">介紹 <input data-char-desc value="自己做的角色"></label>
+      <label class="field">招呼語 <input data-char-greet value="嗨！"></label>
+    </section>
+
+    <!-- 衣服（自訂角色也用這一區換部件與表情） -->
     <section data-panel="outfit" hidden>
-      <h2>衣服</h2>
-      <label class="field">名稱 <input data-outfit-name value="我的衣服"></label>
+      <h2 data-parts-title>衣服</h2>
+      <label class="field" data-outfit-name-field>名稱 <input data-outfit-name value="我的衣服"></label>
       <label class="field">部件 <select data-part></select></label>
       <label class="field">圖片 <input type="file" accept=".png,.svg,.webp,.jpg" data-part-file></label>
       <label><input type="checkbox" data-ghost checked> 顯示原本的部件（半透明對齊用）</label>

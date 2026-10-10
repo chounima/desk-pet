@@ -69,9 +69,24 @@ export class PetView {
 
   setFace(name) {
     if (name === this.face) return;
-    const file = this.faceVariants[name] ?? this.faceVariants.idle;
-    this.faceImg.setAttribute("href", this.rig.base + file);
     this.face = name;
+    this.showFace();
+  }
+
+  // 自訂表情：{ box, images: { 表情: url } }，沒有的表情用 idle；null = 用角色原本的表情
+  setFaceImages(faces) {
+    this.customFaces = faces;
+    this.showFace();
+  }
+
+  showFace() {
+    const c = this.customFaces;
+    if (c?.images && Object.keys(c.images).length) {
+      setImage(this.faceImg, c.images[this.face] ?? c.images.idle ?? Object.values(c.images)[0], c.box);
+      return;
+    }
+    const slot = this.rig.slots.find(s => s.variants);
+    setImage(this.faceImg, this.rig.base + (this.faceVariants[this.face] ?? this.faceVariants.idle), slot.box);
   }
 
   // map: { 插槽名: 替換圖名 }；沒指定或角色沒有該替換圖時用原圖

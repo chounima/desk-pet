@@ -30,6 +30,15 @@ public sealed class RigData
 
     /// <summary>角色資料夾路徑（載入後設定），部件圖檔以此為基準。</summary>
     public string BasePath { get; set; } = "";
+
+    /// <summary>自訂角色：換成自己圖片的部件（同衣服的格式，當作這個角色的基本外觀）</summary>
+    [JsonIgnore] public Dictionary<string, OutfitPart>? DefaultOutfit { get; set; }
+    /// <summary>自訂角色的台詞（沒有的 key 用 default.json）</summary>
+    [JsonIgnore] public Dictionary<string, List<string>>? CustomLines { get; set; }
+
+    /// <summary>部件圖的完整路徑：絕對路徑（自訂角色的表情）直接用，否則接在角色資料夾後面</summary>
+    public string Resolve(string file) =>
+        System.IO.Path.IsPathRooted(file) || file.Contains("://") ? file : BasePath + file;
 }
 
 public sealed class AnchorData

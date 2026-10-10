@@ -90,6 +90,12 @@ public partial class Main : Node2D
         daily = DailyConfig.Load();
         var (ids, loadedRigs) = ContentLoader.LoadCharacters();
         rigs = loadedRigs;
+        // 自訂角色（文件\\DeskPet\\characters）接在內建角色後面
+        foreach (var custom in CustomContent.LoadCharacters(rigs))
+        {
+            rigs[custom.Id] = custom;
+            ids.Add(custom.Id);
+        }
         var bodies = rigs.Values.SelectMany(r => (r.Forms?.Values.Select(f => f.Data) ?? new[] { r }).Append(r)).Select(r => r.Body);
         var (_, clips) = ContentLoader.LoadAnimations(bodies);
         var props = ContentLoader.LoadProps();
@@ -110,6 +116,7 @@ public partial class Main : Node2D
         fx = new Fx();
         AddChild(fx);
         lines = Lines.Load(ids);
+        foreach (var r in rigs.Values) if (r.CustomLines != null) lines.Set(r.Id, r.CustomLines);
         bubble = new Bubble();
         AddChild(bubble);
         sfx = new Sfx { Enabled = settings.Sound };
