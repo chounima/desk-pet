@@ -1,0 +1,15 @@
+{"label": "睡覺", "duration": 3.6, "loop": true, "face": "sleep", "fx": "zzz",
+  "tracks": {
+    "root.y": [[0, 29]],
+    "armNear_u": [[0, -80]],
+    "armNear_l": [[0, 160]],
+    "armFar_u": [[0, -80]],
+    "armFar_l": [[0, 160]],
+    "legNear_u": [[0, -80]],
+    "legNear_l": [[0, 160]],
+    "legFar_u": [[0, -80]],
+    "legFar_l": [[0, 160]],
+    "torso": [[0, 2], [1.8, 4], [3.6, 2]],
+    "head": [[0, 32], [1.8, 36], [3.6, 32]],
+    "tail": [[0, 40]]
+  } }

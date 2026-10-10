@@ -2,6 +2,7 @@
   "id": "choupaca",
   "name": "Choupaca",
   "description": "Chouma 的羊駝化身（暴躁、體力差）",
+  "body": "humanoid",
   "rootScale": 0.458,
   "headTop": [
     6,
@@ -381,5 +382,15 @@
       ],
       "far": false
     }
-  ]
+  ],
+  "forms": {
+    "upright": {
+      "label": "直立",
+      "rig": ""
+    },
+    "quadruped": {
+      "label": "四足",
+      "rig": "forms/quadruped/"
+    }
+  }
 }

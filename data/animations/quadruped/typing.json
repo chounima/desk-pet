@@ -1,0 +1,14 @@
+{"label": "打字", "duration": 0.36, "loop": true, "face": "focus", "props": ["keyboard"],
+  "tracks": {
+    "root.y": [[0, 29]],
+    "armNear_u": [[0, -70]],
+    "armNear_l": [[0, 0], [0.09, 45], [0.18, 0], [0.36, 0]],
+    "armFar_u": [[0, -66]],
+    "armFar_l": [[0, 0], [0.18, 0], [0.27, 45], [0.36, 0]],
+    "legNear_u": [[0, -80]],
+    "legNear_l": [[0, 160]],
+    "legFar_u": [[0, -80]],
+    "legFar_l": [[0, 160]],
+    "head": [[0, 16]],
+    "tail": [[0, 30]]
+  } }

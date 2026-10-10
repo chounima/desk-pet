@@ -1,6 +1,6 @@
 // 桌面預覽進入點：載入資料、建立寵物、綁定輸入、主迴圈
 import { TUNING, VOLLEY } from "./config.js";
-import { loadAll } from "./core/loader.js";
+import { formRig, loadAll } from "./core/loader.js";
 import { Behavior } from "./game/behavior.js";
 import { Pet } from "./game/pet.js";
 import { Volley } from "./game/volley.js";
@@ -10,7 +10,7 @@ import { BallView } from "./view/ball.js";
 import { Fx } from "./view/fx.js";
 
 const $ = id => document.getElementById(id);
-const [{ ids, rigs }, { names, clips }, props] = await loadAll();
+const [{ ids, rigs }, { names, clips, sets }, props] = await loadAll();
 await loadSkills();
 const q = new URLSearchParams(location.search);
 
@@ -19,8 +19,13 @@ const world = {
   get width() { return innerWidth; },
   get groundY() { return innerHeight - TUNING.taskbar; },
 };
+// 每個角色選的型態（?form=quadruped 可指定起始角色的型態）
+const forms = {};
+let charId = q.get("char") ?? ids[0];
+if (q.has("form")) forms[charId] = q.get("form");
+const currentRig = () => formRig(rigs[charId], forms[charId]);
 const pet = new Pet({
-  layer: $("pets"), rig: rigs[q.get("char") ?? ids[0]], clips, props,
+  layer: $("pets"), rig: currentRig(), clipSets: sets, props,
   scale: Number(q.get("scale") ?? TUNING.scale), crossfade: TUNING.crossfade,
 });
 pet.x = world.width / 2;
@@ -61,12 +66,19 @@ function toggleVolley() {
 const panel = new Panel($("panel"), {
   characters: ids.map(id => rigs[id]),
   actions: names.map(n => [n, clips[n]]),
-  onCharacter: id => { pet.setCharacter(rigs[id]); panel.setCharacter(id); },
+  onCharacter: id => { charId = id; switchRig(); },
+  onForm: form => { forms[charId] = form; switchRig(); fx.burst("💨", pet.headTop(), "fx-heart"); },
   onAction: name => { if (!volley.active) behavior.force(name); },
   onAuto: on => behavior.setAuto(on),
   onVolley: toggleVolley,
 });
-panel.setCharacter(pet.rig.id);
+function switchRig() {
+  pet.setCharacter(currentRig());
+  panel.setCharacter(charId);
+  const all = rigs[charId].forms ?? {};
+  panel.setForms(all, forms[charId] in all ? forms[charId] : Object.keys(all)[0]);
+}
+switchRig();
 
 // ---------- 輸入 ----------
 addEventListener("keydown", e => {

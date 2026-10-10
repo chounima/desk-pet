@@ -19,7 +19,7 @@ import { Pet } from "../js/game/pet.js";
 import { Volley } from "../js/game/volley.js";
 import { loadSkills } from "../js/game/volleySkills.js";
 
-const [{ ids, rigs }, { clips }, props] = await loadAll();
+const [{ ids, rigs }, { sets }, props] = await loadAll();
 await loadSkills();
 
 // ?seed=123 固定亂數，讓結果可以重現
@@ -45,7 +45,7 @@ const layer = document.createElementNS("http://www.w3.org/2000/svg", "g");
 const results = {};
 
 for (const id of testIds ?? ids) {
-  const pet = new Pet({ layer, rig: rigs[id], clips, props, scale: TUNING.scale, crossfade: TUNING.crossfade });
+  const pet = new Pet({ layer, rig: rigs[id], clipSets: sets, props, scale: TUNING.scale, crossfade: TUNING.crossfade });
   pet.x = world.width / 2;
   pet.y = world.groundY;
   const stats = { spikes: 0, spikePlans: 0, dives: 0, divePlans: 0, fires: 0, rallies: [], ends: {}, why: {} };

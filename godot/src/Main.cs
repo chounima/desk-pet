@@ -63,16 +63,22 @@ public partial class Main : Node2D
         settings = Settings.Load();
 
         var (ids, rigs) = ContentLoader.LoadCharacters();
-        var (_, clips) = ContentLoader.LoadAnimations();
+        var bodies = rigs.Values.SelectMany(r => (r.Forms?.Values.Select(f => f.Data) ?? new[] { r }).Append(r)).Select(r => r.Body);
+        var (_, clips) = ContentLoader.LoadAnimations(bodies);
         var props = ContentLoader.LoadProps();
         var args = ParseArgs();
         // 起始角色：命令列 > 上次選的 > 第一個
         var startId = args.GetValueOrDefault("char", rigs.ContainsKey(settings.Character) ? settings.Character : ids[0]);
         // 命令列指定的角色（測試用）不寫回設定，才不會蓋掉使用者在系統匣選的角色
         if (!args.ContainsKey("char")) settings.Character = startId;
+        // 型態：命令列（測試用，不存檔）> 這個角色上次選的
+        string? FormOf(string id) =>
+            id == startId && args.TryGetValue("form", out var f) ? f
+            : settings.Forms.TryGetValue(id, out var saved) ? saved : ContentLoader.DefaultForm(rigs[id]);
+        RigData RigOf(string id) => ContentLoader.FormRig(rigs[id], FormOf(id));
         dumpState = args.ContainsKey("dump");
 
-        pet = new Pet(this, rigs[startId], clips, props, PetScale(settings.Size));
+        pet = new Pet(this, RigOf(startId), clips, props, PetScale(settings.Size));
         var area = Area();
         pet.X = area.Size.X / 2;
         pet.Y = area.End.Y;
@@ -116,7 +122,24 @@ public partial class Main : Node2D
         tray = new Tray();
         AddChild(tray);
         tray.Build(ids.Select(id => rigs[id]).ToList(), settings, Autostart.IsEnabled(), GD.Load<Texture2D>("res://icon.svg"));
-        tray.CharacterChosen += id => { pet.SetCharacter(rigs[id]); settings.Character = id; settings.Save(); };
+        tray.SetForms(rigs[startId].Forms, FormOf(startId));
+        tray.CharacterChosen += id =>
+        {
+            pet.SetCharacter(RigOf(id));
+            tray.SetForms(rigs[id].Forms, FormOf(id));
+            settings.Character = id;
+            settings.Save();
+        };
+        tray.FormChosen += form =>
+        {
+            var id = pet.Rig.Id;
+            settings.Forms[id] = form;
+            settings.Save();
+            args.Remove("form");
+            pet.SetCharacter(RigOf(id));
+            tray.SetForms(rigs[id].Forms, form);
+            fx.Burst("💨", pet.HeadTop(), Colors.White);
+        };
         tray.SizeChosen += size => { pet.SetScale(PetScale(size)); settings.Size = size; settings.Save(); };
         tray.AutoToggled += on => { behavior.Auto = on; settings.Auto = on; settings.Save(); };
         tray.AutostartToggled += Autostart.Set;
@@ -130,7 +153,7 @@ public partial class Main : Node2D
         tray.QuitRequested += () => GetTree().Quit();
 
         GD.Print($"[DeskPet] content={ContentLoader.Root} characters={string.Join(",", ids)} " +
-                 $"clips={clips.Count} area={DesktopWindow.Area} uiScale={DesktopWindow.UiScale} start={startId} autostart={Autostart.IsEnabled()}");
+                 $"clips={clips["humanoid"].Count} bodies={string.Join(",", clips.Keys)} form={FormOf(startId)} area={DesktopWindow.Area} uiScale={DesktopWindow.UiScale} start={startId} autostart={Autostart.IsEnabled()}");
     }
 
     static float PetScale(float size) => Tuning.Scale * DesktopWindow.UiScale * size;

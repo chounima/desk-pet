@@ -52,8 +52,55 @@ MALE = Proportions(
 )
 
 
-def bones(p: Proportions) -> list[tuple]:
+BASE_QUAD_HIP = 50   # 四足動作資料的基準身體高度
+
+
+@dataclass(frozen=True)
+class QuadProportions:
+    """四足體型。沿用人形的骨骼名稱，動作與互動規則才能共用名稱：
+    hips = 身體中心（後半身）、torso = 前半身、arm* = 前腳、leg* = 後腳、hand = 前蹄、foot = 後蹄。"""
+    hip: float              # 腳底到身體中心
+    body: float             # 身體中心到前半身的水平距離
+    neck: tuple             # 脖子根部，相對前半身 (x, y)
+    front: tuple            # 前腳 (近側 x, 遠側 x, y)，相對前半身
+    back: tuple             # 後腳 (近側 x, 遠側 x, y)，相對身體中心
+    leg: tuple              # (大腿, 小腿)，前後腳共用
+    tail: tuple
+    head_top: tuple
+    body_type: str = "quadruped"
+
+    @property
+    def root_scale(self) -> float:
+        return round(self.hip / BASE_QUAD_HIP, 3)
+
+    @property
+    def height(self) -> float:
+        return round(self.hip - self.neck[1] - self.head_top[1])
+
+
+def quad_bones(q: QuadProportions) -> list[tuple]:
+    fnx, ffx, fy = q.front
+    bnx, bfx, by = q.back
+    up, low = q.leg
+    return [
+        ("root", None, 0, 0),
+        ("prop", "root", 0, 0),
+        ("hips", "root", 0, -q.hip),
+        ("torso", "hips", q.body, 0),
+        ("head", "torso", *q.neck),
+        ("tail", "hips", *q.tail),
+        ("cape", "hips", *q.tail),
+        ("armFar_u", "torso", ffx, fy), ("armFar_l", "armFar_u", 0, up), ("handFar", "armFar_l", 0, low),
+        ("armNear_u", "torso", fnx, fy), ("armNear_l", "armNear_u", 0, up), ("handNear", "armNear_l", 0, low),
+        ("legFar_u", "hips", bfx, by), ("legFar_l", "legFar_u", 0, up), ("footFar", "legFar_l", 0, low),
+        ("legNear_u", "hips", bnx, by), ("legNear_l", "legNear_u", 0, up), ("footNear", "legNear_l", 0, low),
+    ]
+
+
+def bones(p) -> list[tuple]:
     """(骨骼, 父骨骼, 相對父骨骼的位移 x, y)，父骨骼在前。"""
+    if isinstance(p, QuadProportions):
+        return quad_bones(p)
     near_sx, far_sx, sy = p.shoulder
     near_hx, far_hx, hy = p.hip_joint
     up, low = p.arm

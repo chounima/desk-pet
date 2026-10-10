@@ -1,0 +1,10 @@
+{"label": "接球準備", "hidden": true, "duration": 0.8, "loop": true, "face": "focus",
+  "tracks": {
+    "root.y": [[0, 2], [0.4, 0], [0.8, 2]],
+    "head": [[0, -10], [0.4, -12], [0.8, -10]],
+    "armNear_u": [[0, -8]],
+    "armFar_u": [[0, 6]],
+    "legNear_u": [[0, 8]],
+    "legFar_u": [[0, -6]],
+    "tail": [[0, 0], [0.4, 15], [0.8, 0]]
+  } }

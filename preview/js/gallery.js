@@ -1,15 +1,17 @@
 // 動作總覽：同一個角色的所有動作排成格子同時播放
 import { TUNING } from "./config.js";
-import { loadAll } from "./core/loader.js";
+import { formRig, loadAll } from "./core/loader.js";
 import { Pet } from "./game/pet.js";
 
 const CELL = { w: 230, h: 300, ground: 250, scale: 0.7, fitHeight: 270 };
 const NS = "http://www.w3.org/2000/svg";
 const $ = id => document.getElementById(id);
 
-const [{ ids, rigs }, { names, clips }, props] = await loadAll();
+const [{ ids, rigs }, { names, sets }, props] = await loadAll();
 const q = new URLSearchParams(location.search);
 let charId = q.get("char") ?? ids[0];
+const rig = formRig(rigs[charId], q.get("form"));
+const clips = sets[rig.body ?? "humanoid"] ?? sets.humanoid;
 const freezeAt = q.has("t") ? Number(q.get("t")) : null;
 
 // 角色切換
@@ -18,6 +20,14 @@ for (const id of ids) {
   a.href = `?char=${id}`;
   a.textContent = rigs[id].name;
   if (id === charId) a.className = "on";
+  $("chars").append(a);
+}
+// 型態切換（例如 ?char=choupaca&form=quadruped）
+for (const [name, f] of Object.entries(rigs[charId].forms ?? {})) {
+  const a = document.createElement("a");
+  a.href = `?char=${charId}&form=${name}`;
+  a.textContent = `🔁 ${f.label}`;
+  if (f.data === rig) a.className = "on";
   $("chars").append(a);
 }
 
@@ -46,9 +56,8 @@ const pets = names.map((name, i) => {
   svg.append(layer);
 
   // 高個子角色縮小，讓每個角色在格子裡差不多大
-  const rig = rigs[charId];
   const scale = CELL.scale * Math.min(1, CELL.fitHeight / (rig.height ?? CELL.fitHeight));
-  const pet = new Pet({ layer, rig, clips, props, scale, crossfade: TUNING.crossfade });
+  const pet = new Pet({ layer, rig, clipSets: sets, props, scale, crossfade: TUNING.crossfade });
   pet.x = cx + CELL.w / 2;
   pet.y = cy + CELL.ground;
   pet.play(name, true);

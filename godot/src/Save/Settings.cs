@@ -20,6 +20,8 @@ public sealed class Settings
     static readonly JsonSerializerOptions Options = new() { WriteIndented = true };
 
     public string Character { get; set; } = "";
+    /// <summary>每個角色選的型態 { "choupaca": "quadruped" }</summary>
+    public Dictionary<string, string> Forms { get; set; } = new();
     /// <summary>大小倍率（見 Tuning.Sizes）</summary>
     public float Size { get; set; } = 1f;
     public bool Auto { get; set; } = true;

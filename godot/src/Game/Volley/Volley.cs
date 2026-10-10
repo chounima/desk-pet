@@ -221,17 +221,18 @@ public sealed class Volley
         var speed = VolleyConfig.RunSpeed * sk.Speed;
 
         // 1. 殺球
-        var spike = PlanSpike(aim, speed, s);
+        var spike = pet.Rig.Volley?.Spike == false ? null : PlanSpike(aim, speed, s);
         if (spike != null) return spike;
 
         // 2. 跑得到一般接球的位置 → 不需要特別打法
-        if (ball.Predict(pet.Y - VolleyConfig.HitHeight * s, Width, Ground) is { } pb)
+        if (ball.Predict(pet.Y - HitHeight * s, Width, Ground) is { } pb)
         {
-            var standX = Math.Clamp(pb.x - aim * VolleyConfig.Reach * s, 40 * U, Width - 40 * U);
+            var standX = Math.Clamp(pb.x - aim * Reach * s, 40 * U, Width - 40 * U);
             if (Math.Abs(standX - pet.X) <= speed * pb.t) return null;
         }
 
         // 3. 來不及 → 魚躍；就算撲不到也撲（比站著看球落地有戲）
+        if (pet.Rig.Volley?.Dive == false) return null;
         var d = pet.Probe("vbDive", VolleyConfig.DiveContact, Hand, 0, HandY);
         if (ball.Predict(pet.Y + d.Y, Width, Ground) is not { } pd || GD.Randf() >= sk.Dive) return null;
         var runT = pd.t - VolleyConfig.DiveContact;
@@ -381,8 +382,8 @@ public sealed class Volley
     {
         var s = BodyScale();
         var aim = AimDir();
-        var landX = ball.Predict(pet.Y - VolleyConfig.HitHeight * s, Width, Ground) is { } pb ? pb.x : ball.X;
-        var standX = Math.Clamp(landX - aim * VolleyConfig.Reach * s + missOffset, 40 * U, Width - 40 * U);
+        var landX = ball.Predict(pet.Y - HitHeight * s, Width, Ground) is { } pb ? pb.x : ball.X;
+        var standX = Math.Clamp(landX - aim * Reach * s + missOffset, 40 * U, Width - 40 * U);
         if (!busy) MoveTo(standX, VolleyConfig.RunSpeed * Skill.Speed, dt, aim);
 
         var hp = HitPoint();
@@ -496,10 +497,14 @@ public sealed class Volley
 
     float BodyScale() => pet.Scale * pet.Rig.RootScale;
 
+    // 依型態調整的擊球點（例如四足用頭頂球）；沒設定就用 VolleyConfig
+    float Reach => pet.Rig.Volley?.Reach ?? VolleyConfig.Reach;
+    float HitHeight => pet.Rig.Volley?.HitHeight ?? VolleyConfig.HitHeight;
+
     // 一般低手接球的擊球點
     Vector2 HitPoint()
     {
         var s = BodyScale();
-        return new Vector2(pet.X + pet.Facing * VolleyConfig.Reach * s, pet.Y - VolleyConfig.HitHeight * s);
+        return new Vector2(pet.X + pet.Facing * Reach * s, pet.Y - HitHeight * s);
     }
 }

@@ -11,14 +11,17 @@ namespace DeskPet.UI;
 public partial class Tray : Node
 {
     // 選單項目 id：角色用 0..n-1，大小用 IdSize + i
-    const int IdSize = 100, IdAuto = 1000, IdAutostart = 1001, IdToday = 1002, IdQuit = 1003, IdVolley = 1004, IdSound = 1005;
+    const int IdSize = 100, IdForm = 200, IdAuto = 1000, IdAutostart = 1001, IdToday = 1002, IdQuit = 1003, IdVolley = 1004, IdSound = 1005;
 
     readonly List<string> ids = new();
+    readonly List<string> formIds = new();
     PopupMenu menu = null!;
+    PopupMenu formMenu = null!;
     StatusIndicator indicator = null!;
     int shownKeys = -1;
 
     public event Action<string>? CharacterChosen;
+    public event Action<string>? FormChosen;
     public event Action<float>? SizeChosen;
     public event Action<bool>? AutoToggled;
     public event Action<bool>? AutostartToggled;
@@ -36,6 +39,10 @@ public partial class Tray : Node
             ids.Add(characters[i].Id);
             menu.AddRadioCheckItem($"{characters[i].Name}  {characters[i].Description}", i);
         }
+        // 型態子選單：只有多種型態的角色可以用（見 SetForms）
+        formMenu = new PopupMenu();
+        formMenu.IdPressed += id => { if (id - IdForm < formIds.Count) FormChosen?.Invoke(formIds[(int)(id - IdForm)]); };
+        menu.AddSubmenuNodeItem("🔁 型態", formMenu, IdForm - 1);
         menu.AddSeparator("大小");
         for (var i = 0; i < Tuning.Sizes.Length; i++)
             menu.AddRadioCheckItem(Tuning.Sizes[i].Label, IdSize + i);
@@ -65,6 +72,24 @@ public partial class Tray : Node
     public void SetCharacter(string id)
     {
         for (var i = 0; i < ids.Count; i++) SetChecked(i, ids[i] == id);
+    }
+
+    /// <summary>更新型態子選單；forms 為 null 或只有一種時停用</summary>
+    public void SetForms(Dictionary<string, FormData>? forms, string? current)
+    {
+        formMenu.Clear();
+        formIds.Clear();
+        foreach (var (name, f) in forms ?? new())
+        {
+            formMenu.AddRadioCheckItem(f.Label, IdForm + formIds.Count);
+            formMenu.SetItemChecked(formIds.Count, name == current);
+            formIds.Add(name);
+        }
+        var label = forms is { Count: > 1 } && current != null && forms.TryGetValue(current, out var cur)
+            ? $"🔁 型態：{cur.Label}" : "🔁 型態";
+        var index = menu.GetItemIndex(IdForm - 1);
+        menu.SetItemText(index, label);
+        menu.SetItemDisabled(index, formIds.Count < 2);
     }
 
     public void SetSize(float value)

@@ -1,0 +1,34 @@
+{
+ "clips": [
+  "idle",
+  "walk",
+  "run",
+  "sit",
+  "sleep",
+  "jump",
+  "fall",
+  "dragged",
+  "pat",
+  "angry",
+  "typing",
+  "vbReady",
+  "vbBump"
+ ],
+ "alias": {
+  "sitEdge": "sit",
+  "think": "sit",
+  "stretch": "jump",
+  "wave": "idle",
+  "cheer": "jump",
+  "dance": "jump",
+  "peace": "idle",
+  "shy": "pat",
+  "volleyball": "vbReady",
+  "poke": "vbBump",
+  "salute": "vbBump",
+  "leap": "fall",
+  "vbApproach": "vbBump",
+  "vbSpike": "vbBump",
+  "vbDive": "vbBump"
+ }
+}

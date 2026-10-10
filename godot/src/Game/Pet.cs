@@ -24,15 +24,19 @@ public sealed class Pet
     public PetView View { get; private set; } = null!;
     public IReadOnlyDictionary<string, Transform2D> World => world;
     public Gaze Gaze { get; } = new();
-    public Dictionary<string, ClipData> Clips { get; }
+    /// <summary>目前角色體型的動作組</summary>
+    public Dictionary<string, ClipData> Clips => Animator.Clips;
+    readonly Dictionary<string, Dictionary<string, ClipData>> clipSets;
 
-    public Pet(Node parent, RigData rig, Dictionary<string, ClipData> clips, Dictionary<string, PropData> props, float scale)
+    /// <param name="clipSets">{ 體型: { 動作名: clip } }，見 ContentLoader.LoadAnimations</param>
+    public Pet(Node parent, RigData rig, Dictionary<string, Dictionary<string, ClipData>> clipSets,
+               Dictionary<string, PropData> props, float scale)
     {
         this.parent = parent;
         this.props = props;
+        this.clipSets = clipSets;
         Scale = scale;
-        Clips = clips;
-        Animator = new Animator(clips, Tuning.Crossfade);
+        Animator = new Animator(clipSets["humanoid"], Tuning.Crossfade);
         Animator.Play("idle");
         SetCharacter(rig);
     }
@@ -41,6 +45,14 @@ public sealed class Pet
     {
         View?.QueueFree();
         Rig = rig;
+        // 換體型時換一套動作，並用新的姿勢重播目前的動作
+        var clips = clipSets.GetValueOrDefault(rig.Body) ?? clipSets["humanoid"];
+        if (clips != Animator.Clips)
+        {
+            Animator.Clips = clips;
+            Animator.Play(Animator.Name, true);
+        }
+        probeCache.Clear();
         skeleton = new Skeleton(rig.Bones, rig.RootScale, rig.TrackScale);
         world = skeleton.Compute(Animator.Pose);
         View = new PetView(rig, props, Scale);
@@ -115,7 +127,7 @@ public sealed class Pet
     /// </summary>
     public Vector2 Probe(string name, float t, string bone, float lx, float ly, Dictionary<string, float>? mods = null)
     {
-        var key = $"{Rig.Id}|{name}|{t}|{bone}|{lx}|{ly}|{Scale}|{(mods == null ? "" : string.Join(",", mods))}";
+        var key = $"{Rig.Id}|{Rig.Body}|{name}|{t}|{bone}|{lx}|{ly}|{Scale}|{(mods == null ? "" : string.Join(",", mods))}";
         if (probeCache.TryGetValue(key, out var hit)) return hit;
         var pose = new Dictionary<string, float>();
         foreach (var (ch, keys) in Clips[name].Tracks)

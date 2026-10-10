@@ -5,7 +5,7 @@
 外型是原創的毛茸茸雲朵羊駝，使用者提供的參考圖只當「直立羊駝」的概念參考。
 """
 from ...rig import Proportions
-from . import body, faces, head, limbs
+from . import body, faces, head, limbs, quadruped
 
 ID = "choupaca"
 NAME = "Choupaca"
@@ -26,3 +26,7 @@ PARTS = {
 }
 
 FACES = faces.make()
+
+# 可切換的型態：預設直立，四足的動作放在 data/animations/quadruped/
+FORM_LABEL = "直立"
+FORMS = {"quadruped": quadruped}

@@ -2,6 +2,7 @@
   "id": "mira",
   "name": "Mira",
   "description": "蒸汽龐克的塗鴉滑板師",
+  "body": "humanoid",
   "rootScale": 1.771,
   "headTop": [
     0,

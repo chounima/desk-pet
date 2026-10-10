@@ -2,6 +2,7 @@
   "id": "tk01",
   "name": "TK-01",
   "description": "打字輔助型人形機體",
+  "body": "humanoid",
   "rootScale": 1.0,
   "headTop": [
     6,

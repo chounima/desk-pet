@@ -9,7 +9,7 @@ public sealed class Animator
 {
     static readonly Dictionary<string, float> NoMods = new();
 
-    readonly Dictionary<string, ClipData> clips;
+    Dictionary<string, ClipData> clips;
     readonly float crossfade;
     Dictionary<string, float> from = new();
     Dictionary<string, float> mods = NoMods;
@@ -20,6 +20,13 @@ public sealed class Animator
     public string Name => Clip.Name;
     public bool Finished { get; private set; }
     public Dictionary<string, float> Pose { get; private set; } = new();
+
+    /// <summary>目前使用的動作組（依角色體型切換）</summary>
+    public Dictionary<string, ClipData> Clips
+    {
+        get => clips;
+        set => clips = value;
+    }
 
     public Animator(Dictionary<string, ClipData> clips, float crossfade)
     {

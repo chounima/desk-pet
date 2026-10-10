@@ -15,6 +15,15 @@ def laptop() -> Part:
         (-34, -48, 36, 6))
 
 
+def keyboard() -> Part:
+    """放在地上的小鍵盤（四足角色打字時用前蹄踩）。"""
+    keys = "".join(f'<rect x="{x}" y="{y}" width="5" height="3" rx="0.8" fill="#e6e8ee"/>'
+                   for y in (-7.5, -3.5) for x in range(-22, 20, 7))
+    return Part(
+        f'<path d="M-26,-10 L26,-10 L28,0 L-28,0 Z" fill="#5a5e6a" {L}/>' + keys,
+        (-32, -14, 32, 4))
+
+
 BALL_R = 14     # 排球半徑（Q 版單位）；對打小遊戲依此換算顯示大小
 
 
@@ -33,4 +42,5 @@ def volleyball() -> Part:
 PROPS = {
     "laptop": (laptop, "hips", 46, -6, 15.5),
     "volleyball": (volleyball, "prop", 0, 0, 19),
+    "keyboard": (keyboard, "root", 66, 0, 15.6),
 }

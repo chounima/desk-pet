@@ -175,18 +175,19 @@ export class Volley {
     const inside = x => x > 40 && x < this.world.width - 40;
 
     // 1. 殺球：球會經過跳起時手的高度，而且來得及跑到助跑起點
-    const spike = this.planSpike(aim, speed, s, inside);
+    const spike = this.body("spike") === false ? { why: "這個型態不殺球" } : this.planSpike(aim, speed, s, inside);
     this.spikeWhy = spike.why;            // 除錯用：這球為什麼沒殺
     if (spike.plan) return spike.plan;
 
     // 2. 跑得到一般接球的位置 → 不需要特別打法
-    const pb = this.predict(pet.y - VOLLEY.hitHeight * s);
+    const pb = this.predict(pet.y - this.body("hitHeight") * s);
     if (pb) {
-      const standX = clamp(pb.x - aim * VOLLEY.reach * s, 40, this.world.width - 40);
+      const standX = clamp(pb.x - aim * this.body("reach") * s, 40, this.world.width - 40);
       if (Math.abs(standX - pet.x) <= speed * pb.t) return null;
     }
 
     // 3. 來不及 → 魚躍；就算撲不到也撲（比站著看球落地有戲）
+    if (this.body("dive") === false) return null;
     const d = pet.probe("vbDive", VOLLEY.diveContact, ...HAND);
     const pd = this.predict(pet.y + d.dy);
     if (!pd || Math.random() >= sk.dive) return null;
@@ -320,9 +321,9 @@ export class Volley {
   // 一般低手接球：跑到落點，等球掉到手臂高度
   chaseBump(dt, busy) {
     const pet = this.pet, b = this.ball, s = this.bodyScale(), aim = this.aimDir();
-    const pb = this.predict(pet.y - VOLLEY.hitHeight * s);
+    const pb = this.predict(pet.y - this.body("hitHeight") * s);
     const landX = pb ? pb.x : b.x;
-    const standX = clamp(landX - aim * VOLLEY.reach * s + this.missOffset, 40, this.world.width - 40);
+    const standX = clamp(landX - aim * this.body("reach") * s + this.missOffset, 40, this.world.width - 40);
     if (!busy) this.moveTo(standX, VOLLEY.runSpeed * this.skill.speed, dt, aim);
 
     const hp = this.hitPoint();
@@ -448,6 +449,11 @@ export class Volley {
     return Math.sign(this.aimTarget().x - this.pet.x) || this.pet.facing;
   }
 
+  // 依型態調整的排球參數（例如四足用頭頂球，擊球點比較高、不殺球）；沒設定就用 VOLLEY
+  body(key) {
+    return this.pet.rig.volley?.[key] ?? VOLLEY[key];
+  }
+
   bodyScale() {
     return this.pet.scale * (this.pet.rig.rootScale ?? 1);
   }
@@ -455,7 +461,7 @@ export class Volley {
   // 一般低手接球的擊球點
   hitPoint() {
     const s = this.bodyScale();
-    return { x: this.pet.x + this.pet.facing * VOLLEY.reach * s, y: this.pet.y - VOLLEY.hitHeight * s };
+    return { x: this.pet.x + this.pet.facing * this.body("reach") * s, y: this.pet.y - this.body("hitHeight") * s };
   }
 
   // 預測球接下來的軌跡 [{ t, x, y, vy }]，直到落地

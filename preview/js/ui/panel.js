@@ -9,9 +9,11 @@ function button(text, onClick, title = "") {
 }
 
 export class Panel {
-  constructor(root, { characters, actions, onCharacter, onAction, onAuto, onVolley }) {
+  constructor(root, { characters, actions, onCharacter, onForm, onAction, onAuto, onVolley }) {
     this.charButtons = {};
     this.actionButtons = {};
+    this.formsRow = root.querySelector("[data-forms]");
+    this.onForm = onForm;
 
     const chars = root.querySelector("[data-characters]");
     for (const rig of characters) {
@@ -42,6 +44,17 @@ export class Panel {
 
   setCharacter(id) {
     for (const [k, b] of Object.entries(this.charButtons)) b.classList.toggle("on", k === id);
+  }
+
+  // 型態按鈕：只有一種型態的角色不顯示
+  setForms(forms, current) {
+    const entries = Object.entries(forms ?? {});
+    this.formsRow.hidden = entries.length < 2;
+    this.formsRow.replaceChildren(...entries.map(([name, f]) => {
+      const b = button(f.label, () => this.onForm(name));
+      b.classList.toggle("on", name === current);
+      return b;
+    }));
   }
 
   setAction(name) {

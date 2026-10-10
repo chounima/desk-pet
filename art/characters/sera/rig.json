@@ -2,6 +2,7 @@
   "id": "sera",
   "name": "Sera",
   "description": "藪貓族的見習盜賊",
+  "body": "humanoid",
   "rootScale": 1.0,
   "headTop": [
     6,

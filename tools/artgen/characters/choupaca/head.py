@@ -13,6 +13,10 @@ def _ear(x: float, y: float, r: float) -> str:
             f'<ellipse cx="{x}" cy="{y + 2}" rx="4.5" ry="7" {t} fill="{EAR_IN}"/>')
 
 
+def ears() -> str:
+    return _ear(-20, -102, -25) + _ear(32, -104, 25)
+
+
 def hair_back() -> Part:
     """圓耳朵和脖子畫在後面：脖子根部被身體的毛蓋住，只露出上半截。"""
     neck = "M-18,20 C-22,-4 -20,-30 -16,-52 L28,-52 C32,-30 30,-4 26,20 Z"
@@ -20,7 +24,7 @@ def hair_back() -> Part:
         f'<path d="M{x},{y} q{s * 6},5 0,10" fill="none" stroke="{OL}" stroke-width="2" stroke-linecap="round"/>'
         for x, y, s in ((-19, -38, -1), (28, -40, 1)))
     return Part(
-        _ear(-20, -102, -25) + _ear(32, -104, 25)
+        ears()
         + fluff(neck) + ripples
         + f'<path d="M-8,-46 C-6,-30 -6,-10 -4,10" fill="none" stroke="{WOOL_SHADE}" stroke-width="5" '
           f'stroke-linecap="round" opacity="0.6"/>',

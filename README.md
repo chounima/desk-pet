@@ -166,6 +166,10 @@ desk-pet/
   - 要讓它自動出現，在 `preview/js/config.js` 的 `AUTO` 加權重
 - **新角色**：在 `tools/artgen/characters/` 新增模組（`ID`、`NAME`、`DESCRIPTION`、`PARTS`、`FACES`，可選 `PROPORTIONS`、`TRACK_SCALE`），加進 `characters/__init__.py`，重跑 `gen_art.py`
   - 正常頭身的角色，頭部可以用 Q 版座標畫，再用 `faces.head_transform` 縮小（參考 `mira.py`）
+- **角色型態**（例如 Choupaca 的直立／四足）：角色模組加 `FORMS = {"名稱": 型態模組}`，型態模組提供 `LABEL`、`PARTS`、`FACES`、`PROPORTIONS`，可選 `VOLLEY`（擊球點、能不能殺球／魚躍）。輸出到 `art/characters/<id>/forms/<名稱>/`；網頁面板與系統匣「🔁 型態」可切換，每個角色分開記
+- **非人形體型**：`PROPORTIONS` 用 `rig.QuadProportions`（四足）。骨骼名稱和人形相同（前腳 = arm、後腳 = leg），所以互動規則、台詞完全共用
+  - 體型專屬動作放 `data/animations/<體型>/`，`index.json` 的 `clips` 列出有專屬版的動作，`alias` 讓其他動作借用相近的姿勢（名稱與 `next` 維持原本的）
+  - 測試：`gallery.html?char=choupaca&form=quadruped`、`run_pet.ps1` 或 Godot 加 `--form=quadruped`
 - **新表情**：在 `rig.EXPRESSIONS` 加名稱，並在 `faces.make_faces` 畫出來
 - **新道具**：在 `tools/artgen/props.py` 的 `PROPS` 加一筆，再在動作的 `props` 引用
 

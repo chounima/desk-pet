@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace DeskPet.Content;
 
@@ -13,12 +14,42 @@ public sealed class RigData
     public float RootScale { get; set; } = 1;
     public float[] HeadTop { get; set; } = { 6, -110 };
     public float Height { get; set; } = 270;
+    /// <summary>體型：humanoid（人形）或 quadruped（四足），決定用哪一套動作</summary>
+    public string Body { get; set; } = "humanoid";
+    /// <summary>可切換的型態（只有預設型態的 rig.json 有）</summary>
+    public Dictionary<string, FormData>? Forms { get; set; }
+    /// <summary>依型態調整的排球參數</summary>
+    public VolleyBody? Volley { get; set; }
     public Dictionary<string, float> TrackScale { get; set; } = new();
     public List<BoneData> Bones { get; set; } = new();
     public List<SlotData> Slots { get; set; } = new();
 
     /// <summary>角色資料夾路徑（載入後設定），部件圖檔以此為基準。</summary>
     public string BasePath { get; set; } = "";
+}
+
+public sealed class FormData
+{
+    public string Label { get; set; } = "";
+    /// <summary>型態資料夾（相對角色資料夾），空字串 = 預設型態本身</summary>
+    public string Rig { get; set; } = "";
+    [JsonIgnore] public RigData Data { get; set; } = null!;
+}
+
+public sealed class VolleyBody
+{
+    public float? Reach { get; set; }
+    public float? HitHeight { get; set; }
+    public bool? Spike { get; set; }
+    public bool? Dive { get; set; }
+}
+
+/// <summary>data/animations/&lt;體型&gt;/index.json</summary>
+public sealed class BodyIndex
+{
+    public List<string> Clips { get; set; } = new();
+    /// <summary>沒有專屬版的動作借用哪一個：{ 動作名: 借用的動作名 }</summary>
+    public Dictionary<string, string> Alias { get; set; } = new();
 }
 
 public sealed class BoneData
@@ -77,6 +108,17 @@ public sealed class ClipData
     public Dictionary<string, List<float[]>> Tracks { get; set; } = new();
 
     List<(float t, string name)>? faceKeys;
+
+    /// <summary>借用這個動作的姿勢，但名稱、標籤、next 用原本動作的</summary>
+    public ClipData AliasAs(string name, ClipData? own)
+    {
+        var c = (ClipData)MemberwiseClone();
+        c.Name = name;
+        c.Label = own?.Label ?? Label;
+        c.Hidden = own?.Hidden ?? Hidden;
+        c.Next = own?.Next;
+        return c;
+    }
 
     public string FaceAt(float t)
     {

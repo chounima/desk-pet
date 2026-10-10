@@ -5,7 +5,8 @@ import { Skeleton } from "../core/skeleton.js";
 import { PetView } from "../view/renderer.js";
 
 export class Pet {
-  constructor({ layer, rig, clips, props, scale, crossfade }) {
+  // clipSets：{ 體型: { 動作名: clip } }，見 loader.loadAnimations
+  constructor({ layer, rig, clipSets, props, scale, crossfade }) {
     this.layer = layer;
     this.props = props;
     this.scale = scale;
@@ -15,7 +16,8 @@ export class Pet {
     this.faceOverride = null;     // 由行為邏輯暫時指定的表情
     this.blinkTimer = 2;
     this.blinkLeft = 0;
-    this.animator = new Animator(clips, crossfade);
+    this.clipSets = clipSets;
+    this.animator = new Animator(clipSets.humanoid, crossfade);
     this.animator.play("idle");
     this.setCharacter(rig);
   }
@@ -23,6 +25,13 @@ export class Pet {
   setCharacter(rig) {
     this.view?.destroy();
     this.rig = rig;
+    // 換體型時換一套動作，並用新的姿勢重播目前的動作
+    const clips = this.clipSets[rig.body ?? "humanoid"] ?? this.clipSets.humanoid;
+    if (clips !== this.animator.clips) {
+      this.animator.clips = clips;
+      this.animator.play(this.animator.name ?? "idle", true);
+    }
+    this.probeCache?.clear();
     this.skeleton = new Skeleton(rig.bones, rig.rootScale ?? 1, rig.trackScale ?? {});
     this.world = this.skeleton.compute(this.animator.pose);   // 第一幀前就能查詢骨骼位置
     this.view = new PetView(this.layer, rig, this.props);
