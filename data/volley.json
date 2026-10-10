@@ -16,6 +16,14 @@
       "playerMiss": ["繼續打球！", "耶～"], "fire": ["🔥 手感來了！"]
     }
   },
+  "choupaca": {
+    "title": "羊駝體力差", "speed": 0.75, "miss": 1.7, "spike": 0.12, "dive": 0.25, "power": 0.75,
+    "lines": {
+      "spike": ["吃我這招！呸！", "哼！"], "dive": ["咩——！"], "diveFail": ["跑不動了啦…"],
+      "petMiss": ["蹄子太短了…", "剛剛那球不算！"], "playerMiss": ["哼，活該。", "看吧！"],
+      "fire": ["🔥 毛、毛燒起來了！"]
+    }
+  },
   "sera": {
     "title": "敏捷但粗心", "speed": 1.45, "miss": 1.2, "spike": 0.35, "dive": 1, "power": 0.95,
     "lines": {
