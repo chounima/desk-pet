@@ -24,12 +24,14 @@ public sealed class Pet
     public PetView View { get; private set; } = null!;
     public IReadOnlyDictionary<string, Transform2D> World => world;
     public Gaze Gaze { get; } = new();
+    public Dictionary<string, ClipData> Clips { get; }
 
     public Pet(Node parent, RigData rig, Dictionary<string, ClipData> clips, Dictionary<string, PropData> props, float scale)
     {
         this.parent = parent;
         this.props = props;
         Scale = scale;
+        Clips = clips;
         Animator = new Animator(clips, Tuning.Crossfade);
         Animator.Play("idle");
         SetCharacter(rig);
@@ -104,6 +106,25 @@ public sealed class Pet
     /// <summary>畫面座標 → 某根骨骼的局部座標（判斷點到頭的哪個部位）</summary>
     public Vector2 ToBoneLocal(string bone, Vector2 screen) =>
         world[bone].AffineInverse() * new Vector2((screen.X - X) / (Facing * Scale), (screen.Y - Y) / Scale);
+
+    readonly Dictionary<string, Vector2> probeCache = new();
+
+    /// <summary>
+    /// 探測：動作 name 播到 t 秒時，某根骨骼上的點相對腳底的畫面位移（X 以面向前方為正）。
+    /// 用來預先知道殺球、魚躍時手會在哪裡。mods 同 Play 的軌道縮放。
+    /// </summary>
+    public Vector2 Probe(string name, float t, string bone, float lx, float ly, Dictionary<string, float>? mods = null)
+    {
+        var key = $"{Rig.Id}|{name}|{t}|{bone}|{lx}|{ly}|{Scale}|{(mods == null ? "" : string.Join(",", mods))}";
+        if (probeCache.TryGetValue(key, out var hit)) return hit;
+        var pose = new Dictionary<string, float>();
+        foreach (var (ch, keys) in Clips[name].Tracks)
+            pose[ch] = Animator.SampleTrack(keys, t) * (mods != null && mods.TryGetValue(ch, out var m) ? m : 1);
+        var world = new Skeleton(Rig.Bones, Rig.RootScale, Rig.TrackScale).Compute(pose);
+        var p = world[bone] * new Vector2(lx, ly) * Scale;
+        probeCache[key] = p;
+        return p;
+    }
 
     /// <summary>某根骨骼上的點在畫面上的位置</summary>
     public Vector2 BoneToScreen(string bone, Vector2 local) => ToScreen(world[bone] * local);

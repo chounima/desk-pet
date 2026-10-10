@@ -9,10 +9,12 @@
 //   --test=face*4,Save 模擬點擊部位或特殊按鍵（測試互動規則）
 //                      do:climb 強制做某件事、wait 空一拍
 //   --zones            印出身體各點判定成哪個部位
+//   --volley / --volley-bot  直接開始排球對打（bot = 模擬完美玩家自動回球）
 using System.Collections.Generic;
 using System.Linq;
 using DeskPet.Content;
 using DeskPet.Game;
+using DeskPet.Game.Minigames;
 using DeskPet.Platform;
 using DeskPet.Save;
 using DeskPet.UI;
@@ -36,6 +38,7 @@ public partial class Main : Node2D
     Behavior behavior = null!;
     Fx fx = null!;
     Bubble bubble = null!;
+    VolleySession volley = null!;
     Lines lines = null!;
     Tray tray = null!;
     Settings settings = null!;
@@ -81,6 +84,11 @@ public partial class Main : Node2D
         AddChild(bubble);
         behavior.Said += key => bubble.Say(lines.Pick(pet.Rig.Id, key));
 
+        VolleySkills.Load();
+        volley = new VolleySession { Bot = args.ContainsKey("volley-bot") };
+        AddChild(volley);
+        volley.Init(pet, behavior, Area, props["volleyball"], bubble, fx, this);
+
         if (args.TryGetValue("action", out var action))
         {
             behavior.Auto = false;
@@ -104,6 +112,12 @@ public partial class Main : Node2D
         tray.SizeChosen += size => { pet.SetScale(PetScale(size)); settings.Size = size; settings.Save(); };
         tray.AutoToggled += on => { behavior.Auto = on; settings.Auto = on; settings.Save(); };
         tray.AutostartToggled += Autostart.Set;
+        tray.VolleyToggled += volley.SetActive;
+        if (args.ContainsKey("volley") || volley.Bot)
+        {
+            volley.SetActive(true);
+            tray.SetVolley(true);
+        }
         tray.QuitRequested += () => GetTree().Quit();
 
         GD.Print($"[DeskPet] content={ContentLoader.Root} characters={string.Join(",", ids)} " +
@@ -156,6 +170,7 @@ public partial class Main : Node2D
         UpdateDrag();
         pet.Gaze.Target = lookOverride ?? DesktopWindow.CursorInWindow();
         behavior.Update(dt);
+        volley.Tick(dt, DesktopWindow.CursorInWindow());
         pet.Update(dt);
         fx.UpdateFx(dt, pet.Animator.Fx, pet.HeadTop());
         bubble.UpdateBubble(dt, pet.HeadTop());
@@ -208,12 +223,19 @@ public partial class Main : Node2D
 
     void DumpState() =>
         GD.Print($"[state] keys={keyCount} input={GlobalInput.Running} action={pet.Action} " +
-                 $"t={pet.Animator.LocalTime:0.00} facing={pet.Facing} x={pet.X:0} char={pet.Rig.Id} scale={pet.Scale:0.00} today={settings.TodayKeys} y={pet.Y:0} surface={behavior.SurfaceInfo} windows=[{WindowTracker.Stats}]");
+                 $"t={pet.Animator.LocalTime:0.00} facing={pet.Facing} x={pet.X:0} char={pet.Rig.Id} scale={pet.Scale:0.00} today={settings.TodayKeys} y={pet.Y:0} surface={behavior.SurfaceInfo} windows=[{WindowTracker.Stats}]" + (volley.Active ? $" volley[{volley.DebugInfo}]" : ""));
 
     // ---------- 滑鼠：點擊與拖曳 ----------
 
     public override void _Input(InputEvent e)
     {
+        // 對打中：點球回擊，角色不能點也不能拖
+        if (volley.Active)
+        {
+            if (e is InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: true } click && volley.HitBall(click.Position))
+                volley.ClickBall();
+            return;
+        }
         if (e is InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: true } mb && ZoneAt(mb.Position) is { } zone)
             drag = new Drag { Start = mb.Position, Zone = zone };
     }
@@ -248,7 +270,8 @@ public partial class Main : Node2D
     // 游標在角色不透明的像素上（或正在拖曳）才接收滑鼠，其他時候點擊穿透到桌面
     void UpdateClickThrough()
     {
-        var over = drag != null || pet.View.HitTest(DesktopWindow.CursorInWindow());
+        var cursor = DesktopWindow.CursorInWindow();
+        var over = drag != null || (volley.Active ? volley.HitBall(cursor) : pet.View.HitTest(cursor));
         DesktopWindow.SetClickThrough(!over);
     }
 

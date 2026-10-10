@@ -17,8 +17,10 @@ import { TUNING } from "../js/config.js";
 import { loadAll } from "../js/core/loader.js";
 import { Pet } from "../js/game/pet.js";
 import { Volley } from "../js/game/volley.js";
+import { loadSkills } from "../js/game/volleySkills.js";
 
 const [{ ids, rigs }, { clips }, props] = await loadAll();
+await loadSkills();
 
 // ?seed=123 固定亂數，讓結果可以重現
 if (new URLSearchParams(location.search).has("seed")) {

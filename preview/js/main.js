@@ -4,12 +4,14 @@ import { loadAll } from "./core/loader.js";
 import { Behavior } from "./game/behavior.js";
 import { Pet } from "./game/pet.js";
 import { Volley } from "./game/volley.js";
+import { loadSkills } from "./game/volleySkills.js";
 import { Panel } from "./ui/panel.js";
 import { BallView } from "./view/ball.js";
 import { Fx } from "./view/fx.js";
 
 const $ = id => document.getElementById(id);
 const [{ ids, rigs }, { names, clips }, props] = await loadAll();
+await loadSkills();
 const q = new URLSearchParams(location.search);
 
 // ---------- 世界與寵物 ----------

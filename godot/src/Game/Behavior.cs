@@ -56,7 +56,7 @@ public sealed class Behavior
         var t = Now();
         lastInput = t;
         taps.Add(t);
-        if (Current != State.Ground) return;
+        if (Current != State.Ground || Suspended) return;
         typingUntil = t + Tuning.TypingHold;
         if (pet.Action != "typing" && pet.Action != "salute")
         {
@@ -78,7 +78,7 @@ public sealed class Behavior
     public void OnPetClick(string zone)
     {
         lastInput = Now();
-        if (Current != State.Ground) return;
+        if (Current != State.Ground || Suspended) return;
         if (pet.Action == "sleep") Apply(interactions.Busy("sleep"));
         else if (pet.Action == "typing") Apply(interactions.Busy("typing"));
         else Apply(interactions.OnClick(zone));
@@ -143,8 +143,36 @@ public sealed class Behavior
 
     // ---------- 每幀 ----------
 
+    // ---------- 小遊戲 ----------
+
+    /// <summary>小遊戲進行中：寵物交給小遊戲控制，這裡只負責站在地面</summary>
+    public bool Suspended { get; private set; }
+
+    public void EnterMinigame()
+    {
+        Suspended = true;
+        surfaces.Stand(null);
+        Current = State.Ground;
+        vx = vy = 0;
+        target = null;
+        pet.Y = surfaces.GroundY;
+        pet.FaceOverride = null;
+    }
+
+    public void ExitMinigame()
+    {
+        Suspended = false;
+        lastInput = Now();
+        Start("idle");
+    }
+
     public void Update(float dt)
     {
+        if (Suspended)
+        {
+            pet.Y = surfaces.GroundY;
+            return;
+        }
         UpdateState(dt);
         if (Now() < tempFaceUntil) pet.FaceOverride = tempFace;
     }
