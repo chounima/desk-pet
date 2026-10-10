@@ -1,0 +1,126 @@
+{
+ "greet": [
+  "Yo! Wanna draw together?",
+  "I'm full of ideas today!"
+ ],
+ "wake": [
+  "Inspiration!",
+  "Mm… I dreamed of a new palette"
+ ],
+ "sleep": [
+  "Tired from drawing…",
+  "A quick nap before the paint dries…"
+ ],
+ "dragged": [
+  "Hey hey, careful with my board!",
+  "Taking me for a ride?"
+ ],
+ "land": [
+  "Perfect landing~",
+  "Skateboard practice pays off!"
+ ],
+ "typingStart": [
+  "I'll draw you an illustration!",
+  "Show me when you're done~"
+ ],
+ "pat": [
+  "Hehe, I got praised~",
+  "Cool ears, right?"
+ ],
+ "patMany": [
+  "O-okay, that's enough~",
+  "My headpiece is slipping!"
+ ],
+ "poke": [
+  "Eek!",
+  "What~"
+ ],
+ "annoyed": [
+  "Poke again and I'll doodle on your face!",
+  "Hmph hmph!"
+ ],
+ "flee": [
+  "Skateboard dash—!"
+ ],
+ "highFive": [
+  "Yeah! High five!"
+ ],
+ "startle": [
+  "Whoa! Almost fell!"
+ ],
+ "busy": [
+  "Let me finish this stroke!",
+  "Busy busy~"
+ ],
+ "enter": [
+  "Nice paragraph!"
+ ],
+ "oops": [
+  "Just redraw it~",
+  "Mistakes are art too!"
+ ],
+ "save": [
+  "Saved, phew!"
+ ],
+ "windowGone": [
+  "Hey hey, where's the floor!?"
+ ],
+ "climb": [
+  "Nice view up here~"
+ ],
+ "hopDown": [
+  "Ollie!"
+ ],
+ "morning": [
+  "Morning~ what do you want to draw today?"
+ ],
+ "noon": [
+  "Good afternoon!"
+ ],
+ "afternoon": [
+  "Afternoons are for skating~"
+ ],
+ "evening": [
+  "Evening~"
+ ],
+ "lateNight": [
+  "Not sleeping yet?"
+ ],
+ "goSleep": [
+  "Inspiration will still be here tomorrow, go to bed~"
+ ],
+ "stretchRemind": [
+  "Come on, stretch with me~",
+  "Rest your eyes a bit!"
+ ],
+ "back": [
+  "I'm back~"
+ ],
+ "hide": [
+  "I'll wander off for a bit~"
+ ],
+ "guitar": [
+  "How about some music~"
+ ],
+ "guitarEnd": [
+  "Did you like it?"
+ ],
+ "focusStart": [
+  "Focus, I'll be drawing next to you~"
+ ],
+ "focusBreak": [
+  "Take a break~"
+ ],
+ "focusBack": [
+  "Let's keep going~"
+ ],
+ "focusDone": [
+  "One round done!"
+ ],
+ "app_video": [
+  "Let's watch together~"
+ ],
+ "app_music": [
+  "Great song!"
+ ]
+}

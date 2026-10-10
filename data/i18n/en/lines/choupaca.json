@@ -1,0 +1,138 @@
+{
+ "greet": [
+  "What?",
+  "……You again.",
+  "Make it quick, I'm busy (spacing out)"
+ ],
+ "wake": [
+  "Who! Who woke me!",
+  "Tch… I just fell asleep…"
+ ],
+ "sleep": [
+  "Two steps and I'm tired…",
+  "Alpaca needs recharging…"
+ ],
+ "dragged": [
+  "Let go! I'll spit!",
+  "You'll mess up my wool!!"
+ ],
+ "land": [
+  "That hurt…",
+  "My back… alpacas have backs too…"
+ ],
+ "typingStart": [
+  "Hooves aren't made for typing…",
+  "Hmph, I can code too."
+ ],
+ "pat": [
+  "……Hmph.",
+  "D-don't touch my wool!"
+ ],
+ "patMany": [
+  "……Fine, just a little longer.",
+  "You're flattening my wool…"
+ ],
+ "poke": [
+  "Huh?",
+  "Quit poking."
+ ],
+ "annoyed": [
+  "Ptooey—!",
+  "Poke me again and I'll spit!"
+ ],
+ "flee": [
+  "I'm ignoring you, hmph!"
+ ],
+ "highFive": [
+  "……Fine, a high five.",
+  "Gently! My hooves are delicate!"
+ ],
+ "startle": [
+  "Baa!"
+ ],
+ "tail": [
+  "Don't touch my tail! Ptooey!",
+  "That's my pom-pom!"
+ ],
+ "busy": [
+  "Shush, I'm busy!",
+  "Let me finish this line…"
+ ],
+ "enter": [
+  "It's sent, don't rush me.",
+  "Why hit Enter so hard."
+ ],
+ "oops": [
+  "Another typo, tch.",
+  "Backspace is smoking."
+ ],
+ "save": [
+  "Saved, saved, quit nagging."
+ ],
+ "windowGone": [
+  "Hey! I was standing on that!"
+ ],
+ "climb": [
+  "Hmph… hup… so high…",
+  "Climbing is exhausting…"
+ ],
+ "hopDown": [
+  "Baa!"
+ ],
+ "morning": [
+  "……Morning."
+ ],
+ "noon": [
+  "Hungry."
+ ],
+ "afternoon": [
+  "I want a nap…"
+ ],
+ "evening": [
+  "Finally evening, hmph."
+ ],
+ "lateNight": [
+  "Why aren't you asleep?"
+ ],
+ "goSleep": [
+  "Go to bed! Or I'll spit!",
+  "I'm falling asleep…"
+ ],
+ "stretchRemind": [
+  "Doesn't your butt hurt from sitting? Get up!",
+  "Drink water, dummy."
+ ],
+ "back": [
+  "……I'm back. So what."
+ ],
+ "hide": [
+  "Hmph, I'm ignoring you."
+ ],
+ "guitar": [
+  "……Just one song."
+ ],
+ "guitarEnd": [
+  "Done, no more requests."
+ ],
+ "focusStart": [
+  "……I won't bother you, you don't bother me."
+ ],
+ "focusBreak": [
+  "Break, I'm tired."
+ ],
+ "focusBack": [
+  "Hmph, back to work."
+ ],
+ "focusDone": [
+  "……Not bad."
+ ],
+ "app_coding": [
+  "Coding again."
+ ],
+ "app_game": [
+  "Don't play all day!"
+ ],
+ "app_video": [
+  "Is it good? Let me see."
+ ]
+}

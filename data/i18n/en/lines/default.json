@@ -1,0 +1,150 @@
+{
+ "greet": [
+  "Hi!",
+  "Hello~"
+ ],
+ "wake": [
+  "Mm… morning",
+  "I'm awake…"
+ ],
+ "sleep": [
+  "So sleepy…",
+  "Zzz…"
+ ],
+ "dragged": [
+  "Whoa! Put me down!",
+  "Where are we going?"
+ ],
+ "land": [
+  "Ouch…",
+  "Safe landing!"
+ ],
+ "typingStart": [
+  "I'll type too!"
+ ],
+ "pat": [
+  "Hehe~",
+  "That feels nice~"
+ ],
+ "patMany": [
+  "Th-that's a lot of pats…",
+  "My hair's getting messy…"
+ ],
+ "poke": [
+  "Eek!",
+  "Why'd you poke me?"
+ ],
+ "annoyed": [
+  "Stop poking!",
+  "Hmph!"
+ ],
+ "flee": [
+  "I'm ignoring you!"
+ ],
+ "highFive": [
+  "Yay! High five!"
+ ],
+ "startle": [
+  "Whoa! You scared me!"
+ ],
+ "tail": [
+  "Don't touch my tail!"
+ ],
+ "busy": [
+  "I'm busy~",
+  "Hold on!"
+ ],
+ "enter": [
+  "Sent!",
+  "One part done!"
+ ],
+ "oops": [
+  "Typo?",
+  "It's okay, take your time~"
+ ],
+ "save": [
+  "Saved!",
+  "All saved!"
+ ],
+ "windowGone": [
+  "Whoa! The floor's gone!"
+ ],
+ "climb": [
+  "Let's go up there!"
+ ],
+ "hopDown": [
+  "Hup!"
+ ],
+ "morning": [
+  "Good morning! Let's do our best today~"
+ ],
+ "noon": [
+  "Good afternoon! Have you eaten?"
+ ],
+ "afternoon": [
+  "Afternoon~"
+ ],
+ "evening": [
+  "Good evening! Good work today"
+ ],
+ "lateNight": [
+  "Still up this late?"
+ ],
+ "goSleep": [
+  "It's late, get some sleep…",
+  "Staying up is bad for you"
+ ],
+ "stretchRemind": [
+  "You've been sitting a long time, let's move a bit!",
+  "Take a break and drink some water~"
+ ],
+ "back": [
+  "I'm back!"
+ ],
+ "hide": [
+  "I'll go hide for a bit~"
+ ],
+ "guitar": [
+  "Let me play a song~",
+  "Listen to this!"
+ ],
+ "guitarEnd": [
+  "Thanks for listening!"
+ ],
+ "noSongs": [
+  "I don't have any songs yet…"
+ ],
+ "focusStart": [
+  "Focus time! I'll keep quiet."
+ ],
+ "focusBreak": [
+  "Break time! Stretch a little~"
+ ],
+ "focusBack": [
+  "Break's over, let's keep going!"
+ ],
+ "focusDone": [
+  "One focus round done! Amazing!"
+ ],
+ "app_coding": [
+  "Coding?"
+ ],
+ "app_game": [
+  "Gaming time? Good luck!"
+ ],
+ "app_video": [
+  "What are you watching? Let me see!"
+ ],
+ "app_music": [
+  "Nice song~"
+ ],
+ "app_office": [
+  "Writing a report?"
+ ],
+ "app_chat": [
+  "Who are you chatting with?"
+ ],
+ "app_browser": [
+  "Looking something up?"
+ ]
+}

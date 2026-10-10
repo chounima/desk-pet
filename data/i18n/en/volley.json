@@ -1,0 +1,151 @@
+{
+ "default": {
+  "title": "Casual",
+  "lines": {
+   "spike": [
+    "Take that!"
+   ],
+   "dive": [
+    "Saved it!"
+   ],
+   "diveFail": [
+    "So close…"
+   ],
+   "petMiss": [
+    "Missed it…"
+   ],
+   "playerMiss": [
+    "Point!"
+   ],
+   "fire": [
+    "🔥 On fire!"
+   ]
+  }
+ },
+ "chouma": {
+  "title": "Club ace",
+  "lines": {
+   "spike": [
+    "My turn!",
+    "Spiiike!",
+    "Nice set!"
+   ],
+   "dive": [
+    "Got it!",
+    "Not over yet!"
+   ],
+   "diveFail": [
+    "Dang…"
+   ],
+   "petMiss": [
+    "Ah, my bad…",
+    "One more!"
+   ],
+   "playerMiss": [
+    "Keep playing!",
+    "Yay~"
+   ],
+   "fire": [
+    "🔥 I'm in the zone!"
+   ]
+  }
+ },
+ "choupaca": {
+  "title": "Low-stamina alpaca",
+  "lines": {
+   "spike": [
+    "Eat this! Ptooey!",
+    "Hmph!"
+   ],
+   "dive": [
+    "Baaa—!"
+   ],
+   "diveFail": [
+    "Can't run anymore…"
+   ],
+   "petMiss": [
+    "My hooves are too short…",
+    "That one doesn't count!"
+   ],
+   "playerMiss": [
+    "Hmph, serves you right.",
+    "Told you!"
+   ],
+   "fire": [
+    "🔥 M-my wool is burning!"
+   ]
+  }
+ },
+ "sera": {
+  "title": "Quick but careless",
+  "lines": {
+   "spike": [
+    "Nyaha!",
+    "Caught it, nya!"
+   ],
+   "dive": [
+    "Pounce—!"
+   ],
+   "diveFail": [
+    "Mew…"
+   ],
+   "petMiss": [
+    "Aww…",
+    "That didn't count!"
+   ],
+   "playerMiss": [
+    "Hehe~"
+   ],
+   "fire": [
+    "🔥 My tail's on fire, nya!"
+   ]
+  }
+ },
+ "tk01": {
+  "title": "Precise calculation",
+  "lines": {
+   "spike": [
+    "Executing spike."
+   ],
+   "dive": [
+    "Recovery successful."
+   ],
+   "diveFail": [
+    "Out of calculated range."
+   ],
+   "petMiss": [
+    "Calculation error."
+   ],
+   "playerMiss": [
+    "Target missed."
+   ],
+   "fire": [
+    "🔥 Processor overheating."
+   ]
+  }
+ },
+ "mira": {
+  "title": "Just for fun",
+  "lines": {
+   "spike": [
+    "Take that!"
+   ],
+   "dive": [
+    "Phew!"
+   ],
+   "diveFail": [
+    "Oopsie~"
+   ],
+   "petMiss": [
+    "Oopsie~",
+    "Slipped!"
+   ],
+   "playerMiss": [
+    "I win!"
+   ],
+   "fire": [
+    "🔥 Full power!"
+   ]
+  }
+ }
+}

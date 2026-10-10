@@ -1,0 +1,133 @@
+{
+ "greet": [
+  "Nya~ looking for me?",
+  "Hehe~",
+  "Wanna play with me?"
+ ],
+ "wake": [
+  "Mew… five more minutes…",
+  "Who woke me up, nya?"
+ ],
+ "sleep": [
+  "Purr purr…",
+  "Sunbathing is the best…"
+ ],
+ "dragged": [
+  "Nya! Let go!",
+  "Not the scruff!"
+ ],
+ "land": [
+  "Cats always land on their feet!",
+  "Nyaha!"
+ ],
+ "typingStart": [
+  "I wanna press keys too!",
+  "Keyboards are fun, nya~"
+ ],
+ "pat": [
+  "Purr purr~",
+  "Pat me more, nya~"
+ ],
+ "patMany": [
+  "Nya… getting sleepy…",
+  "The ears too!"
+ ],
+ "poke": [
+  "Nya?",
+  "Hey!"
+ ],
+ "annoyed": [
+  "Hsss—!",
+  "Poke me again and I'll bite!"
+ ],
+ "flee": [
+  "Nyaa—! I'm ignoring you!"
+ ],
+ "highFive": [
+  "Paw-pad high five!"
+ ],
+ "startle": [
+  "Mew!"
+ ],
+ "tail": [
+  "Not the tail! Nya!",
+  "Hsss—! Don't grab my tail!"
+ ],
+ "busy": [
+  "I'm pressing keys, nya!",
+  "Wait a sec, nya~"
+ ],
+ "enter": [
+  "I hit the big button!",
+  "Nyaha! Sent!"
+ ],
+ "oops": [
+  "Hehe, a typo, nya?",
+  "I hit the wrong keys a lot too~"
+ ],
+ "save": [
+  "Saved, nya!"
+ ],
+ "windowGone": [
+  "Nyaa—!?"
+ ],
+ "climb": [
+  "High places are the best, nya!"
+ ],
+ "hopDown": [
+  "Nyaha!"
+ ],
+ "morning": [
+  "Nya~ good morning!"
+ ],
+ "noon": [
+  "Is there fish for lunch, nya?"
+ ],
+ "afternoon": [
+  "Nap time, nya…"
+ ],
+ "evening": [
+  "Night is cat time, nya!"
+ ],
+ "lateNight": [
+  "A fellow night owl, nya?"
+ ],
+ "goSleep": [
+  "Even I'm sleepy, nya…",
+  "Go to bed, nya!"
+ ],
+ "stretchRemind": [
+  "Streeetch, nya! You too!",
+  "You've sat too long, nya, go for a walk~"
+ ],
+ "back": [
+  "Nyaha! I'm back!"
+ ],
+ "hide": [
+  "Going on patrol, nya~"
+ ],
+ "guitar": [
+  "Nya~ listen to me play!"
+ ],
+ "guitarEnd": [
+  "Where's my applause, nya?"
+ ],
+ "focusStart": [
+  "Okay, I'll be quiet… nya."
+ ],
+ "focusBreak": [
+  "Break! Play with me!"
+ ],
+ "focusBack": [
+  "Back to work, nya~"
+ ],
+ "focusDone": [
+  "Good job, nya!"
+ ],
+ "app_game": [
+  "Games! I wanna play too, nya!"
+ ],
+ "app_music": [
+  "Nya~ let's sway!"
+ ]
+}

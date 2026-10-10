@@ -1,0 +1,143 @@
+{
+ "greet": [
+  "Hi!",
+  "Peace~",
+  "Wanna go play volleyball?"
+ ],
+ "wake": [
+  "Ah… I dozed off",
+  "Back to volleyball!"
+ ],
+ "sleep": [
+  "So tired… practiced too hard today",
+  "Just five minutes…"
+ ],
+ "dragged": [
+  "Wha-wha-what?!",
+  "Put me down!"
+ ],
+ "land": [
+  "Good thing I practice receiving…",
+  "I'm fine, I'm fine!"
+ ],
+ "typingStart": [
+  "Let's code together!",
+  "Keep doing what you love!"
+ ],
+ "pat": [
+  "Hehe…",
+  "Wh-why the sudden head pat…"
+ ],
+ "patMany": [
+  "O-okay, that's embarrassing…",
+  "You'll mess up my hair~"
+ ],
+ "poke": [
+  "Oh?",
+  "You startled me!"
+ ],
+ "annoyed": [
+  "Stop poking!",
+  "My glasses are slipping!"
+ ],
+ "flee": [
+  "I'm off to practice!"
+ ],
+ "highFive": [
+  "Nice! High five!",
+  "Good ball!"
+ ],
+ "startle": [
+  "Whoa! Almost stepped on it!"
+ ],
+ "busy": [
+  "Hold on, I'm coding!",
+  "Almost done!"
+ ],
+ "enter": [
+  "Did it compile?",
+  "Push!"
+ ],
+ "oops": [
+  "Typo? Happens to me too~",
+  "Let's fix that bug!"
+ ],
+ "save": [
+  "Ctrl+S is a good habit!",
+  "Saved!"
+ ],
+ "windowGone": [
+  "Huh?!"
+ ],
+ "climb": [
+  "Jump!"
+ ],
+ "hopDown": [
+  "Landed~"
+ ],
+ "morning": [
+  "Morning! Let's keep playing volleyball today!"
+ ],
+ "noon": [
+  "Afternoon! Gotta eat to have energy to code"
+ ],
+ "afternoon": [
+  "It's afternoon, wanna go practice?"
+ ],
+ "evening": [
+  "Evening~ how much did you write today?"
+ ],
+ "lateNight": [
+  "Rushing homework again?"
+ ],
+ "goSleep": [
+  "It's late, there's class tomorrow",
+  "I'm getting sleepy too…"
+ ],
+ "stretchRemind": [
+  "You've sat too long! Jump like you're blocking!",
+  "Drink some water first~"
+ ],
+ "back": [
+  "I'm back!"
+ ],
+ "hide": [
+  "I'll go practice!"
+ ],
+ "guitar": [
+  "Guitar time!",
+  "I practiced this one for ages!"
+ ],
+ "guitarEnd": [
+  "Thanks~ I'll learn a new one next time!"
+ ],
+ "focusStart": [
+  "Let's focus on coding together!"
+ ],
+ "focusBreak": [
+  "Break! Drink water, stretch~"
+ ],
+ "focusBack": [
+  "Okay, keep doing what you love!"
+ ],
+ "focusDone": [
+  "One tomato done! Nice!"
+ ],
+ "app_coding": [
+  "Coding? Me too!",
+  "Wanna debug together?"
+ ],
+ "app_game": [
+  "Remember to rest after!",
+  "Good luck this round!"
+ ],
+ "app_music": [
+  "Sounds good! Want me to play guitar?"
+ ],
+ "app_office": [
+  "Good luck with the report… I hate writing them too"
+ ],
+ "app_chat": [
+  "Organizing a volleyball game?"
+ ]
+}

@@ -1,0 +1,130 @@
+{
+ "greet": [
+  "…Yes?",
+  "User detected.",
+  "TK-01, standing by."
+ ],
+ "wake": [
+  "System rebooted.",
+  "Standby mode released."
+ ],
+ "sleep": [
+  "Entering power-saving mode.",
+  "…Lowering processor clock."
+ ],
+ "dragged": [
+  "Warning: abnormal position.",
+  "Please put this unit down."
+ ],
+ "land": [
+  "Landing complete.",
+  "Damage: none."
+ ],
+ "typingStart": [
+  "Logging work data.",
+  "Syncing input."
+ ],
+ "pat": [
+  "…This is not in the spec sheet.",
+  "Head contact… permitted."
+ ],
+ "patMany": [
+  "E-error: temperature rising…",
+  "…That will do."
+ ],
+ "poke": [
+  "…?",
+  "External contact detected."
+ ],
+ "annoyed": [
+  "Please stop interfering.",
+  "Second warning."
+ ],
+ "flee": [
+  "Initiating evasion."
+ ],
+ "highFive": [
+  "High-five protocol, executing."
+ ],
+ "startle": [
+  "!? …Leg sensors abnormal."
+ ],
+ "busy": [
+  "Working, please wait.",
+  "Recording."
+ ],
+ "enter": [
+  "Data sent.",
+  "Paragraph complete."
+ ],
+ "oops": [
+  "Correction detected.",
+  "Correction rate rising."
+ ],
+ "save": [
+  "Save confirmed.",
+  "Data secured."
+ ],
+ "windowGone": [
+  "Warning: support surface lost."
+ ],
+ "climb": [
+  "Moving to higher ground."
+ ],
+ "hopDown": [
+  "Descending."
+ ],
+ "morning": [
+  "Good morning. System startup complete."
+ ],
+ "noon": [
+  "Midday. Refueling recommended."
+ ],
+ "afternoon": [
+  "Afternoon work mode."
+ ],
+ "evening": [
+  "Good evening. Good work today."
+ ],
+ "lateNight": [
+  "Late-night activity detected."
+ ],
+ "goSleep": [
+  "Sleep mode recommended.",
+  "Lack of sleep lowers efficiency."
+ ],
+ "stretchRemind": [
+  "Continuous work too long. Stretching recommended.",
+  "Please hydrate."
+ ],
+ "back": [
+  "Back online."
+ ],
+ "hide": [
+  "Switching to hidden standby."
+ ],
+ "guitar": [
+  "Running performance routine."
+ ],
+ "guitarEnd": [
+  "Performance complete."
+ ],
+ "focusStart": [
+  "Focus mode on. Muted standby."
+ ],
+ "focusBreak": [
+  "Break period. Stretching recommended."
+ ],
+ "focusBack": [
+  "Resuming work."
+ ],
+ "focusDone": [
+  "Focus period complete. Efficiency good."
+ ],
+ "app_coding": [
+  "Development environment detected."
+ ],
+ "app_game": [
+  "Entertainment program detected."
+ ]
+}
