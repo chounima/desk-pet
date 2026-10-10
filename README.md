@@ -42,6 +42,9 @@ Godot 4.7 .NET（C#）。直接讀取專案根目錄的 `art/` 與 `data/`，和
 | Desk Pet 視窗 | 系統匣或右鍵選單「📖 收藏／🛒 商店／⚙ 設定」：獨立的系統視窗（`UI/Hub/`）。設定勾「開發者模式」多一個分頁，可改參數（存成 `user://progression.override.json`）、作弊、模擬隔天。`--hub=shop` 啟動時直接打開 |
 | 彈吉他 | 右鍵選單／系統匣「🎸 彈吉他」或 Desk Pet 視窗「🎵 音樂」分頁（`Audio/Music/`）。內建曲 `data/music/*.json` 用撥弦合成演奏；自訂音樂放 `文件\DeskPet\music`（mp3／ogg／wav，`bpm.json` 可指定速度，否則從低音能量抓拍點）。刷弦動作依 BPM 調速並在拍點重來（`Animator.Speed`、`Rephase`）。`--mute` 測試時靜音、`--test=guitar` 直接開始彈 |
 | 道具位置修正 | 角色模組 `PROP_OVERRIDES = {"guitar": {"dx", "dy", "scale"}}`：正常頭身角色抱吉他的位置 |
+| 專注模式 | 番茄鐘（`Game/Focus.cs`、`Main.Focus.cs`、`data/focus.json`）：專注中只做安靜動作、不講一般台詞，倒數顯示在頭旁邊；完成一輪送點數與好感度，休息時伸懶腰。右鍵選單／系統匣「🍅 開始專注」、Desk Pet 視窗「🍅 專注」分頁可改分鐘數。測試：`--sandbox --focus-minutes=0.1 --test=focus` |
+| 依正在用的程式反應 | 設定勾選才開（預設關）：只看前景程式的執行檔名稱（`Platform/ActiveApp.cs`），依 `data/apps.json` 分類，說一句話並讓相關動作更常出現（`Game/AppAwareness.cs`）。`--selftest=apps` 檢查分類 |
+| 測試沙盒 | `--sandbox`：收集進度從空白開始、不存檔，測試不會動到真正的進度 |
 | 開機自動啟動 | `HKCU\Software\Microsoft\Windows\CurrentVersion\Run\DeskPet`（`--autostart=on/off` 也可設定） |
 
 ```

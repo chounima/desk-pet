@@ -19,6 +19,7 @@ public partial class HubWindow : Window
     public SettingsTab Settings { get; }
     public DevTab Dev { get; }
     public MusicTab Music { get; private set; } = null!;
+    public FocusTab Focus { get; private set; } = null!;
 
     public HubWindow(Progress progress, Shop shop, Settings settings, List<RigData> characters,
                      Dictionary<string, PropData> props, System.Func<bool> autostart, System.Func<string> currentChar)
@@ -63,13 +64,21 @@ public partial class HubWindow : Window
         tabs.MoveChild(Music, Shop.GetIndex() + 1);
     }
 
+    /// <summary>專注分頁（放在音樂後面）</summary>
+    public void AddFocusTab(Game.Focus focus, Game.FocusConfig cfg, Settings settings)
+    {
+        Focus = new FocusTab(focus, cfg, settings);
+        tabs.AddChild(Focus);
+        tabs.MoveChild(Focus, Music.GetIndex() + 1);
+    }
+
     /// <summary>開發者分頁只在開發者模式顯示</summary>
     public void SetDevMode(bool on) => tabs.SetTabHidden(tabs.GetTabIdxFromControl(Dev), !on);
 
     /// <summary>tab：collection | shop | music | settings | dev；shopCategory 指定商店分類</summary>
     public void Open(string tab, string? shopCategory = null)
     {
-        Control target = tab switch { "shop" => Shop, "music" => (Control?)Music ?? Shop, "settings" => Settings, "dev" => Dev, _ => Collection };
+        Control target = tab switch { "shop" => Shop, "music" => (Control?)Music ?? Shop, "focus" => (Control?)Focus ?? Collection, "settings" => Settings, "dev" => Dev, _ => Collection };
         tabs.CurrentTab = tabs.GetTabIdxFromControl(target);
         if (shopCategory != null) Shop.ShowCategory(shopCategory);
         RefreshAll();
@@ -85,6 +94,7 @@ public partial class HubWindow : Window
         if (current == Collection) Collection.Refresh();
         else if (current == Shop) Shop.Refresh();
         else if (current == Music) Music.Refresh();
+        else if (current == Focus) Focus.Refresh();
         else if (current == Settings) Settings.Refresh();
         else if (current == Dev) Dev.Refresh();
     }
@@ -94,10 +104,12 @@ public partial class HubWindow : Window
         if (!Visible) return;
         points.Text = $"💎 {progress.State.Points}";
         // 收藏分頁的進度條每秒更新一次（陪伴時間、打字點數會一直變）
-        if ((refreshTimer -= (float)delta) <= 0 && tabs.GetCurrentTabControl() == Collection)
+        if ((refreshTimer -= (float)delta) <= 0)
         {
             refreshTimer = 1;
-            Collection.Refresh();
+            var current = tabs.GetCurrentTabControl();
+            if (current == Collection) Collection.Refresh();
+            else if (current == Focus) Focus.Refresh();        // 倒數每秒更新
         }
     }
 }

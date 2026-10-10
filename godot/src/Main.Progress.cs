@@ -20,6 +20,7 @@ public partial class Main
     HubWindow hub = null!;
     Dictionary<string, PropData> allProps = null!;
     bool progressDirty;
+    bool sandbox;
     float progressSaveTimer = ProgressSaveEvery;
     int pendingPoints;
     float pointsTimer;
@@ -27,8 +28,10 @@ public partial class Main
     void SetupProgress(List<string> ids, Dictionary<string, PropData> props)
     {
         allProps = props;
-        var isNewSave = !File.Exists(ProjectSettings.GlobalizePath("user://progress.json"));
-        progressState = ProgressState.Load();
+        // --sandbox：測試用，從空白進度開始、不存檔（不動到使用者真正的進度）
+        sandbox = args.ContainsKey("sandbox");
+        var isNewSave = !sandbox && !File.Exists(ProjectSettings.GlobalizePath("user://progress.json"));
+        progressState = sandbox ? new ProgressState() : ProgressState.Load();
         progress = new Progress(ProgressionConfig.Load(), progressState, _ => progressDirty = true);
         shop = new Shop(progress);
         progress.Event += OnProgressEvent;
@@ -84,7 +87,7 @@ public partial class Main
 
     void FlushProgress()
     {
-        if (!progressDirty) return;
+        if (!progressDirty || sandbox) return;
         progressDirty = false;
         progress.State.Save();
         progressState = progress.State;      // 開發者重置後 State 會換成新的物件
@@ -192,6 +195,7 @@ public partial class Main
             case "fullscreenHide": presence.AutoHideFullscreen = settings.AutoHideFullscreen = on; break;
             case "fitScreen": settings.FitScreen = on; pet.SetScale(PetScale(settings.Size)); break;
             case "devMode": settings.DevMode = on; hub.SetDevMode(on); break;
+            case "appAware": apps.Enabled = settings.AppAwareness = on; break;
         }
         settings.Save();
         tray.SetOption(key, on);

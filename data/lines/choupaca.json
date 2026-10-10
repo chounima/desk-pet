@@ -30,5 +30,12 @@
   "back": ["……我回來了，怎樣。"],
   "hide": ["哼，不理你了。"],
   "guitar": ["……只彈一首喔。"],
-  "guitarEnd": ["好了，不准再點歌。"]
+  "guitarEnd": ["好了，不准再點歌。"],
+  "focusStart": ["……我不吵你，你也別吵我。"],
+  "focusBreak": ["休息啦，我累了。"],
+  "focusBack": ["哼，回去工作。"],
+  "focusDone": ["……還不錯嘛。"],
+  "app_coding": ["又在寫 code。"],
+  "app_game": ["不准一直玩！"],
+  "app_video": ["好看嗎？讓我看。"]
 }

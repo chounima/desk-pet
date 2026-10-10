@@ -1,0 +1,30 @@
+{
+  "_說明": "專注模式（番茄鐘）的預設值；使用者可在 Desk Pet 視窗的「🍅 專注」分頁改時間（存在設定裡）",
+  "workMinutes": 25,
+  "shortBreakMinutes": 5,
+  "longBreakMinutes": 15,
+  "longBreakEvery": 4,
+  "_專注中": "專注時只做安靜的動作、不講一般台詞",
+  "calmActions": [
+    "idle",
+    "sit",
+    "sitEdge",
+    "read",
+    "think",
+    "typing",
+    "coffee"
+  ],
+  "breakActions": [
+    "stretch",
+    "dance",
+    "cheer",
+    "jump",
+    "coffee",
+    "wave"
+  ],
+  "reward": {
+    "_說明": "完成一個專注時段的獎勵",
+    "points": 5,
+    "affection": 3
+  }
+}

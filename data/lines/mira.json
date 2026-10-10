@@ -29,5 +29,11 @@
   "back": ["回來啦～"],
   "hide": ["我先去旁邊晃晃～"],
   "guitar": ["來點音樂吧～"],
-  "guitarEnd": ["好聽嗎？"]
+  "guitarEnd": ["好聽嗎？"],
+  "focusStart": ["專心吧，我在旁邊畫畫～"],
+  "focusBreak": ["休息一下吧～"],
+  "focusBack": ["繼續囉～"],
+  "focusDone": ["完成一輪！"],
+  "app_video": ["一起看～"],
+  "app_music": ["好歌！"]
 }

@@ -29,5 +29,11 @@
   "back": ["重新上線。"],
   "hide": ["切換為待機隱藏。"],
   "guitar": ["播放演奏程序。"],
-  "guitarEnd": ["演奏結束。"]
+  "guitarEnd": ["演奏結束。"],
+  "focusStart": ["專注模式啟動。靜音待命。"],
+  "focusBreak": ["休息時段。建議伸展。"],
+  "focusBack": ["恢復作業。"],
+  "focusDone": ["專注時段完成。效率良好。"],
+  "app_coding": ["偵測到開發環境。"],
+  "app_game": ["偵測到娛樂程式。"]
 }

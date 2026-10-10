@@ -29,5 +29,14 @@
   "back": ["我回來了！"],
   "hide": ["那我先去練球！"],
   "guitar": ["吉他時間！", "這首我練很久了！"],
-  "guitarEnd": ["謝謝～下次再彈新的！"]
+  "guitarEnd": ["謝謝～下次再彈新的！"],
+  "focusStart": ["一起專心寫 code！"],
+  "focusBreak": ["休息！去喝水、拉筋～"],
+  "focusBack": ["好，繼續做喜歡的事！"],
+  "focusDone": ["一顆番茄完成！Nice！"],
+  "app_coding": ["寫 code 嗎？我也來！", "要不要一起 debug？"],
+  "app_game": ["打完記得休息喔！", "這局加油！"],
+  "app_music": ["好聽！要不要我彈吉他？"],
+  "app_office": ["報告加油…我也很怕寫報告"],
+  "app_chat": ["是在揪打球嗎？"]
 }

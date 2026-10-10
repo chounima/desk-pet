@@ -30,5 +30,11 @@
   "back": ["喵哈！我回來了！"],
   "hide": ["我去巡邏一下喵～"],
   "guitar": ["喵～來聽我彈！"],
-  "guitarEnd": ["掌聲在哪裡喵？"]
+  "guitarEnd": ["掌聲在哪裡喵？"],
+  "focusStart": ["好，我安靜…喵。"],
+  "focusBreak": ["休息！陪我玩！"],
+  "focusBack": ["回去工作吧喵～"],
+  "focusDone": ["做得好喵！"],
+  "app_game": ["遊戲！我也要玩喵！"],
+  "app_music": ["喵～跟著搖！"]
 }

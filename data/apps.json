@@ -1,0 +1,116 @@
+{
+  "_說明": "偵測正在用的程式（使用者在設定勾選才會開啟）。只比對前景程式的執行檔名稱（小寫、不含 .exe，* 是萬用字元），不讀視窗內容、不存檔",
+  "categories": {
+    "coding": {
+      "processes": [
+        "code",
+        "devenv",
+        "rider64",
+        "idea64",
+        "pycharm64",
+        "clion64",
+        "webstorm64",
+        "godot*",
+        "sublime_text",
+        "notepad++",
+        "windowsterminal",
+        "cmd",
+        "powershell",
+        "pwsh"
+      ],
+      "line": "app_coding",
+      "boost": {
+        "typing": 3,
+        "think": 2
+      }
+    },
+    "game": {
+      "processes": [
+        "steam",
+        "league of legends",
+        "valorant*",
+        "riotclientservices",
+        "minecraft*",
+        "javaw",
+        "genshinimpact",
+        "epicgameslauncher"
+      ],
+      "line": "app_game",
+      "boost": {
+        "cheer": 3,
+        "volleyball": 2
+      }
+    },
+    "video": {
+      "processes": [
+        "vlc",
+        "potplayer*",
+        "mpc-hc*",
+        "netflix"
+      ],
+      "line": "app_video",
+      "boost": {
+        "sit": 3,
+        "sitEdge": 2
+      }
+    },
+    "music": {
+      "processes": [
+        "spotify",
+        "kkbox",
+        "applemusic",
+        "itunes"
+      ],
+      "line": "app_music",
+      "boost": {
+        "dance": 4
+      }
+    },
+    "office": {
+      "processes": [
+        "winword",
+        "excel",
+        "powerpnt",
+        "onenote",
+        "acrord32",
+        "acrobat",
+        "notion"
+      ],
+      "line": "app_office",
+      "boost": {
+        "read": 3,
+        "coffee": 2
+      }
+    },
+    "chat": {
+      "processes": [
+        "line",
+        "discord",
+        "telegram",
+        "slack",
+        "teams",
+        "ms-teams"
+      ],
+      "line": "app_chat",
+      "boost": {
+        "wave": 3,
+        "peace": 2
+      }
+    },
+    "browser": {
+      "processes": [
+        "chrome",
+        "msedge",
+        "firefox",
+        "brave",
+        "opera"
+      ],
+      "line": "app_browser",
+      "boost": {
+        "think": 1.5
+      }
+    }
+  },
+  "stableSeconds": 5,
+  "lineCooldownMinutes": 15
+}

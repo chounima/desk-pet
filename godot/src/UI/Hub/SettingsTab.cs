@@ -31,6 +31,7 @@ public partial class SettingsTab : VBoxContainer
         AddChild(Check("自動行為（自己走動、做各種動作）", settings.Auto, "auto"));
         AddChild(Check("🔊 音效", settings.Sound, "sound"));
         AddChild(Check("全螢幕時自動隱藏（玩遊戲、看影片、簡報）", settings.AutoHideFullscreen, "fullscreenHide"));
+        AddChild(Check("依正在用的程式反應（只看程式名稱，不讀內容、不存紀錄）", settings.AppAwareness, "appAware"));
 
         AddChild(Ui.Heading("大小"));
         var size = new OptionButton { FocusMode = FocusModeEnum.None };

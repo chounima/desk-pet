@@ -57,6 +57,16 @@ public partial class Main : Node2D
     public override void _Ready()
     {
         // --selftest=progress：只跑收集系統的規則測試就結束（不需要單一實例、不開畫面）
+        // --selftest=apps：檢查程式名稱分類（data/apps.json）
+        if (OS.GetCmdlineUserArgs().Contains("--selftest=apps"))
+        {
+            duplicate = true;
+            var aw = new AppAwareness(AppConfig.Load());
+            foreach (var name in new[] { "code", "chrome", "valorant-win64-shipping", "godot_v4.7.2-stable_mono_win64", "spotify", "line", "winword", "explorer" })
+                GD.Print($"[apps] {name} -> {aw.Classify(name) ?? "(無)"}");
+            GetTree().Quit();
+            return;
+        }
         if (OS.GetCmdlineUserArgs().Contains("--selftest=progress"))
         {
             duplicate = true;
@@ -106,6 +116,7 @@ public partial class Main : Node2D
         AddChild(sfx);
         behavior.Said += key =>
         {
+            if (focus != null && !ShouldSpeak(key)) return;     // 專注中保持安靜
             bubble.Say(lines.Pick(pet.Rig.Id, key));
             sfx.PlayForLine(key);
         };
@@ -158,6 +169,7 @@ public partial class Main : Node2D
         SetupProgress(ids, props);
         SetupDaily();
         SetupMusic();
+        SetupFocus();
         if (args.TryGetValue("hub", out var hubTab)) hub.Open(hubTab);     // --hub=shop：一開始就打開視窗（截圖用）
 
         GD.Print($"[DeskPet] content={ContentLoader.Root} characters={string.Join(",", ids)} " +
@@ -233,6 +245,7 @@ public partial class Main : Node2D
         UpdateDaily(dt);
         UpdateProgress(dt);
         UpdateMusic(dt);
+        UpdateFocus(dt);
         UpdateDrag();
         pet.Gaze.Target = lookOverride ?? DesktopWindow.CursorInWindow();
         behavior.Update(dt);
@@ -259,7 +272,9 @@ public partial class Main : Node2D
         else if (step == "menu") OpenPetMenu();                          // 叫出右鍵選單（不用真的點）
         else if (step.StartsWith("hide:")) presence.HideFor(float.Parse(step[5..]) / 60f);   // hide:3 = 隱藏 3 秒
         else if (step == "remind") behavior.Remind("stretchRemind", "stretch");
-        else if (step == "guitar") StartPerformance(force: true);                   // 開始彈吉他（不檢查有沒有買，測試用）
+        else if (step == "guitar") StartPerformance(force: true);
+        else if (step == "focus") StartFocus();
+        else if (step.StartsWith("focusSkip")) focus.Skip();                   // 開始彈吉他（不檢查有沒有買，測試用）
         else if (step == "wait") { }                                     // 空一拍
         else if (System.Enum.TryParse<GlobalInput.KeyKind>(step, out var kind)) behavior.OnKey(kind);
         else behavior.OnPetClick(step);
@@ -293,7 +308,7 @@ public partial class Main : Node2D
 
     void DumpState() =>
         GD.Print($"[state] keys={keyCount} input={GlobalInput.Running} action={pet.Action} " +
-                 $"t={pet.Animator.LocalTime:0.00} facing={pet.Facing} x={pet.X:0} char={pet.Rig.Id} scale={pet.Scale:0.00} today={settings.TodayKeys} y={pet.Y:0} surface={behavior.SurfaceInfo} windows=[{WindowTracker.Stats}]" + (volley.Active ? $" volley[{volley.DebugInfo}]" : "") + $" hidden={presence.Hidden}" + (performing ? $" music[{music.Current?.Title} bpm={music.Bpm:0} speed={pet.Animator.Speed:0.00}]" : "") + $" sfx[{string.Join(",", sfx.Played.Select(kv => $"{kv.Key}={kv.Value}"))}]");
+                 $"t={pet.Animator.LocalTime:0.00} facing={pet.Facing} x={pet.X:0} char={pet.Rig.Id} scale={pet.Scale:0.00} today={settings.TodayKeys} y={pet.Y:0} surface={behavior.SurfaceInfo} windows=[{WindowTracker.Stats}]" + (volley.Active ? $" volley[{volley.DebugInfo}]" : "") + $" hidden={presence.Hidden}" + (focus?.Current is { } fp && fp != Focus.Phase.Off ? $" focus[{fp} {focus.Label()} rounds={focus.Rounds} pts={progress.State.Points}]" : "") + (performing ? $" music[{music.Current?.Title} bpm={music.Bpm:0} speed={pet.Animator.Speed:0.00}]" : "") + $" sfx[{string.Join(",", sfx.Played.Select(kv => $"{kv.Key}={kv.Value}"))}]");
 
     // ---------- 滑鼠：點擊與拖曳 ----------
 
@@ -369,7 +384,7 @@ public partial class Main : Node2D
         if (settings == null) return;    // 重複啟動、還沒初始化就結束的實例
         GlobalInput.Stop();
         settings.Save();
-        progressState?.Save();
+        if (!sandbox) progressState?.Save();
         SingleInstance.Release();
     }
 

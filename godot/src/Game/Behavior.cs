@@ -28,6 +28,8 @@ public sealed class Behavior
     public bool Auto { get; set; } = true;
     /// <summary>自動行為可以挑的動作（商店的動作買了才可以）</summary>
     public Func<string, bool> Allowed { get; set; } = _ => true;
+    /// <summary>自動行為的權重倍率（休息時間、正在用的程式會讓某些動作更常出現）</summary>
+    public Func<string, float> Weight { get; set; } = _ => 1;
     public State Current { get; private set; } = State.Ground;
 
     /// <summary>想說話時發出台詞的 key（見 data/lines/）</summary>
@@ -379,10 +381,11 @@ public sealed class Behavior
     string WeightedPick()
     {
         var table = Tuning.Auto.Where(kv => Allowed(kv.Key)).ToList();
-        var total = table.Sum(kv => kv.Value.Weight);
+        float W(string name, float w) => w * Weight(name);
+        var total = table.Sum(kv => W(kv.Key, kv.Value.Weight));
         var r = GD.Randf() * total;
         foreach (var (name, v) in table)
-            if ((r -= v.Weight) <= 0) return name;
+            if ((r -= W(name, v.Weight)) <= 0) return name;
         return "idle";
     }
 }

@@ -9,7 +9,7 @@ namespace DeskPet.UI;
 
 public partial class PetMenu : Node
 {
-    const int IdVolley = 1, IdHide = 2, IdCollection = 3, IdShop = 4, IdGuitar = 5, IdAction = 100, IdForm = 200;
+    const int IdVolley = 1, IdHide = 2, IdCollection = 3, IdShop = 4, IdGuitar = 5, IdFocus = 6, IdAction = 100, IdForm = 200;
 
     readonly MenuConfig config;
     PopupMenu menu = null!, actions = null!, forms = null!;
@@ -21,6 +21,9 @@ public partial class PetMenu : Node
     public event Action? HideRequested;
     public event Action<string>? HubRequested;
     public event Action? GuitarToggled;
+    public event Action? FocusToggled;
+    /// <summary>專注模式中：選單顯示「結束專注」</summary>
+    public bool Focusing { get; set; }
     /// <summary>正在彈吉他：選單顯示「停止演奏」</summary>
     public bool Performing { get; set; }
 
@@ -40,6 +43,7 @@ public partial class PetMenu : Node
             else if (id == IdHide) HideRequested?.Invoke();
             else if (id == IdCollection) HubRequested?.Invoke("collection");
             else if (id == IdGuitar) GuitarToggled?.Invoke();
+            else if (id == IdFocus) FocusToggled?.Invoke();
             else if (id == IdShop) HubRequested?.Invoke("shop");
         };
     }
@@ -81,6 +85,7 @@ public partial class PetMenu : Node
         }
 
         menu.AddSeparator();
+        menu.AddItem(Focusing ? "⏹ 結束專注" : "🍅 開始專注", IdFocus);
         menu.AddItem(Performing ? "⏹ 停止演奏" : "🎸 彈吉他", IdGuitar);
         menu.AddItem(volleyOn ? "🏐 結束對打" : "🏐 排球對打", IdVolley);
         menu.AddItem($"😴 躲起來 {hideMinutes:0} 分鐘", IdHide);

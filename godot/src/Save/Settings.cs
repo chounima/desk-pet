@@ -36,6 +36,11 @@ public sealed class Settings
     public float MusicVolume { get; set; } = 0.6f;
     public bool MusicShuffle { get; set; }
     public bool MusicLoop { get; set; } = true;
+    /// <summary>專注／休息分鐘數（null = data/focus.json 的預設）</summary>
+    public float? FocusWork { get; set; }
+    public float? FocusBreak { get; set; }
+    /// <summary>偵測正在用的程式（預設關閉，使用者同意才開）</summary>
+    public bool AppAwareness { get; set; }
     /// <summary>每日按鍵次數 { "2026-10-10": 1234 }，保留最近 30 天</summary>
     public SortedDictionary<string, int> DailyKeys { get; set; } = new();
 
