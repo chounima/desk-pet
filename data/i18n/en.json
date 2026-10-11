@@ -242,5 +242,10 @@
  "ach.streak_7.name": "Every Day",
  "ach.streak_7.desc": "Log in 7 days in a row",
  "ach.alpaca.name": "The Alpaca's Secret",
- "ach.alpaca.desc": "Unlock Choupaca"
+ "ach.alpaca.desc": "Unlock Choupaca",
+ "music.checkHint": "Only checked songs are played when you press Play; unchecked ones can still be played with “Play this”.",
+ "music.include": "Include in auto play",
+ "music.formatM4a": "This file is actually M4A (AAC) with an .mp3 name (common for audio downloaded from video sites). Only real MP3/OGG/WAV can be played — please convert it to MP3 or OGG.",
+ "music.formatWebm": "This file is actually WebM. Only MP3/OGG/WAV can be played — please convert it.",
+ "music.formatUnknown": "Couldn't recognize this file; it may be damaged or not MP3/OGG/WAV."
 }

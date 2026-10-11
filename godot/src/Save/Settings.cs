@@ -36,6 +36,8 @@ public sealed class Settings
     public float MusicVolume { get; set; } = 0.6f;
     public bool MusicShuffle { get; set; }
     public bool MusicLoop { get; set; } = true;
+    /// <summary>不要自動彈的曲子（Track.Id：song:twinkle、file:xxx.mp3）</summary>
+    public HashSet<string> MusicDisabled { get; set; } = new();
     /// <summary>專注／休息分鐘數（null = data/focus.json 的預設）</summary>
     public float? FocusWork { get; set; }
     public float? FocusBreak { get; set; }

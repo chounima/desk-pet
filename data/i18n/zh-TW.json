@@ -134,5 +134,10 @@
  "menu.callBack": "🙋 叫她出來",
  "settings.language": "語言 / Language",
  "settings.languageAuto": "自動（依 Windows 語言）",
- "settings.languageNote": "換語言後會自動重新啟動。"
+ "settings.languageNote": "換語言後會自動重新啟動。",
+ "music.checkHint": "打勾的曲子才會在「開始彈」時輪流播放；沒打勾的還是可以按「彈這首」單獨彈。",
+ "music.include": "自動播放時要彈這首",
+ "music.formatM4a": "這個檔案其實是 M4A（AAC）格式，只是副檔名寫成 .mp3（常見於從影音網站下載的音樂）。桌寵只能播真正的 MP3／OGG／WAV，請用轉檔軟體轉成 MP3 或 OGG 再放進來。",
+ "music.formatWebm": "這個檔案其實是 WebM 格式，桌寵只能播 MP3／OGG／WAV，請轉檔後再放進來。",
+ "music.formatUnknown": "看不出這個檔案的格式，可能已損壞或不是 MP3／OGG／WAV。"
 }

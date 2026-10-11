@@ -242,5 +242,10 @@
  "ach.streak_7.name": "毎日会える",
  "ach.streak_7.desc": "7 日連続ログイン",
  "ach.alpaca.name": "アルパカの秘密",
- "ach.alpaca.desc": "Choupaca を解放する"
+ "ach.alpaca.desc": "Choupaca を解放する",
+ "music.checkHint": "チェックした曲だけが「弾く」で順番に流れます。チェックを外した曲も「これを弾く」で個別に弾けます。",
+ "music.include": "自動再生に含める",
+ "music.formatM4a": "このファイルは拡張子が .mp3 ですが、実際は M4A（AAC）形式です（動画サイトから保存した音声によくあります）。本物の MP3／OGG／WAV のみ再生できるので、MP3 か OGG に変換してください。",
+ "music.formatWebm": "このファイルは実際は WebM 形式です。MP3／OGG／WAV に変換してください。",
+ "music.formatUnknown": "ファイル形式を認識できません。壊れているか、MP3／OGG／WAV ではない可能性があります。"
 }

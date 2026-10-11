@@ -341,6 +341,9 @@ public partial class Main : Node2D
         {
             if (e is InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: true } click && volley.HitBall(click.Position))
                 volley.ClickBall();
+            // 右鍵點角色：叫出選單（可以結束對打）
+            else if (e is InputEventMouseButton { ButtonIndex: MouseButton.Right, Pressed: true } rc && pet.View.HitTest(rc.Position))
+                OpenPetMenu();
             return;
         }
         // 彈吉他中：點角色只冒愛心（不能拖），右鍵選單照常
@@ -396,7 +399,8 @@ public partial class Main : Node2D
     {
         if (presence.Hidden) return;       // 隱藏中一律穿透（OnPresenceChanged 已設好）
         var cursor = DesktopWindow.CursorInWindow();
-        var over = drag != null || (volley.Active ? volley.HitBall(cursor) : pet.View.HitTest(cursor));
+        // 對打中球和角色都要能點（角色用來按右鍵叫選單）
+        var over = drag != null || (volley.Active && volley.HitBall(cursor)) || pet.View.HitTest(cursor);
         DesktopWindow.SetClickThrough(!over);
     }
 

@@ -63,12 +63,28 @@ public partial class MusicTab : VBoxContainer
         var list = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
         scroll.AddChild(list);
         AddChild(scroll);
+        list.AddChild(Ui.Text(I18n.T("music.checkHint"), Ui.Muted, 13, wrap: true));
         foreach (var t in player.Tracks)
         {
             var playing = player.Current?.Id == t.Id;
-            var name = Ui.Text($"{(playing ? "▶ " : "")}{(t.Builtin ? "🎵" : "📁")} {t.Title}", playing ? Ui.Accent : null);
+            var row = new HBoxContainer();
+            // 勾選 = 自動播放時會彈；格式不支援的不能勾
+            var on = new CheckBox { ButtonPressed = t.Problem == null && !settings.MusicDisabled.Contains(t.Id), Disabled = t.Problem != null,
+                                    FocusMode = FocusModeEnum.None, TooltipText = I18n.T("music.include") };
+            on.Toggled += v =>
+            {
+                if (refreshing) return;
+                if (v) settings.MusicDisabled.Remove(t.Id); else settings.MusicDisabled.Add(t.Id);
+                settings.Save();
+            };
+            row.AddChild(on);
+            var name = Ui.Text($"{(playing ? "▶ " : "")}{(t.Builtin ? "🎵" : "📁")} {t.Title}", playing ? Ui.Accent : t.Problem != null ? Ui.Muted : null);
             name.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-            list.AddChild(Ui.Row(name, Ui.Button(I18n.T("music.playThis"), () => PlayRequested?.Invoke(t))));
+            name.ClipText = true;
+            row.AddChild(name);
+            if (t.Problem == null) row.AddChild(Ui.Button(I18n.T("music.playThis"), () => PlayRequested?.Invoke(t)));
+            list.AddChild(row);
+            if (t.Problem != null) list.AddChild(Ui.Text("⚠ " + I18n.T(t.Problem), new Color("#ffb36b"), 13, wrap: true));
         }
         // 還沒買的內建曲
         foreach (var (id, item) in shop.Items("music"))

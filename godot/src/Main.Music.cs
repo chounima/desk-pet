@@ -17,6 +17,7 @@ public partial class Main
         music.Volume = args.ContainsKey("mute") ? 0.0001f : settings.MusicVolume;     // --mute：測試時不發出聲音
         music.Shuffle = settings.MusicShuffle;
         music.Loop = settings.MusicLoop;
+        music.IsDisabled = id => settings.MusicDisabled.Contains(id);
         music.Beat += OnBeat;
         music.TrackStarted += _ => { UpdateStrumSpeed(); if (hub.Visible) hub.RefreshAll(); };
         music.Stopped += () => { if (performing) EndPerformance(); };
@@ -35,7 +36,9 @@ public partial class Main
     {
         if (!force && !shop.ActionOwned("guitar")) { hub.Open("shop", "action"); return; }
         music.RefreshTracks(id => shop.Owns($"song:{id}"));
-        if (music.Tracks.Count == 0) { behavior.Say("noSongs"); hub.Open("music"); return; }
+        // 指定曲子時就算勾掉也照彈；沒指定時要有能自動播放的
+        if (track == null && !music.HasPlayable) { behavior.Say("noSongs"); hub.Open("music"); return; }
+        if (track?.Problem != null) { hub.Open("music"); return; }
         if (volley.Active) { volley.SetActive(false); tray.SetVolley(false); }
         if (!performing)
         {

@@ -12,6 +12,8 @@ namespace DeskPet.Audio.Music;
 public sealed record Track(string Id, string Title, string? SongId, string? FilePath, float? Bpm)
 {
     public bool Builtin => SongId != null;
+    /// <summary>不能播的原因（i18n key，例如格式不支援）；null = 可以播</summary>
+    public string? Problem { get; init; }
 }
 
 public partial class MusicPlayer : Node
@@ -32,6 +34,12 @@ public partial class MusicPlayer : Node
     public bool Shuffle { get; set; }
     /// <summary>播完整個清單後從頭再來</summary>
     public bool Loop { get; set; } = true;
+    /// <summary>使用者勾掉、不要自動彈的曲子（「彈這首」還是可以指定）</summary>
+    public Func<string, bool> IsDisabled { get; set; } = _ => false;
+    readonly HashSet<string> failed = new();      // 這次執行中讀取失敗的檔案，不再嘗試
+
+    /// <summary>自動播放（第一首、下一首）會挑的曲子</summary>
+    public bool Playable(Track t) => t.Problem == null && !failed.Contains(t.Id) && !IsDisabled(t.Id);
 
     /// <summary>目前的 BPM（內建曲或 bpm.json 指定；自訂音樂則用估計值）</summary>
     public float? Bpm => Current?.Bpm ?? detector.Bpm;
@@ -94,7 +102,33 @@ public partial class MusicPlayer : Node
             .Where(f => Extensions.Contains(Path.GetExtension(f).ToLowerInvariant()))
             .OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
             .Select(f => new Track($"file:{Path.GetFileName(f)}", Path.GetFileNameWithoutExtension(f), null, f,
-                                   bpms.TryGetValue(Path.GetFileName(f), out var b) ? b : null));
+                                   bpms.TryGetValue(Path.GetFileName(f), out var b) ? b : null) { Problem = CheckFormat(f) });
+    }
+
+    /// <summary>
+    /// 看檔頭判斷實際格式：常見的是從影音網站下載的 m4a（AAC）被改成 .mp3，Godot 解不開。
+    /// 回傳不能播的原因（i18n key），可以播回傳 null。
+    /// </summary>
+    static string? CheckFormat(string path)
+    {
+        try
+        {
+            var head = new byte[12];
+            using (var f = File.OpenRead(path)) f.ReadExactly(head, 0, Math.Min(12, (int)f.Length));
+            string Ascii(int at, int n) => System.Text.Encoding.ASCII.GetString(head, at, n);
+            if (Ascii(4, 4) == "ftyp") return "music.formatM4a";            // MP4／M4A（AAC）
+            if (head[0] == 0x1A && head[1] == 0x45 && head[2] == 0xDF && head[3] == 0xA3) return "music.formatWebm";
+            var ext = Path.GetExtension(path).ToLowerInvariant();
+            var ok = ext switch
+            {
+                ".mp3" => Ascii(0, 3) == "ID3" || (head[0] == 0xFF && (head[1] & 0xE0) == 0xE0),
+                ".ogg" => Ascii(0, 4) == "OggS",
+                ".wav" => Ascii(0, 4) == "RIFF" && Ascii(8, 4) == "WAVE",
+                _ => false,
+            };
+            return ok ? null : "music.formatUnknown";
+        }
+        catch (Exception) { return "music.formatUnknown"; }
     }
 
     /// <summary>第一次使用時建立資料夾並放一份說明</summary>
@@ -111,8 +145,15 @@ public partial class MusicPlayer : Node
 
     public void Play(Track track)
     {
-        var stream = Load(track);
-        if (stream == null) { Next(); return; }
+        var stream = track.Problem == null ? Load(track) : null;
+        if (stream == null)
+        {
+            // 讀不到：記下來，往後找下一首能播的；全部都不能播就停止（不會無限重試）
+            failed.Add(track.Id);
+            Current = track;
+            Next();
+            return;
+        }
         Current = track;
         player.Stream = stream;
         player.Play();
@@ -123,9 +164,13 @@ public partial class MusicPlayer : Node
 
     public void PlayFirst()
     {
-        if (Tracks.Count == 0) return;
-        Play(Shuffle ? Tracks[rng.Next(Tracks.Count)] : Tracks[0]);
+        var candidates = Tracks.Where(Playable).ToList();
+        if (candidates.Count == 0) { Stop(); return; }
+        Play(Shuffle ? candidates[rng.Next(candidates.Count)] : candidates[0]);
     }
+
+    /// <summary>有沒有可以自動播放的曲子</summary>
+    public bool HasPlayable => Tracks.Any(Playable);
 
     public void Stop()
     {
@@ -137,16 +182,19 @@ public partial class MusicPlayer : Node
 
     void Next()
     {
-        if (Tracks.Count == 0 || Current == null) { Stop(); return; }
-        var i = Tracks.FindIndex(t => t.Id == Current.Id);
-        if (Shuffle && Tracks.Count > 1)
+        var candidates = Tracks.Where(Playable).ToList();
+        if (candidates.Count == 0 || Current == null) { Stop(); return; }
+        if (Shuffle)
         {
-            int j;
-            do j = rng.Next(Tracks.Count); while (j == i);
-            Play(Tracks[j]);
+            var others = candidates.Where(t => t.Id != Current.Id).ToList();
+            Play(others.Count > 0 ? others[rng.Next(others.Count)] : candidates[0]);
+            return;
         }
-        else if (i + 1 < Tracks.Count) Play(Tracks[i + 1]);
-        else if (Loop) Play(Tracks[0]);
+        // 從目前這首往後找第一首能播的；到底了要循環才從頭
+        var i = Tracks.FindIndex(t => t.Id == Current.Id);
+        var after = Tracks.Skip(i + 1).FirstOrDefault(Playable);
+        if (after != null) Play(after);
+        else if (Loop) Play(candidates[0]);       // 失敗的已經排除，所以不會一直重試同一首
         else Stop();
     }
 
