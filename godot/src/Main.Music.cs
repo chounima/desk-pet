@@ -44,7 +44,7 @@ public partial class Main
         {
             performing = true;
             progress.AddStat("guitar");
-            behavior.EnterMinigame();
+            behavior.EnterMinigame("guitar");
             pet.Play("guitar", true);
             behavior.Say("guitar");
             petMenu.Performing = true;
@@ -64,7 +64,7 @@ public partial class Main
     {
         performing = false;
         pet.Animator.Speed = 1;
-        behavior.ExitMinigame();
+        behavior.ExitMinigame("guitar");
         behavior.Say("guitarEnd");
         petMenu.Performing = false;
         tray.SetPerforming(false);

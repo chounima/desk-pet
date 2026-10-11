@@ -1,5 +1,6 @@
 ﻿// 行為邏輯：自動選動作、走路移動、打字反應、睡覺、被拖曳與掉落（移植自 preview/js/game/behavior.js）
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using DeskPet.Platform;
 using Godot;
@@ -147,7 +148,7 @@ public sealed class Behavior
     public void Force(string name)
     {
         lastInput = Now();
-        if (Current != State.Ground) return;
+        if (Current != State.Ground || Suspended) return;     // 小遊戲中不接受指定動作（右鍵選單、商店預覽）
         if (name == "typing") typingUntil = Auto ? Now() + 5 : double.MaxValue;
         Start(name, Auto ? null : float.PositiveInfinity);
     }
@@ -156,12 +157,15 @@ public sealed class Behavior
 
     // ---------- 小遊戲 ----------
 
-    /// <summary>小遊戲進行中：寵物交給小遊戲控制，這裡只負責站在地面</summary>
-    public bool Suspended { get; private set; }
+    // 正在控制角色的小遊戲（排球、彈吉他…）。用名字記，一個結束時另一個還在就不會把控制權交回來
+    readonly HashSet<string> minigames = new();
 
-    public void EnterMinigame()
+    /// <summary>小遊戲進行中：寵物交給小遊戲控制，這裡只負責站在地面</summary>
+    public bool Suspended => minigames.Count > 0;
+
+    public void EnterMinigame(string name)
     {
-        Suspended = true;
+        minigames.Add(name);
         surfaces.Stand(null);
         Current = State.Ground;
         vx = vy = 0;
@@ -170,9 +174,9 @@ public sealed class Behavior
         pet.FaceOverride = null;
     }
 
-    public void ExitMinigame()
+    public void ExitMinigame(string name)
     {
-        Suspended = false;
+        if (!minigames.Remove(name) || Suspended) return;      // 還有別的小遊戲在進行
         lastInput = Now();
         Start("idle");
     }

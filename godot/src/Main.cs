@@ -288,6 +288,7 @@ public partial class Main : Node2D
         else if (step == "remind") behavior.Remind("stretchRemind", "stretch");
         else if (step == "guitar") StartPerformance(force: true);
         else if (step == "focus") StartFocus();
+        else if (step == "volley") { volley.SetActive(true); tray.SetVolley(true); }      // 開始排球對打
         else if (step.StartsWith("outfit:"))                             // outfit:<資料夾名> 直接穿上自訂衣服（不存設定）
             pet.SetOutfit(outfits.FirstOrDefault(o => o.Id == step[7..])?.Parts);
         else if (step.StartsWith("wear:") && sandbox)                    // wear:acc:strawhat（只在 --sandbox）直接送並穿上

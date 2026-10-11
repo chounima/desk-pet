@@ -65,7 +65,7 @@ public partial class VolleySession : Node2D
         if (on == Active) return;
         if (on)
         {
-            behavior.EnterMinigame();
+            behavior.EnterMinigame("volley");
             volley.Start();
             hud.Visible = true;
         }
@@ -75,7 +75,7 @@ public partial class VolleySession : Node2D
             ball.HideBall();
             hud.Visible = false;
             shakeTarget.Position = Vector2.Zero;
-            behavior.ExitMinigame();
+            behavior.ExitMinigame("volley");
         }
     }
 
