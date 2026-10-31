@@ -13,7 +13,7 @@
   "propOverrides": {
     "guitar": {
       "dx": 2,
-      "dy": 12,
+      "dy": 28,
       "scale": 1.12
     }
   },
