@@ -1,4 +1,4 @@
-// Discord 本機 RPC：讀「自己目前所在的語音頻道」裡有誰、誰在講話、誰靜音
+﻿// Discord 本機 RPC：讀「自己目前所在的語音頻道」裡有誰、誰在講話、誰靜音
 //
 // 透過 Discord 桌面版開的 named pipe（\\.\pipe\discord-ipc-0）溝通，不需要機器人進伺服器，
 // 私訊通話、群組通話也可以。需要自己在 Discord 開發者後台建立應用程式（拿 Client ID / Secret），
@@ -169,17 +169,16 @@ public sealed class DiscordRpc : PresenceSource
         // 第一次：Discord 跳出授權視窗，使用者按「授權」後拿到 code，再換成 token
         if (clientSecret.Length == 0) throw new FatalError(I18n.T("live.discordNeedSecret"));
         Status = I18n.T("live.discordAuthorize");
-        var auth = await Command("AUTHORIZE", new JsonObject { ["client_id"] = clientId, ["scopes"] = new JsonArray(Scopes.Select(s => (JsonNode)s!).ToArray()) }, null, ct, TimeSpan.FromMinutes(5));
+        // RPC 授權不能帶 redirect_uri；開發者後台設了 Redirects 的話 Discord 反而會要求帶，兩邊衝突，所以後台不要設 Redirects
+        var auth = await Command("AUTHORIZE", new JsonObject
+        {
+            ["client_id"] = clientId,
+            ["scopes"] = new JsonArray(Scopes.Select(s => (JsonNode)s!).ToArray()),
+        }, null, ct, TimeSpan.FromMinutes(5));
         if (auth["evt"]?.GetValue<string>() == "ERROR")
             throw new FatalError(I18n.T("live.discordDenied", auth["data"]?["message"]?.GetValue<string>() ?? ""));
         var code = auth["data"]?["code"]?.GetValue<string>() ?? "";
-        // 開發者後台沒設定 Redirect 時可以不帶；有設定時要帶一樣的，常見的兩個都試試看
-        foreach (var redirect in new[] { null, "http://localhost", "http://127.0.0.1" })
-        {
-            var form = new Dictionary<string, string> { ["grant_type"] = "authorization_code", ["code"] = code };
-            if (redirect != null) form["redirect_uri"] = redirect;
-            if (await Exchange(form, ct)) break;
-        }
+        await Exchange(new() { ["grant_type"] = "authorization_code", ["code"] = code }, ct);
         if (accessToken.Length == 0 || !await TryAuthenticate(accessToken, ct))
             throw new FatalError(I18n.T("live.discordTokenFailed"));
     }
