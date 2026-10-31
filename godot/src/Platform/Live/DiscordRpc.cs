@@ -169,7 +169,7 @@ public sealed class DiscordRpc : PresenceSource
         // 第一次：Discord 跳出授權視窗，使用者按「授權」後拿到 code，再換成 token
         if (clientSecret.Length == 0) throw new FatalError(I18n.T("live.discordNeedSecret"));
         Status = I18n.T("live.discordAuthorize");
-        // RPC 授權不能帶 redirect_uri；開發者後台設了 Redirects 的話 Discord 反而會要求帶，兩邊衝突，所以後台不要設 Redirects
+        // RPC 授權不能帶 redirect_uri，Discord 會用開發者後台 Redirects 的第一個；後台一個都沒設會出現 Missing "redirect_uri"
         var auth = await Command("AUTHORIZE", new JsonObject
         {
             ["client_id"] = clientId,
@@ -178,7 +178,9 @@ public sealed class DiscordRpc : PresenceSource
         if (auth["evt"]?.GetValue<string>() == "ERROR")
             throw new FatalError(I18n.T("live.discordDenied", auth["data"]?["message"]?.GetValue<string>() ?? ""));
         var code = auth["data"]?["code"]?.GetValue<string>() ?? "";
-        await Exchange(new() { ["grant_type"] = "authorization_code", ["code"] = code }, ct);
+        // 換 token：先不帶 redirect_uri，不行再帶後台設定的 http://localhost
+        if (!await Exchange(new() { ["grant_type"] = "authorization_code", ["code"] = code }, ct))
+            await Exchange(new() { ["grant_type"] = "authorization_code", ["code"] = code, ["redirect_uri"] = "http://localhost" }, ct);
         if (accessToken.Length == 0 || !await TryAuthenticate(accessToken, ct))
             throw new FatalError(I18n.T("live.discordTokenFailed"));
     }
