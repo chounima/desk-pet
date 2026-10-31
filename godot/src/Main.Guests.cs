@@ -29,6 +29,7 @@ public partial class Main
     int manualCount;
     readonly HashSet<string> selfSpeaking = new();    // 哪些來源說「使用者自己正在講話」（Discord、麥克風）
     readonly Mouth mainMouth = new();
+    readonly View.SpeechWaves mainWaves = new();
 
     public IReadOnlyList<Guest> Guests => guests;
     public IReadOnlyList<PresenceSource> Sources => sources;
@@ -40,6 +41,8 @@ public partial class Main
         allClips = clips;
         guestProps = props;
         charIds = ids;
+
+        AddChild(mainWaves);
 
         // 客人的右鍵選單：揮手、換角色、請他離開
         guestMenu = new PopupMenu();
@@ -266,7 +269,11 @@ public partial class Main
     }
 
     /// <summary>主角色講話（Discord 裡的自己、麥克風）：在 behavior.Update 之後、pet.Update 之前呼叫</summary>
-    void UpdateMainMouth(float dt) => mainMouth.Update(dt, pet, behavior, selfSpeaking.Count > 0 && !performing);
+    void UpdateMainMouth(float dt)
+    {
+        var talking = mainMouth.Update(dt, pet, behavior, selfSpeaking.Count > 0 && !performing && !presence.Hidden);
+        mainWaves.UpdateWaves(dt, talking, pet, mainMouth.Open);
+    }
 
     void SetGuestsHidden(bool hidden)
     {

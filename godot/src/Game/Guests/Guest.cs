@@ -37,6 +37,7 @@ public sealed class Guest
     readonly StyleBoxFlat tagStyle;
     readonly Lines lines;
     readonly Mouth mouth = new();
+    readonly SpeechWaves waves = new();
     float leaveLeft = -1;
     bool hidden;
 
@@ -52,6 +53,7 @@ public sealed class Guest
         Behavior = new Behavior(Pet, area, interactions, new Surfaces(area, () => WindowTracker.Platforms));
         fx = new Fx();
         parent.AddChild(fx);
+        parent.AddChild(waves);
         bubble = new Bubble();
         parent.AddChild(bubble);
         Behavior.Said += key2 => { if (!bubble.Visible) bubble.Say(lines.Pick(Pet.Rig.Id, key2)); };
@@ -194,7 +196,9 @@ public sealed class Guest
     // 講話中：動嘴，名牌加綠框（像 Discord 的講話提示）
     void UpdateMouth(float dt)
     {
-        var w = mouth.Update(dt, Pet, Behavior, Speaking && !Muted) ? (int)Mathf.Max(1, 2 * DesktopWindow.UiScale) : 0;
+        var talking = mouth.Update(dt, Pet, Behavior, Speaking && !Muted && !hidden);
+        waves.UpdateWaves(dt, talking, Pet, mouth.Open);
+        var w = talking ? (int)Mathf.Max(1, 2 * DesktopWindow.UiScale) : 0;
         if (tagStyle.BorderWidthBottom != w) SetBorder(w);
     }
 
@@ -213,6 +217,7 @@ public sealed class Guest
     {
         Pet.View.QueueFree();
         fx.QueueFree();
+        waves.QueueFree();
         bubble.QueueFree();
         tagPanel.QueueFree();
     }
