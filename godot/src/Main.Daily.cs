@@ -1,4 +1,4 @@
-// 主程式的日常體驗部分：右鍵選單、全螢幕自動隱藏、暫時隱藏、螢幕變化自適應、依時間反應
+﻿// 主程式的日常體驗部分：右鍵選單、全螢幕自動隱藏、暫時隱藏、螢幕變化自適應、依時間反應
 using DeskPet.Content;
 using DeskPet.Game;
 using DeskPet.Platform;
@@ -45,7 +45,7 @@ public partial class Main
 
         tray.SetDaily(settings.AutoHideFullscreen, settings.FitScreen);
         tray.FullscreenToggled += on => { presence.AutoHideFullscreen = on; settings.AutoHideFullscreen = on; settings.Save(); };
-        tray.FitScreenToggled += on => { settings.FitScreen = on; settings.Save(); pet.SetScale(PetScale(settings.Size)); };
+        tray.FitScreenToggled += on => { settings.FitScreen = on; settings.Save(); pet.SetScale(PetScale(settings.Size)); RescaleGuests(); };
         tray.HideToggled += () =>
         {
             if (presence.ManualHidden) presence.ShowNow();
@@ -74,6 +74,7 @@ public partial class Main
         pet.View.Visible = !hidden;
         fx.Visible = !hidden;
         bubble.Muted = hidden;
+        SetGuestsHidden(hidden);
         tray.SetHidden(presence.ManualHidden);
         if (hidden)
         {
@@ -88,6 +89,7 @@ public partial class Main
     void OnDisplayChanged()
     {
         pet.SetScale(PetScale(settings.Size));
+        RescaleGuests();
         var area = Area();
         pet.X = Mathf.Clamp(pet.X, area.Position.X + 40, area.End.X - 40);
         if (pet.Y > area.End.Y || behavior.Current == Behavior.State.Ground) pet.Y = Mathf.Min(pet.Y, area.End.Y);

@@ -49,6 +49,20 @@ public sealed class Settings
     public int Screen { get; set; } = -1;
     /// <summary>介面語言：auto（依 Windows）、zh-TW、en、ja</summary>
     public string Language { get; set; } = "auto";
+    /// <summary>直播／會議模式：連線到下面設定的來源，有人在線上就出現客人角色</summary>
+    public bool LiveMode { get; set; }
+    /// <summary>Twitch 頻道名稱（匿名讀聊天室，不用登入）</summary>
+    public string TwitchChannel { get; set; } = "";
+    /// <summary>Discord 應用程式（開發者後台自己建立的）：用本機 RPC 讀語音頻道裡誰在講話</summary>
+    public string DiscordClientId { get; set; } = "";
+    public string DiscordClientSecret { get; set; } = "";
+    /// <summary>Discord 授權後拿到的 token（之後不用每次再按授權）</summary>
+    public string DiscordAccessToken { get; set; } = "";
+    public string DiscordRefreshToken { get; set; } = "";
+    /// <summary>同時最多幾個客人（null = data/guests.json 的預設）</summary>
+    public int? MaxGuests { get; set; }
+    /// <summary>某個人固定用哪個角色 { "twitch:12345" 或名字: 角色 }</summary>
+    public Dictionary<string, string> GuestCharacters { get; set; } = new();
     /// <summary>每日按鍵次數 { "2026-10-10": 1234 }，保留最近 30 天</summary>
     public SortedDictionary<string, int> DailyKeys { get; set; } = new();
 

@@ -1,4 +1,4 @@
-// 「Desk Pet」視窗：收藏、商店、設定、開發者四個分頁（獨立的系統視窗，不受桌寵視窗點擊穿透影響）
+﻿// 「Desk Pet」視窗：收藏、商店、設定、開發者四個分頁（獨立的系統視窗，不受桌寵視窗點擊穿透影響）
 using System.Collections.Generic;
 using DeskPet.Content;
 using DeskPet.Game.Progression;
@@ -21,6 +21,7 @@ public partial class HubWindow : Window
     public MusicTab Music { get; private set; } = null!;
     public FocusTab Focus { get; private set; } = null!;
     public WardrobeTab Wardrobe { get; private set; } = null!;
+    public GuestsTab Guests { get; private set; } = null!;
 
     public HubWindow(Progress progress, Shop shop, Settings settings, List<RigData> characters,
                      Dictionary<string, PropData> props, Dictionary<string, AccessoryData> accessories,
@@ -82,13 +83,21 @@ public partial class HubWindow : Window
         tabs.MoveChild(tab, Collection.GetIndex() + 1);
     }
 
+    /// <summary>多人分頁（放在設定前面）</summary>
+    public void AddGuestsTab(GuestsTab tab)
+    {
+        Guests = tab;
+        tabs.AddChild(tab);
+        tabs.MoveChild(tab, Settings.GetIndex());
+    }
+
     /// <summary>開發者分頁只在開發者模式顯示</summary>
     public void SetDevMode(bool on) => tabs.SetTabHidden(tabs.GetTabIdxFromControl(Dev), !on);
 
     /// <summary>tab：collection | shop | music | settings | dev；shopCategory 指定商店分類</summary>
     public void Open(string tab, string? shopCategory = null)
     {
-        Control target = tab switch { "shop" => Shop, "music" => (Control?)Music ?? Shop, "focus" => (Control?)Focus ?? Collection, "wardrobe" => (Control?)Wardrobe ?? Collection, "settings" => Settings, "dev" => Dev, _ => Collection };
+        Control target = tab switch { "shop" => Shop, "music" => (Control?)Music ?? Shop, "focus" => (Control?)Focus ?? Collection, "wardrobe" => (Control?)Wardrobe ?? Collection, "guests" => (Control?)Guests ?? Collection, "settings" => Settings, "dev" => Dev, _ => Collection };
         tabs.CurrentTab = tabs.GetTabIdxFromControl(target);
         if (shopCategory != null) Shop.ShowCategory(shopCategory);
         RefreshAll();
@@ -106,6 +115,7 @@ public partial class HubWindow : Window
         else if (current == Music) Music.Refresh();
         else if (current == Focus) Focus.Refresh();
         else if (current == Wardrobe) Wardrobe.Refresh();
+        else if (current == Guests) Guests.Refresh();
         else if (current == Settings) Settings.Refresh();
         else if (current == Dev) Dev.Refresh();
     }
@@ -114,6 +124,7 @@ public partial class HubWindow : Window
     {
         if (!Visible) return;
         points.Text = $"💎 {progress.State.Points}";
+        if (tabs.GetCurrentTabControl() == Guests) Guests.Tick();     // 誰在講話要即時顯示
         // 收藏分頁的進度條每秒更新一次（陪伴時間、打字點數會一直變）
         if ((refreshTimer -= (float)delta) <= 0)
         {

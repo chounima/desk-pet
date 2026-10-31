@@ -1,0 +1,40 @@
+{
+  "_說明": "客人角色（多人／直播模式）：聊天關鍵字與表情反應會讓對應的客人做動作。match 裡的英數字要整個字相符，中日文只要有出現就算。",
+  "maxGuests": 8,
+  "chatIdleMinutes": 10,
+  "chatMaxChars": 40,
+  "scale": 0.85,
+  "chatTriggers": [
+    { "match": ["!jump", "!跳"], "action": "jump" },
+    { "match": ["!dance", "跳舞", "dance"], "action": "dance" },
+    { "match": ["!wave", "hi", "hello", "hey", "嗨", "哈囉", "安安", "你好", "こんにちは", "やあ"], "action": "wave" },
+    { "match": ["bye", "掰", "拜拜", "再見", "またね"], "action": "wave" },
+    { "match": ["哈哈", "lol", "lmao", "xd", "笑死", "www", "草"], "action": "cheer" },
+    { "match": ["gg", "nice", "讚", "好耶", "+1", "いいね"], "action": "peace" },
+    { "match": ["嗯…", "嗯...", "hmm", "想想", "うーん"], "action": "think" },
+    { "match": ["晚安", "gn", "おやすみ", "睏", "zzz"], "action": "sleep" },
+    { "match": ["累", "tired", "伸懶腰", "疲れた"], "action": "stretch" },
+    { "match": ["咖啡", "coffee", "コーヒー"], "action": "coffee" },
+    { "match": ["生氣", "怒", "angry", "💢"], "action": "angry" },
+    { "match": ["害羞", "///", "shy", "照れ"], "action": "shy" },
+    { "match": ["!salute", "收到", "遵命", "roger", "了解"], "action": "salute" }
+  ],
+  "reactions": {
+    "👍": "peace",
+    "✌": "peace",
+    "🎉": "cheer",
+    "❤": "cheer",
+    "😂": "cheer",
+    "🤣": "cheer",
+    "👋": "wave",
+    "😡": "angry",
+    "😠": "angry",
+    "😳": "shy",
+    "🥺": "shy",
+    "🤔": "think",
+    "😴": "sleep",
+    "☕": "coffee",
+    "🫡": "salute",
+    "*": "jump"
+  }
+}

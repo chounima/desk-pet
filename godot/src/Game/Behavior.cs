@@ -38,6 +38,9 @@ public sealed class Behavior
 
     public void Say(string key) => Said?.Invoke(key);
 
+    /// <summary>有動靜（例如客人在講話）：重新計算多久沒互動，才不會睡著</summary>
+    public void Touch() => lastInput = Now();
+
     /// <summary>提醒（例如久坐）：說一句話，站在地上又沒在玩小遊戲時順便做一個動作</summary>
     public void Remind(string lineKey, string action)
     {

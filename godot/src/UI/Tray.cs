@@ -1,4 +1,4 @@
-// 系統匣圖示與右鍵選單：切換角色、大小、自動行為、今日統計、結束
+﻿// 系統匣圖示與右鍵選單：切換角色、大小、自動行為、今日統計、結束
 using System;
 using System.Collections.Generic;
 using DeskPet.Content;
@@ -14,7 +14,7 @@ public partial class Tray : Node
     // 選單項目 id：角色用 0..n-1，大小用 IdSize + i
     const int IdSize = 100, IdForm = 200, IdAuto = 1000, IdAutostart = 1001, IdToday = 1002, IdQuit = 1003, IdVolley = 1004, IdSound = 1005,
         IdFullscreen = 1006, IdFit = 1007, IdHide = 1008,
-        IdCollection = 1009, IdShop = 1010, IdSettings = 1011, IdGuitar = 1012, IdFocus = 1013, IdWardrobe = 1014;
+        IdCollection = 1009, IdShop = 1010, IdSettings = 1011, IdGuitar = 1012, IdFocus = 1013, IdWardrobe = 1014, IdGuests = 1015;
 
     readonly List<string> ids = new();
     readonly List<string> formIds = new();
@@ -59,6 +59,7 @@ public partial class Tray : Node
         menu.AddItem(I18n.T("tab.wardrobe"), IdWardrobe);
         menu.AddItem(I18n.T("tab.collection"), IdCollection);
         menu.AddItem(I18n.T("tab.shop"), IdShop);
+        menu.AddItem(I18n.T("menu.guests"), IdGuests);
         menu.AddItem(I18n.T("menu.settings"), IdSettings);
         menu.AddSeparator(I18n.T("settings.size"));
         for (var i = 0; i < Tuning.Sizes.Length; i++)
@@ -224,6 +225,9 @@ public partial class Tray : Node
                 break;
             case IdShop:
                 HubRequested?.Invoke("shop");
+                break;
+            case IdGuests:
+                HubRequested?.Invoke("guests");
                 break;
             case IdSettings:
                 HubRequested?.Invoke("settings");

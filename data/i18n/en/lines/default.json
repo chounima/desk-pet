@@ -146,5 +146,6 @@
  ],
  "app_browser": [
   "Looking something up?"
- ]
+ ],
+ "guestBye": ["Bye~", "Gotta go!", "See you!"]
 }

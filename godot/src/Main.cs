@@ -10,6 +10,9 @@
 //                      do:climb 強制做某件事、wait 空一拍、menu 叫出右鍵選單、hide:3 隱藏 3 秒、remind 久坐提醒
 //   --zones            印出身體各點判定成哪個部位
 //   --volley / --volley-bot  直接開始排球對打（bot = 模擬完美玩家自動回球）
+//   --guests=join:a@sera,speak:a,chat:a:嗨,leave:a  假的多人來源（見 ScriptSource）
+//   --twitch=頻道      連線某個 Twitch 聊天室（不存設定）
+//   --discord=ClientID 連線 Discord 本機 RPC（不存設定、不存 token）
 using System.Collections.Generic;
 using System.Linq;
 using DeskPet.Audio;
@@ -31,6 +34,7 @@ public partial class Main : Node2D
         public Vector2 Start;
         public string Zone = "body";     // 按下時點到的部位
         public bool Moved;
+        public Game.Guests.Guest? Guest;  // 拖的是客人（null = 主角色）
     }
 
     const float SaveEvery = 30;       // 統計每 30 秒存一次檔
@@ -168,7 +172,7 @@ public partial class Main : Node2D
             settings.Save();
         };
         tray.FormChosen += ChooseForm;
-        tray.SizeChosen += size => { pet.SetScale(PetScale(size)); settings.Size = size; settings.Save(); };
+        tray.SizeChosen += size => { pet.SetScale(PetScale(size)); settings.Size = size; settings.Save(); RescaleGuests(); };
         tray.AutoToggled += on => { behavior.Auto = on; settings.Auto = on; settings.Save(); };
         tray.AutostartToggled += Autostart.Set;
         tray.VolleyToggled += volley.SetActive;
@@ -184,6 +188,7 @@ public partial class Main : Node2D
         SetupMusic();
         SetupFocus();
         SetupCustom();
+        SetupGuests(ids, clips, props);
         if (args.TryGetValue("hub", out var hubTab)) hub.Open(hubTab);     // --hub=shop：一開始就打開視窗（截圖用）
 
         GD.Print($"[DeskPet] content={ContentLoader.Root} characters={string.Join(",", ids)} " +
@@ -263,12 +268,14 @@ public partial class Main : Node2D
         UpdateDrag();
         pet.Gaze.Target = lookOverride ?? DesktopWindow.CursorInWindow();
         behavior.Update(dt);
+        UpdateMainMouth(dt);
         volley.Tick(dt, DesktopWindow.CursorInWindow());
         pet.Update(dt);
         fx.UpdateFx(dt, pet.Animator.Fx, pet.HeadTop());
         bubble.UpdateBubble(dt, pet.HeadTop());
+        UpdateGuests(dt);
         UpdateClickThrough();
-        if (dumpState && Engine.GetProcessFrames() % 120 == 0) DumpState();
+        if (dumpState && Engine.GetProcessFrames() % 120 == 0) { DumpState(); DumpGuests(); }
     }
 
     // ---------- 測試用 ----------
@@ -354,20 +361,26 @@ public partial class Main : Node2D
             progress.OnInteraction(pet.Rig.Id);
             return;
         }
-        if (e is InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: true } mb && ZoneAt(mb.Position) is { } zone)
+        if (e is InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: true } mb)
         {
-            drag = new Drag { Start = mb.Position, Zone = zone };
-            dailyLife.OnActivity();
+            if (ZoneAt(mb.Position) is { } zone) drag = new Drag { Start = mb.Position, Zone = zone };
+            else if (GuestAt(mb.Position) is { } g && ZoneOn(g.Pet, mb.Position) is { } gz) drag = new Drag { Start = mb.Position, Zone = gz, Guest = g };
+            if (drag != null) dailyLife.OnActivity();
         }
-        if (e is InputEventMouseButton { ButtonIndex: MouseButton.Right, Pressed: true } rb && ZoneAt(rb.Position) != null)
-            OpenPetMenu();
+        if (e is InputEventMouseButton { ButtonIndex: MouseButton.Right, Pressed: true } rb)
+        {
+            if (ZoneAt(rb.Position) != null) OpenPetMenu();
+            else if (GuestAt(rb.Position) is { } g) OpenGuestMenu(g);
+        }
     }
 
     /// <summary>畫面上某點點到角色的哪個部位；沒點到角色回傳 null</summary>
-    string? ZoneAt(Vector2 point)
+    string? ZoneAt(Vector2 point) => ZoneOn(pet, point);
+
+    static string? ZoneOn(Pet p, Vector2 point)
     {
-        if (pet.View.HitSlot(point) is not { } slot) return null;
-        return Interactions.ZoneOf(slot, pet.ToBoneLocal("head", point).Y, pet.Rig.HeadTop[1]);
+        if (p.View.HitSlot(point) is not { } slot) return null;
+        return Interactions.ZoneOf(slot, p.ToBoneLocal("head", point).Y, p.Rig.HeadTop[1]);
     }
 
     // 拖曳中游標可能離開可點擊區域，所以改用全域查詢游標位置與按鍵狀態
@@ -375,14 +388,15 @@ public partial class Main : Node2D
     {
         if (drag == null) return;
         var cursor = DesktopWindow.CursorInWindow();
+        var b = drag.Guest?.Behavior ?? behavior;
         if (!DesktopWindow.LeftButtonDown())
         {
-            if (drag.Moved) behavior.Release();
+            if (drag.Moved) b.Release();
             else
             {
-                behavior.OnPetClick(drag.Zone);
-                progress.OnInteraction(pet.Rig.Id);
-                fx.Heart(pet.HeadTop());
+                b.OnPetClick(drag.Zone);
+                if (drag.Guest == null) progress.OnInteraction(pet.Rig.Id);
+                fx.Heart((drag.Guest?.Pet ?? pet).HeadTop());
             }
             drag = null;
             return;
@@ -390,9 +404,9 @@ public partial class Main : Node2D
         if (!drag.Moved && cursor.DistanceTo(drag.Start) > 5 * DesktopWindow.UiScale)
         {
             drag.Moved = true;
-            behavior.Grab(cursor);
+            b.Grab(cursor);
         }
-        if (drag.Moved) behavior.MoveHeld(cursor);
+        if (drag.Moved) b.MoveHeld(cursor);
     }
 
     // 游標在角色不透明的像素上（或正在拖曳）才接收滑鼠，其他時候點擊穿透到桌面
@@ -401,7 +415,7 @@ public partial class Main : Node2D
         if (presence.Hidden) return;       // 隱藏中一律穿透（OnPresenceChanged 已設好）
         var cursor = DesktopWindow.CursorInWindow();
         // 對打中球和角色都要能點（角色用來按右鍵叫選單）
-        var over = drag != null || (volley.Active && volley.HitBall(cursor)) || pet.View.HitTest(cursor);
+        var over = drag != null || (volley.Active && volley.HitBall(cursor)) || pet.View.HitTest(cursor) || (!volley.Active && GuestAt(cursor) != null);
         DesktopWindow.SetClickThrough(!over);
     }
 
@@ -409,6 +423,7 @@ public partial class Main : Node2D
     {
         if (settings == null) return;    // 重複啟動、還沒初始化就結束的實例
         GlobalInput.Stop();
+        foreach (var s in sources) s.Stop();
         settings.Save();
         if (!sandbox) progressState?.Save();
         SingleInstance.Release();

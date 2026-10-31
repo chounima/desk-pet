@@ -1,4 +1,4 @@
-// 主程式的收集系統部分：點數、好感度、解鎖、商店外觀、Desk Pet 視窗（收藏／商店／設定／開發者）
+﻿// 主程式的收集系統部分：點數、好感度、解鎖、商店外觀、Desk Pet 視窗（收藏／商店／設定／開發者）
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -270,5 +270,6 @@ public partial class Main
         settings.Size = size;
         settings.Save();
         tray.SetSize(size);
+        RescaleGuests();
     }
 }

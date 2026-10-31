@@ -42,5 +42,6 @@
   "app_music": ["這首好聽～"],
   "app_office": ["在寫報告嗎？"],
   "app_chat": ["在跟誰聊天？"],
-  "app_browser": ["在找什麼資料嗎？"]
+  "app_browser": ["在找什麼資料嗎？"],
+  "guestBye": ["掰掰～", "先走囉！", "下次見～"]
 }
