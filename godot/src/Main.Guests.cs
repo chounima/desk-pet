@@ -63,6 +63,13 @@ public partial class Main
         if (args.TryGetValue("twitch", out var channel)) AddSource(new TwitchChat(channel));    // 測試用：不存設定
         if (args.TryGetValue("discord", out var client))       // --discord=ClientID 或 ClientID:token
             AddSource(new DiscordRpc(new Save.Settings { DiscordClientId = client.Split(':')[0], DiscordAccessToken = client.Split(':').ElementAtOrDefault(1) ?? "" }));
+        if (args.TryGetValue("audio", out var audio))         // --audio=mic+apps；其他名字當成額外的會議軟體（例如 +powershell）
+        {
+            var parts = audio.Split('+');
+            var apps = new Dictionary<string, string>(guestCfg.MeetingApps);
+            foreach (var extra in parts.Except(new[] { "mic", "apps" })) apps[extra] = extra;
+            AddSource(new AudioWatch(parts.Contains("mic"), parts.Length > (parts.Contains("mic") ? 1 : 0), apps, guestCfg.MicThreshold, guestCfg.AppThreshold));
+        }
         RestartLiveSources();
     }
 
@@ -90,6 +97,8 @@ public partial class Main
         if (!settings.LiveMode) return;
         if (!string.IsNullOrWhiteSpace(settings.TwitchChannel)) liveSources.Add(new TwitchChat(settings.TwitchChannel));
         if (!string.IsNullOrWhiteSpace(settings.DiscordClientId)) liveSources.Add(new DiscordRpc(settings));
+        if (settings.MicTalk || settings.MeetingAudio)
+            liveSources.Add(new AudioWatch(settings.MicTalk, settings.MeetingAudio, guestCfg.MeetingApps, guestCfg.MicThreshold, guestCfg.AppThreshold));
         foreach (var s in liveSources) AddSource(s);
     }
 

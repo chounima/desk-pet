@@ -1,4 +1,4 @@
-// 使用者設定與統計，存在 user://settings.json
+﻿// 使用者設定與統計，存在 user://settings.json
 // （Windows：%APPDATA%\Godot\app_userdata\Desk Pet\settings.json）
 //
 // 🔒 每日按鍵只存「次數」，不存按了什麼。
@@ -59,6 +59,10 @@ public sealed class Settings
     /// <summary>Discord 授權後拿到的 token（之後不用每次再按授權）</summary>
     public string DiscordAccessToken { get; set; } = "";
     public string DiscordRefreshToken { get; set; } = "";
+    /// <summary>直播模式：麥克風有聲音時主角色動嘴</summary>
+    public bool MicTalk { get; set; }
+    /// <summary>直播模式：會議軟體（Teams、Zoom…）有聲音時出現「通話」客人</summary>
+    public bool MeetingAudio { get; set; }
     /// <summary>同時最多幾個客人（null = data/guests.json 的預設）</summary>
     public int? MaxGuests { get; set; }
     /// <summary>某個人固定用哪個角色 { "twitch:12345" 或名字: 角色 }</summary>

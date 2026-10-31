@@ -4,6 +4,23 @@
   "chatIdleMinutes": 10,
   "chatMaxChars": 40,
   "scale": 0.85,
+  "_meetingApps": "偵測音量的會議軟體 { 程式名稱（工作管理員裡的名稱，不含 .exe）: 顯示名稱 }。瀏覽器（Google Meet）也會播影片聲音，預設不列。",
+  "meetingApps": {
+    "zoom": "Zoom",
+    "ms-teams": "Teams",
+    "teams": "Teams",
+    "line": "LINE",
+    "webex": "Webex",
+    "ciscocollabhost": "Webex",
+    "skype": "Skype",
+    "slack": "Slack",
+    "telegram": "Telegram",
+    "whatsapp": "WhatsApp",
+    "messenger": "Messenger",
+    "googlemeet": "Google Meet"
+  },
+  "micThreshold": 0.06,
+  "appThreshold": 0.02,
   "chatTriggers": [
     { "match": ["!jump", "!跳"], "action": "jump" },
     { "match": ["!dance", "跳舞", "dance"], "action": "dance" },

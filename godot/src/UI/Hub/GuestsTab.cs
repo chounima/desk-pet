@@ -68,6 +68,16 @@ public partial class GuestsTab : ScrollContainer
         body.AddChild(secret);
         body.AddChild(Ui.Text(I18n.T("guests.discordHint"), Ui.Muted, 13, wrap: true));
 
+        // 其他會議軟體：偵測音量
+        body.AddChild(Ui.Heading(I18n.T("guests.audio")));
+        var micTalk = new CheckBox { Text = I18n.T("guests.micTalk"), ButtonPressed = settings.MicTalk, FocusMode = FocusModeEnum.None,
+                                     AutowrapMode = TextServer.AutowrapMode.WordSmart, SizeFlagsHorizontal = SizeFlags.ExpandFill };
+        var meeting = new CheckBox { Text = I18n.T("guests.meetingAudio"), ButtonPressed = settings.MeetingAudio, FocusMode = FocusModeEnum.None,
+                                     AutowrapMode = TextServer.AutowrapMode.WordSmart, SizeFlagsHorizontal = SizeFlags.ExpandFill };
+        body.AddChild(micTalk);
+        body.AddChild(meeting);
+        body.AddChild(Ui.Text(I18n.T("guests.audioHint"), Ui.Muted, 13, wrap: true));
+
         body.AddChild(Ui.Row(
             Ui.Button(I18n.T("guests.apply"), () =>
             {
@@ -76,6 +86,8 @@ public partial class GuestsTab : ScrollContainer
                 if (clientId.Text.Trim() != settings.DiscordClientId) settings.DiscordAccessToken = settings.DiscordRefreshToken = "";
                 settings.DiscordClientId = clientId.Text.Trim();
                 settings.DiscordClientSecret = secret.Text.Trim();
+                settings.MicTalk = micTalk.ButtonPressed;
+                settings.MeetingAudio = meeting.ButtonPressed;
                 settings.Save();
                 LiveChanged?.Invoke();
             }),

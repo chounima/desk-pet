@@ -1,4 +1,4 @@
-// 客人角色的規則（data/guests.json）：人數上限、聊天關鍵字 → 動作、表情反應 → 動作
+﻿// 客人角色的規則（data/guests.json）：人數上限、聊天關鍵字 → 動作、表情反應 → 動作
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -17,6 +17,11 @@ public sealed class GuestConfig
     public int ChatMaxChars { get; set; } = 40;
     /// <summary>客人比主角色小一點，比較分得出來</summary>
     public float Scale { get; set; } = 0.85f;
+    /// <summary>偵測音量的會議軟體 { 程式名稱（不含 .exe）: 顯示名稱 }</summary>
+    public Dictionary<string, string> MeetingApps { get; set; } = new();
+    /// <summary>音量（0～1 峰值）超過多少算在講話：麥克風、會議軟體</summary>
+    public float MicThreshold { get; set; } = 0.06f;
+    public float AppThreshold { get; set; } = 0.02f;
     public List<Trigger> ChatTriggers { get; set; } = new();
     /// <summary>{ emoji: 動作 }，"*" = 其他 emoji</summary>
     public Dictionary<string, string> Reactions { get; set; } = new();

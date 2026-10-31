@@ -13,6 +13,7 @@
 //   --guests=join:a@sera,speak:a,chat:a:嗨,leave:a  假的多人來源（見 ScriptSource）
 //   --twitch=頻道      連線某個 Twitch 聊天室（不存設定）
 //   --discord=ClientID 連線 Discord 本機 RPC（不存設定、不存 token）
+//   --audio=mic+apps   偵測麥克風／會議軟體音量（apps 可以在 data/guests.json 的 meetingApps 加程式）
 using System.Collections.Generic;
 using System.Linq;
 using DeskPet.Audio;

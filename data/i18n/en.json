@@ -281,5 +281,11 @@
  "live.discordDenied": "Authorization denied: {0}",
  "live.discordTokenFailed": "Token exchange failed (check the Client Secret and add http://localhost to OAuth2 Redirects)",
  "live.discordNoChannel": "Connected, not in a voice channel",
- "live.discordCall": "Call"
+ "live.discordCall": "Call",
+ "guests.audio": "Other meeting apps (volume)",
+ "guests.micTalk": "Main pet talks when I speak (mic level)",
+ "guests.meetingAudio": "Show a \"call\" character when a meeting app plays sound (Teams, Zoom, LINE…)",
+ "guests.audioHint": "🔒 Only reads volume levels; nothing is recorded or listened to. It can't tell who is speaking; use Discord above for that. Press \"Apply & reconnect\" after changing.",
+ "live.audioOn": "Watching volume",
+ "live.meetingGuest": "{0} call"
 }

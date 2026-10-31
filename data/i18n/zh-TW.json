@@ -173,5 +173,11 @@
  "live.discordDenied": "授權被拒絕：{0}",
  "live.discordTokenFailed": "換取授權失敗（檢查 Client Secret，OAuth2 Redirects 加上 http://localhost）",
  "live.discordNoChannel": "已連線，目前不在語音頻道",
- "live.discordCall": "通話"
+ "live.discordCall": "通話",
+ "guests.audio": "其他會議軟體（偵測音量）",
+ "guests.micTalk": "我講話時主角色動嘴（麥克風音量）",
+ "guests.meetingAudio": "會議軟體有聲音時出現「通話」角色（Teams、Zoom、LINE…）",
+ "guests.audioHint": "🔒 只讀音量大小，不錄音也不讀內容。分不出是誰在講話；要知道是誰，請用上面的 Discord。改了要按「套用並重新連線」。",
+ "live.audioOn": "偵測音量中",
+ "live.meetingGuest": "{0} 通話"
 }
