@@ -1,4 +1,4 @@
-# Desk Pet
+﻿# Desk Pet
 
 全身角色的桌面寵物：在工作列上走動、坐下、睡覺，你打字時會拿出筆電一起打。
 角色和動作都可以切換。規劃見 [PLAN.md](PLAN.md)。
@@ -49,6 +49,11 @@ Godot 4.7 .NET（C#）。直接讀取專案根目錄的 `art/` 與 `data/`，和
 | 多國語言 | 介面文字用 `I18n.T("key")`，翻譯表 `data/i18n/<語言>.json`（找不到用 zh-TW）；資料名稱（角色、動作、商品、成就、曲子…）載入後用 `char.<id>.name`、`anim.<名稱>`、`item.<id>` 等 key 換成目前語言；台詞與排球台詞放 `data/i18n/<語言>/lines/<角色>.json`、`volley.json`，只蓋過有翻的 key。`--lang=en` 測試用。內容翻譯寫在 `tools/i18n/content_<語言>.py`，改完跑 `python tools/i18n/build.py` |
 | 成就 | 15 個（`data/achievements.json`），依統計數字自動解鎖並送點數；收藏分頁最下面看進度。之後接 Steam 見「接上 Steam」 |
 | 多螢幕 | 設定分頁「螢幕」選要顯示在哪個螢幕（`DesktopWindow.Screen`）；角色不會跨螢幕走 |
+| 多人／直播模式 | Desk Pet 視窗「👥 多人」分頁。外部來源的事件統一成 `PresenceEvent`（出現、離開、講話、靜音、聊天、表情），變成**客人角色**（`Game/Guests/`、`Main.Guests.cs`）：頭上有名牌，講話時動嘴＋名牌綠框，聊天顯示在泡泡，關鍵字／表情做動作（`data/guests.json`）。客人可以點、拖、右鍵（換角色會記住這個人用哪隻）；不影響收集進度、不參加小遊戲。也可以手動加入角色 |
+| Twitch | `Platform/Live/TwitchChat.cs`：匿名（justinfan）連 `wss://irc-ws.chat.twitch.tv` 讀聊天室，不用登入或申請。留言的人出現，太久沒講話離開；滿了換掉最久沒講話的（剛來 15 秒內不換）。測試：`--twitch=頻道` |
+| Discord | `Platform/Live/DiscordRpc.cs`：本機 RPC（named pipe `discord-ipc-N`），讀自己所在語音頻道裡的人、誰在講話（`SPEAKING_START/STOP`）、靜音，跟著換頻道。需要自己建立 Discord 應用程式（Client ID／Secret，OAuth2 Redirects 加 `http://localhost`），第一次會在 Discord 裡授權，token 存在設定。自己講話 → 主角色動嘴。測試：`--discord=ClientID[:token]` |
+| 會議軟體（音量） | `Platform/Live/AudioWatch.cs`：Windows 音量表（直接呼叫 COM vtable，Godot 可卸載組件不能用 ComImport）。麥克風有聲音 → 主角色動嘴；`meetingApps` 裡的程式（Teams、Zoom、LINE…）有聲音 → 「XX 通話」客人動嘴，程式關掉就離開。只讀音量，不錄音。測試：`--audio=mic+apps+powershell` |
+| 假的多人來源 | `--guests=join:alice@sera,speak:alice,chat:alice:哈哈,mute:alice,react:alice:🎉,leave:alice`（每步 1 秒，`Game/Guests/ScriptSource.cs`） |
 | 開機自動啟動 | `HKCU\Software\Microsoft\Windows\CurrentVersion\Run\DeskPet`（`--autostart=on/off` 也可設定） |
 
 ```
@@ -57,8 +62,8 @@ godot/src/
 ├── Content/           資料格式與讀取
 ├── Core/              Skeleton、Animator（移植自 preview/js/core）
 ├── View/              PetView（部件繪製、點擊判定）、SvgTextures、Fx
-├── Game/              Pet、Behavior、Tuning（移植自 preview/js/game）
-├── Platform/          DesktopWindow（視窗、點擊穿透、DPI）、GlobalInput（全域鍵盤）
+├── Game/              Pet、Behavior、Tuning（移植自 preview/js/game）；Guests/ 客人角色
+├── Platform/          DesktopWindow（視窗、點擊穿透、DPI）、GlobalInput（全域鍵盤）；Live/ Twitch、Discord、音量偵測
 └── UI/                Tray（系統匣）
 ```
 
