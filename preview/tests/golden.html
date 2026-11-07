@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>共用測試</title>
+<style>
+  body { font: 14px/1.6 system-ui, sans-serif; margin: 24px; background: #1f2230; color: #e8e8ef; }
+  h1 { font-size: 20px; }
+  .pass { color: #6fdc8c; } .fail { color: #ff7a85; }
+  pre { white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<h1>共用測試 <span id="status">執行中…</span></h1>
+<p>和桌寵（Godot）比對同一份答案 <code>tests/golden/pose.json</code>：角色＋動作＋時間 → 各骨骼世界座標與表情。答案由 Godot 產生（<code>--selftest=golden --update</code>）。</p>
+<pre id="log"></pre>
+<script type="module">
+import { PATHS } from "../js/config.js";
+import { loadCharacters, loadAnimations, formRig } from "../js/core/loader.js";
+import { Skeleton } from "../js/core/skeleton.js";
+import { sampleTrack } from "../js/core/animator.js";
+
+const POS_TOLERANCE = 0.01, ANGLE_TOLERANCE = 0.01;
+const log = text => { document.getElementById("log").textContent += text + "\n"; };
+
+// 和 Godot ClipData.FaceAt 一樣：字串，或 [[時間, 表情], ...]
+function faceAt(clip, t) {
+  const f = clip.face;
+  if (typeof f === "string") return f;
+  if (!Array.isArray(f)) return "idle";
+  let value = f[0][1];
+  for (const [k, name] of f) if (t >= k) value = name;
+  return value;
+}
+
+// 和 Pet.Probe 一樣：直接取樣關鍵影格（不含交叉淡化、視線），再算骨架
+function compute(c, rigs, sets) {
+  const [id, form] = c.char.split("@");
+  const rig = formRig(rigs[id], form);
+  const clips = sets[rig.body ?? "humanoid"] ?? sets.humanoid;
+  const clip = clips[c.clip];
+  // Godot 用 float（32 位元）算 frac × duration，這裡也轉成 32 位元，時間才會一致
+  const t = Math.fround(Math.fround(c.frac) * Math.fround(clip.duration));
+  const pose = {};
+  for (const [ch, keys] of Object.entries(clip.tracks)) pose[ch] = sampleTrack(keys, t) * (c.mods?.[ch] ?? 1);
+  const world = new Skeleton(rig.bones, rig.rootScale ?? 1, rig.trackScale ?? {}).compute(pose);
+  const bones = {};
+  for (const b of rig.bones) {
+    const m = world[b.name];
+    bones[b.name] = [m[4], m[5], Math.atan2(m[1], m[0]) * 180 / Math.PI];
+  }
+  return { face: faceAt(clip, t), bones };
+}
+
+const angleDiff = (a, b) => { const d = Math.abs(a - b) % 360; return d > 180 ? 360 - d : d; };
+
+function* compare(expected, actual) {
+  if (expected.face !== actual.face) yield `表情 ${expected.face} ≠ ${actual.face}`;
+  for (const [name, e] of Object.entries(expected.bones)) {
+    const a = actual.bones[name];
+    if (!a) { yield `少了骨骼 ${name}`; continue; }
+    if (Math.abs(e[0] - a[0]) > POS_TOLERANCE || Math.abs(e[1] - a[1]) > POS_TOLERANCE)
+      yield `${name} 位置 (${e[0]}, ${e[1]}) ≠ (${a[0].toFixed(4)}, ${a[1].toFixed(4)})`;
+    if (angleDiff(e[2], a[2]) > ANGLE_TOLERANCE) yield `${name} 角度 ${e[2]} ≠ ${a[2].toFixed(4)}`;
+  }
+}
+
+const status = document.getElementById("status");
+try {
+  const doc = await (await fetch(`${PATHS.art}/../tests/golden/pose.json`)).json();
+  const { rigs } = await loadCharacters();
+  const bodies = new Set(Object.values(rigs).flatMap(r => [r, ...Object.values(r.forms ?? {}).map(f => f.data)]).map(r => r.body ?? "humanoid"));
+  const { sets } = await loadAnimations(bodies);
+  if (doc.expected.length !== doc.cases.length) throw new Error(`expected 有 ${doc.expected.length} 個，cases 有 ${doc.cases.length} 個（先在 Godot 跑 --update）`);
+  let failures = 0;
+  doc.cases.forEach((c, i) => {
+    for (const problem of compare(doc.expected[i], compute(c, rigs, sets)))
+      if (failures++ < 30) log(`✗ ${c.char} ${c.clip} frac=${c.frac}：${problem}`);
+  });
+  status.textContent = failures ? `✗ ${failures} 個不一致` : `✓ 全部通過（${doc.cases.length} 個案例）`;
+  status.className = failures ? "fail" : "pass";
+  document.title = failures ? `FAIL ${failures}` : "PASS";
+} catch (e) {
+  status.textContent = `✗ ${e.message}`;
+  status.className = "fail";
+  document.title = "ERROR";
+}
+</script>
+</body>
+</html>

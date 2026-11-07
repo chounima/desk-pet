@@ -72,6 +72,14 @@ public partial class Main : Node2D
             GetTree().Quit();
             return;
         }
+        // --selftest=golden [--update]：共用測試（tests/golden/），和網頁版比對同一份答案
+        if (OS.GetCmdlineUserArgs().Contains("--selftest=golden"))
+        {
+            duplicate = true;
+            var code = Tests.Golden.Run(OS.GetCmdlineUserArgs().Contains("--update"));
+            GetTree().Quit(code);
+            return;
+        }
         if (OS.GetCmdlineUserArgs().Contains("--selftest=progress"))
         {
             duplicate = true;
