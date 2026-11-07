@@ -43,6 +43,8 @@ public sealed class FeatureHost
     public required Func<Rect2> Area { get; init; }
     /// <summary>角色某個型態的骨架（依使用者選的型態）</summary>
     public required Func<string, RigData> RigOf { get; init; }
+    /// <summary>換主角色的驅動者（例如半身模式原地不動）；null = 換回桌面漫遊</summary>
+    public required Action<Game.Drivers.IPetDriver?> SetDriver { get; init; }
     /// <summary>主角色目前的顯示大小</summary>
     public required Func<float> PetScale { get; init; }
     /// <summary>--dump：除錯輸出開著</summary>

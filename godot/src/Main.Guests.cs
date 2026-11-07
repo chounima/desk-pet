@@ -275,7 +275,7 @@ public partial class Main
     /// <summary>主角色講話（Discord 裡的自己、麥克風）：在 behavior.Update 之後、pet.Update 之前呼叫</summary>
     void UpdateMainMouth(float dt)
     {
-        var talking = mainMouth.Update(dt, pet, behavior, control, selfSpeaking.Count > 0 && !performing && !presence.Hidden);
+        var talking = mainMouth.Update(dt, driver, control, selfSpeaking.Count > 0 && !performing && !presence.Hidden);
         mainWaves.UpdateWaves(dt, talking, pet, mainMouth.Open);
     }
 

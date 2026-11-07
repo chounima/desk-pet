@@ -7,7 +7,7 @@ using Godot;
 
 namespace DeskPet.Game;
 
-public sealed class Behavior
+public sealed class Behavior : Drivers.IPetDriver
 {
     public enum State { Ground, Held, Air }
 
@@ -40,6 +40,18 @@ public sealed class Behavior
 
     /// <summary>有動靜（例如客人在講話）：重新計算多久沒互動，才不會睡著</summary>
     public void Touch() => lastInput = Now();
+
+    // ---------- IPetDriver ----------
+
+    public string Id => "behavior";
+
+    public bool TryStart(string action)
+    {
+        Force(action);
+        return pet.Action == action || action is "climb" or "hopDown";
+    }
+
+    public bool CanEmote => Current == State.Ground && !Suspended && pet.Action != "sleep";
 
     /// <summary>提醒（例如久坐）：說一句話，站在地上又沒在玩小遊戲時順便做一個動作</summary>
     public void Remind(string lineKey, string action)

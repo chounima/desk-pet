@@ -12,10 +12,10 @@ public sealed class Mouth
     public bool Open => open;
 
     /// <summary>在 Behavior.Update 之後、Pet.Update 之前呼叫；嘴型透過 arbiter 請求（Mouth 管道、講話優先順序）。回傳這一幀有沒有在動嘴</summary>
-    public bool Update(float dt, Pet pet, Behavior behavior, Control.ControlArbiter control, bool talking)
+    public bool Update(float dt, Drivers.IPetDriver driver, Control.ControlArbiter control, bool talking)
     {
-        if (!talking || behavior.Current != Behavior.State.Ground || behavior.Suspended || pet.Action == "sleep") return false;
-        behavior.Touch();       // 講話中不會睡著
+        if (!talking || !driver.CanEmote) return false;
+        driver.Touch();         // 講話中不會睡著
         timer -= dt;
         if (timer <= 0)
         {

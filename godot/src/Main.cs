@@ -49,6 +49,8 @@ public partial class Main : Node2D
 
     Pet pet = null!;
     Behavior behavior = null!;
+    /// <summary>目前驅動主角色的是誰（預設 behavior；SetDriver 換成別的，null = 換回漫遊）</summary>
+    Game.Drivers.IPetDriver driver = null!;
     Fx fx = null!;
     Bubble bubble = null!;
     VolleySession volley = null!;
@@ -149,7 +151,8 @@ public partial class Main : Node2D
         RefreshWindows();
         behavior = new Behavior(pet, Area, new Interactions(InteractionData.Load()),
                                 new Surfaces(Area, () => WindowTracker.Platforms)) { Auto = settings.Auto };
-        control = new Game.Control.ControlArbiter(a => { behavior.Force(a); return pet.Action == a; }, () => Time.GetTicksMsec() / 1000.0);
+        driver = behavior;
+        control = new Game.Control.ControlArbiter(a => driver.TryStart(a), () => Time.GetTicksMsec() / 1000.0);
         fx = new Fx();
         AddChild(fx);
         lines = Lines.Load(ids);
@@ -268,7 +271,7 @@ public partial class Main : Node2D
         while (GlobalInput.TryDequeue(out var kind))
         {
             newKeys++;
-            behavior.OnKey(kind);
+            if (driver == behavior) behavior.OnKey(kind);     // 換成別的驅動者（例如原地不動）時，打字不讓角色拿筆電
         }
         RunTestScript();
         keyCount += newKeys;
@@ -301,7 +304,7 @@ public partial class Main : Node2D
         UpdateDrag();
         pet.Gaze.Target = lookOverride ?? DesktopWindow.CursorInWindow();
         FeaturesBeforeBehavior(dt);
-        behavior.Update(dt);
+        driver.Update(dt);
         UpdateMainMouth(dt);
         FeaturesAfterBehavior(dt);
         if (control.WholeFace() is { } face) pet.FaceOverride = face;     // 講話、功能模組的表情請求
@@ -404,7 +407,8 @@ public partial class Main : Node2D
         if (e is InputEventMouseButton mbe && ZoneAt(mbe.Position) == null && FeaturesHandleInput(e)) return;
         if (e is InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: true } mb)
         {
-            if (ZoneAt(mb.Position) is { } zone) drag = new Drag { Start = mb.Position, Zone = zone };
+            // 主角色交給別的驅動者（例如原地不動）時不能拖
+            if (driver == behavior && ZoneAt(mb.Position) is { } zone) drag = new Drag { Start = mb.Position, Zone = zone };
             else if (GuestAt(mb.Position) is { } g && ZoneOn(g.Pet, mb.Position) is { } gz) drag = new Drag { Start = mb.Position, Zone = gz, Guest = g };
             if (drag != null) dailyLife.OnActivity();
         }

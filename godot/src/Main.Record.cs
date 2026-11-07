@@ -1,4 +1,4 @@
-// --record=資料夾：把某個角色的某個動作錄成一張張 PNG（升級前後比較用，見 tools/record_clip.ps1）
+﻿// --record=資料夾：把某個角色的某個動作錄成一張張 PNG（升級前後比較用，見 tools/record_clip.ps1）
 //
 // 搭配 --char、--form、--action；--record-frames=12。動作從 0 秒開始，每一步固定前進 1/60 秒（不看實際時間），
 // 等距存 N 張，裁切角色附近的範圍。之後有物理時，甩動也會被錄下來（網頁版 preview/record.html 用同樣的方式模擬）。
@@ -23,14 +23,11 @@ public partial class Main
         recordDir = ProjectSettings.GlobalizePath(dir);
         Directory.CreateDirectory(recordDir);
         if (args.TryGetValue("record-frames", out var n)) recordFrames = Mathf.Max(2, int.Parse(n));
-        behavior.Auto = false;
-        behavior.EnterMinigame("record");          // 行為不再改動作，只負責站在地面
         var action = args.GetValueOrDefault("action", "idle");
-        pet.Play(action, true);
-        pet.Animator.Seek(0);
         var area = Area();
-        pet.X = area.GetCenter().X;
         pet.Facing = 1;
+        SetDriver(new Game.Drivers.StillDriver(pet, area.GetCenter().X, area.End.Y, action) { HoldLastFrame = true });   // 原地不動，只做這個動作
+        pet.Animator.Seek(0);
         // N 張平均分布在動作長度內（循環動作的最後一張不會和第一張重複）
         var duration = pet.Animator.Clip.Duration;
         recordStepsPer = Mathf.Max(1, Mathf.RoundToInt(duration / RecordStep / (pet.Animator.Clip.Loop ? recordFrames : recordFrames - 1)));
@@ -68,7 +65,7 @@ public partial class Main
 
     void StepRecord()
     {
-        behavior.Update(RecordStep);
+        driver.Update(RecordStep);
         pet.Update(RecordStep);
     }
 

@@ -54,7 +54,7 @@ public sealed class Guest
         this.lines = lines;
         Pet = new Pet(parent, rig, clips, props, scale);
         Behavior = new Behavior(Pet, area, interactions, new Surfaces(area, () => WindowTracker.Platforms));
-        Control = new ControlArbiter(a => { Behavior.Force(a); return Pet.Action == a || a is "climb" or "hopDown"; }, Now);
+        Control = new ControlArbiter(Behavior.TryStart, Now);
         fx = new Fx();
         parent.AddChild(fx);
         parent.AddChild(waves);
@@ -200,7 +200,7 @@ public sealed class Guest
     // 講話中：動嘴，名牌加綠框（像 Discord 的講話提示）
     void UpdateMouth(float dt)
     {
-        var talking = mouth.Update(dt, Pet, Behavior, Control, Speaking && !Muted && !hidden);
+        var talking = mouth.Update(dt, Behavior, Control, Speaking && !Muted && !hidden);
         if (Control.WholeFace() is { } face) Pet.FaceOverride = face;
         Control.EndFrame();
         waves.UpdateWaves(dt, talking, Pet, mouth.Open);
