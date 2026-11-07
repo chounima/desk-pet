@@ -12,7 +12,8 @@ param(
 )
 $root = Split-Path $PSScriptRoot -Parent
 if (-not $Out) { $Out = Join-Path $root "build\record\$Char$(if ($Form) { "-$Form" })-$Clip" }
-$Out = [System.IO.Path]::GetFullPath((Join-Path (Get-Location) $Out))     # Godot 會從自己的專案資料夾解讀相對路徑
+if (-not [System.IO.Path]::IsPathRooted($Out)) { $Out = Join-Path (Get-Location) $Out }
+$Out = [System.IO.Path]::GetFullPath($Out)     # Godot 會從自己的專案資料夾解讀相對路徑
 New-Item -ItemType Directory -Force $Out | Out-Null
 $godot = Get-ChildItem "$env:LOCALAPPDATA\Microsoft\WinGet\Packages" -Recurse -Filter "Godot_v4*_mono_win64_console.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
 if (-not $godot) { throw "找不到 Godot .NET 版" }

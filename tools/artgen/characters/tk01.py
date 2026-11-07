@@ -17,12 +17,35 @@ L = stroke(OL)
 
 
 def hair_back() -> Part:
-    back = "M-44,-60 C-54,-112 64,-114 56,-60 L58,54 Q6,70 -48,54 Z"
-    strands = "M-36,0 L-40,50 M-16,10 L-18,62 M30,6 L36,56"
+    # 頭上的那一片（下面的長髮是 HAIR_CHAINS 的兩節，會飄）
+    back = "M-44,-60 C-54,-112 64,-114 56,-60 L57,-14 Q6,-6 -46,-14 Z"
+    return Part(f'<path d="{back}" fill="{HAIR_SHADE}" {L}/>', HEAD_BOX)
+
+
+def _hair_segment(top_w: tuple[float, float], bottom_w: tuple[float, float], length: float, tip: bool) -> Part:
+    """長髮的一節：骨骼原點在上緣中間，往下 length；上端多畫一點和上一節重疊（不畫上緣的線，接縫才看不出來）"""
+    (tl, tr), (bl, br) = top_w, bottom_w
+    bottom = f"Q{(bl + br) / 2:.0f},{length + 16:.0f} {bl},{length}" if tip else f"L{bl},{length + 8}"
+    fill = f"M{tl},-8 L{tr},-8 L{br},{length + (0 if tip else 8)} {bottom} Z"
+    sides = f"M{tl},-8 L{bl},{length}" + (f" Q{(bl + br) / 2:.0f},{length + 16:.0f} {br},{length}" if tip else f" M{br},{length + 8}") + f" L{tr},-8"
+    strands = f"M{tl + 14},2 L{bl + 12},{length - 4} M{(tl + tr) / 2 - 8:.0f},6 L{(bl + br) / 2 - 10:.0f},{length - 2} M{tr - 16},4 L{br - 14},{length - 6}"
     return Part(
-        f'<path d="{back}" fill="{HAIR_SHADE}" {L}/>'
+        f'<path d="{fill}" fill="{HAIR_SHADE}"/>'
+        f'<path d="{sides}" fill="none" stroke="{OL}" stroke-width="3" stroke-linejoin="round"/>'
         f'<path d="{strands}" fill="none" stroke="{OL}" stroke-width="1.5" opacity="0.35"/>',
-        HEAD_BOX)
+        (min(tl, bl) - 4, -10, max(tr, br) + 4, length + 20))
+
+
+# 後面的長髮：掛在頭上 (6, -18)，兩節各長 36、40（Q 版單位），走路、停下、被拎著時會甩
+HAIR_CHAINS = {
+    "hairB": {
+        "anchor": (6, -18), "z": 1.05,
+        "segments": [
+            (36, lambda: _hair_segment((-51, 51), (-53, 52), 36, tip=False)),
+            (40, lambda: _hair_segment((-53, 52), (-54, 52), 40, tip=True)),
+        ],
+    },
+}
 
 
 def head() -> Part:

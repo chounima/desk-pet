@@ -158,6 +158,18 @@
       "parent": "legNear_l",
       "x": 0,
       "y": 42
+    },
+    {
+      "name": "hairB_1",
+      "parent": "head",
+      "x": 6,
+      "y": -18
+    },
+    {
+      "name": "hairB_2",
+      "parent": "hairB_1",
+      "x": 0,
+      "y": 36
     }
   ],
   "slots": [
@@ -171,6 +183,32 @@
         -170,
         90,
         110
+      ],
+      "far": false
+    },
+    {
+      "name": "hairB_1",
+      "bone": "hairB_1",
+      "z": 1.051,
+      "file": "parts/hairB_1.svg",
+      "box": [
+        -57,
+        -10,
+        56,
+        56
+      ],
+      "far": false
+    },
+    {
+      "name": "hairB_2",
+      "bone": "hairB_2",
+      "z": 1.052,
+      "file": "parts/hairB_2.svg",
+      "box": [
+        -58,
+        -10,
+        56,
+        60
       ],
       "far": false
     },
@@ -403,5 +441,27 @@
       ],
       "far": false
     }
-  ]
+  ],
+  "physics": {
+    "hairB_1": {
+      "stiffness": 220,
+      "damping": 9,
+      "gravity": 0,
+      "inertia": 0.8,
+      "drag": 7,
+      "limit": 16,
+      "axis": 90,
+      "length": 36
+    },
+    "hairB_2": {
+      "stiffness": 220,
+      "damping": 9,
+      "gravity": 0,
+      "inertia": 0.8,
+      "drag": 7,
+      "limit": 16,
+      "axis": 90,
+      "length": 40
+    }
+  }
 }

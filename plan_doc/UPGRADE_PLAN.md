@@ -200,8 +200,8 @@ data/animations/<動作>.json                                  共用（現在�
 
 | 步驟 | Godot | 網頁 | 內容 |
 |---|---|---|---|
-| 3a | `tools/artgen/rig.py` | — | **頭髮骨鏈**（選配）：`hairF_1..3`、`hairS_1..3`、`hairB_1..3`，每節一個插槽 |
-| 3b | `tools/artgen/characters/tk01.py`、`sera.py` | — | TK-01 長髮、Sera 耳朵拆成骨鏈並開物理 |
+| 3a ✅ | `tools/artgen/__init__.py` | — | **頭髮骨鏈**（選配）：角色模組寫 `HAIR_CHAINS = {"hairB": {anchor, z, segments: [(長度, 部件)…], physics}}`，自動產生 `hairB_1..n` 骨骼、插槽、物理（每節掛在上一節尾端，預設 `HAIR_PHYSICS`）。不用改 Godot／網頁，沿用次級物理 |
+| 3b ✅ | `tools/artgen/characters/tk01.py` | — | TK-01 後面長髮拆成頭上一片＋兩節骨鏈（走路、急停會甩）；Sera 耳朵先不拆（小、短，收益低） |
 | 3c / 3d | `View/PetView.cs` | `view/renderer.js` | **轉頭視差**：頭部圖層設 `depth`，轉頭時依深度位移不同量 |
 | 3e | `tools/artgen/faces.py` | — | **分層表情**：臉拆成 `eyes`（眼白／瞳孔分開）、`brows`、`mouth`。嘴型至少有「閉、半開、全開」，完整版加母音「あいうえお」；眼睛有「睜、半閉、閉」。舊的整張臉照樣可用 |
 | 3f / 3g | `View/PetView.cs` | `view/renderer.js` | 分層表情的繪製與組合；**瞳孔可以在眼白範圍內位移**（眼睛跟游標用） |

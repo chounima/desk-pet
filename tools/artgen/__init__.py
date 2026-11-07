@@ -28,6 +28,27 @@ PHYSICS_DEFAULTS = {
     "tail": {"stiffness": 90, "damping": 6, "gravity": 0, "inertia": 1.3, "drag": 18, "limit": 40},
     "cape": {"stiffness": 140, "damping": 9, "gravity": 0, "inertia": 1, "drag": 15, "limit": 25},
 }
+# 頭髮骨鏈每一節的預設物理（往下延伸；後面的節跟著前面的節轉，甩起來是連續的）
+HAIR_PHYSICS = {"stiffness": 220, "damping": 9, "gravity": 0, "inertia": 0.8, "drag": 7, "limit": 16, "axis": 90}
+
+
+def hair_chains(src, out: Path) -> tuple[list, list, dict]:
+    """頭髮骨鏈（選配）：HAIR_CHAINS = { "hairB": { "anchor": (x, y), "z": 1.05, "segments": [(長度, 部件函式), …], "physics": {…} } }
+    第 1 節掛在頭上的 anchor，下一節掛在上一節的尾端（往下 長度）。回傳 (骨骼, 插槽, 物理)。
+    每一節的部件圖以自己的骨骼為原點、往下畫，上端要和上一節重疊一點。"""
+    bones, slots, physics = [], [], {}
+    for chain, spec in getattr(src, "HAIR_CHAINS", {}).items():
+        parent, (x, y) = "head", spec["anchor"]
+        for i, (length, fn) in enumerate(spec["segments"], 1):
+            bone = f"{chain}_{i}"
+            part = fn()
+            _write(out / "parts" / f"{bone}.svg", part.to_svg())
+            bones.append((bone, parent, x, y))
+            slots.append({"name": bone, "bone": bone, "z": round(spec.get("z", 1.05) + i * 0.001, 3),
+                          "file": f"parts/{bone}.svg", "box": part.box, "far": False})
+            physics[bone] = {**HAIR_PHYSICS, "length": length, **spec.get("physics", {})}
+            parent, (x, y) = bone, (0, length)
+    return bones, slots, physics
 
 
 def default_physics(slots: list[dict], overrides: dict) -> dict:
@@ -75,6 +96,8 @@ def build_character(char, out: Path, form=None) -> dict:
         if art in alts:
             entry["alt"] = alts[art]
         slots.append(entry)
+    chain_bones, chain_slots, chain_physics = hair_chains(src, out)
+    slots += chain_slots
     face_name, face_bone, face_z = rig.FACE_SLOT
     slots.append({
         "name": face_name, "bone": face_bone, "z": face_z,
@@ -96,10 +119,10 @@ def build_character(char, out: Path, form=None) -> dict:
         "anchors": {name: {"bone": b, "x": round(x, 1), "y": round(y, 1), "scale": round(sc, 3)}
                     for name, (b, x, y, sc) in {**rig.default_anchors(prop, getattr(src, "HEAD_TRANSFORM", (1, 0))),
                                                 **getattr(src, "ANCHORS", {})}.items()},
-        "bones": [{"name": n, "parent": p, "x": x, "y": y} for n, p, x, y in rig.bones(prop)],
+        "bones": [{"name": n, "parent": p, "x": x, "y": y} for n, p, x, y in rig.bones(prop) + chain_bones],
         "slots": sorted(slots, key=lambda s: s["z"]),
     }
-    physics = default_physics(slots, getattr(src, "PHYSICS", {}))
+    physics = {**default_physics(slots, getattr(src, "PHYSICS", {})), **chain_physics}
     if physics:
         data["physics"] = physics
     if hasattr(src, "VOLLEY"):
