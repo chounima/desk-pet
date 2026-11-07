@@ -91,12 +91,7 @@ public sealed class ControlArbiter
     }
 
     /// <summary>嘴巴管道的值（closed、half、open、母音）→ 只有整張臉時用哪張臉</summary>
-    public static string AsWholeFace(string mouth) => mouth switch
-    {
-        "closed" => "happy",
-        "half" or "open" or "a" or "i" or "u" or "e" or "o" => "surprised",
-        _ => mouth,
-    };
+    public static string AsWholeFace(string mouth) => Content.FaceConfig.Load().Talk.WholeFace.GetValueOrDefault(mouth, mouth);   // data/face.json
 
     /// <summary>每幀最後呼叫：清掉「只在這一幀有效」的請求</summary>
     public void EndFrame()

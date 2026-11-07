@@ -318,7 +318,7 @@ def validate(root: Path) -> Report:
     check_character_clips(report, root, sch, bodies, {c.split("/")[0]: b for c, b in chars if "/" not in c})
     check_packages(report, root, sch, {c.split("/")[0] for c, _ in chars})
     check_tracks_and_props(report, root, bones | {"root"})
-    for name in ("tuning", "guests", "vtuber"):
+    for name in ("tuning", "guests", "vtuber", "face"):
         if (root / "data" / f"{name}.json").exists():
             check_schema(report, root, sch[name], root / "data" / f"{name}.json")
     check_refs(report, root, chars, bodies)

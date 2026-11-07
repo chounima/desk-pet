@@ -1,0 +1,80 @@
+{
+  "_說明": "表情、眨眼、視線、講話動嘴的參數（桌寵與網頁讀同一份）。改完重新啟動桌寵（網頁重新整理）就會用新的值。說明見 docs/CUSTOMIZE.md。",
+  "blink": {
+    "_說明": "眨眼：每隔 intervalMin～intervalMax 秒眨一次，閉眼 duration 秒。分層臉睜著眼就會眨；只有整張臉的角色只在 wholeFaceExpressions 這些表情時眨",
+    "intervalMin": 2.5,
+    "intervalMax": 5.5,
+    "duration": 0.12,
+    "wholeFaceExpressions": [
+      "idle",
+      "focus"
+    ]
+  },
+  "gaze": {
+    "_說明": "視線：眼睛（瞳孔）最快、頭其次、身體最慢。游標離臉 range px 以內才看（半身模式不限）；lookDistance px 算看到底；stillLimit 秒游標沒動就看回前方；每隔 glanceMin～glanceMax 秒瞄開 glanceTimeMin～glanceTimeMax 秒",
+    "headFollow": 6,
+    "eyeFollow": 12,
+    "bodyFollow": 2,
+    "headRatio": 0.4,
+    "headMin": -12,
+    "headMax": 15,
+    "bodyRatio": 0.3,
+    "faceShiftX": 3,
+    "faceShiftY": 2.5,
+    "range": 900,
+    "lookDistance": 300,
+    "stillLimit": 8,
+    "glanceMin": 6,
+    "glanceMax": 14,
+    "glanceTimeMin": 0.5,
+    "glanceTimeMax": 1.0,
+    "lookActions": [
+      "idle",
+      "sit",
+      "sitEdge",
+      "think",
+      "wave",
+      "peace",
+      "cheer"
+    ]
+  },
+  "talk": {
+    "_說明": "沒有聲音分析時的動嘴（Discord 講話、冒台詞泡泡）：張嘴 openMin～openMax 秒、閉嘴 closedMin～closedMax 秒交替，張嘴時 halfChance 的機率是半開。wholeFace = 只有整張臉的角色，嘴型要換成哪張臉",
+    "openMin": 0.1,
+    "openMax": 0.22,
+    "closedMin": 0.08,
+    "closedMax": 0.18,
+    "halfChance": 0.4,
+    "wholeFace": {
+      "closed": "happy",
+      "half": "surprised",
+      "open": "surprised",
+      "a": "surprised",
+      "i": "surprised",
+      "u": "surprised",
+      "e": "surprised",
+      "o": "surprised"
+    }
+  },
+  "expressions": {
+    "_說明": "分層臉的表情調整，蓋過角色原本的設定（art/characters/<id>/rig.json 的 face.expressions）。\"*\" = 所有角色，或寫角色 id。每個表情：{ 圖層: 圖名 }（eyes、mouth、blush、extras…，空字串 = 這層不顯示），alpha = { 圖層: 不透明度 }。可以新增自己的表情名（例如 wink），快捷鍵和規則就能用。可用的圖名見 rig.json 的 face.layers",
+    "*": {},
+    "_範例": {
+      "tk01": {
+        "happy": {
+          "mouth": "va",
+          "alpha": {
+            "blush": 1
+          }
+        },
+        "wink": {
+          "eyes": "arc",
+          "mouth": "smile",
+          "alpha": {
+            "blush": 0.5
+          }
+        }
+      }
+    }
+  }
+}

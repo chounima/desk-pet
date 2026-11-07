@@ -2,7 +2,7 @@
 import { Animator, sampleTrack } from "../core/animator.js";
 import { Spring } from "../core/spring.js";
 import { Overlay } from "../core/overlay.js";
-import { MOTION } from "../config.js";
+import { FACE, MOTION } from "../config.js";
 import { apply } from "../core/math.js";
 import { Skeleton } from "../core/skeleton.js";
 import { PetView } from "../view/renderer.js";
@@ -87,7 +87,7 @@ export class Pet {
       this.view.setFaceLayers(faceLayers(this.rig.face, { expression: face, blink, mouth: this.mouthShape, look: this.look,
         eyes: own ? this.animator.eyes : null, mouthArt: own ? this.animator.mouth : null }));
     }
-    else this.view.setFace(blink && (face === "idle" || face === "focus") ? "blink" : face);
+    else this.view.setFace(blink && FACE.blink.wholeFaceExpressions.includes(face) ? "blink" : face);
     this.view.setProps(this.animator.props);
     this.view.setAlt(this.animator.alt);
     this.view.draw(this.world, this.x, this.y, this.facing, this.scale);
@@ -98,8 +98,9 @@ export class Pet {
     const face = this.faceOverride ?? this.animator.face;
     this.blinkTimer -= dt;
     if (this.blinkTimer <= 0) {
-      this.blinkLeft = 0.12;
-      this.blinkTimer = 2.5 + Math.random() * 3;
+      const b = FACE.blink;          // data/face.json
+      this.blinkLeft = b.duration;
+      this.blinkTimer = b.intervalMin + Math.random() * (b.intervalMax - b.intervalMin);
     }
     const blink = this.blinkLeft > 0;
     if (blink) this.blinkLeft -= dt;
@@ -123,7 +124,7 @@ export class Pet {
   }
 
   // 視線：看著畫面上的點（null = 不看），分層臉的瞳孔慢慢轉過去（和桌寵 Gaze 一樣，離臉 range（預設 300 px）算看到底）
-  lookAt(point, dt, range = 300) {
+  lookAt(point, dt, range = FACE.gaze.lookDistance) {
     let target = [0, 0];
     if (point) {
       const [hx, hy] = this.rig.headTop ?? [6, -110];
@@ -131,11 +132,14 @@ export class Pet {
       const clamp = v => Math.max(-1, Math.min(1, v));
       target = [clamp((point.x - this.x - px * this.facing * this.scale) * this.facing / range), clamp((point.y - this.y - py * this.scale) / range)];
     }
-    const [lx, ly] = this.look ?? [0, 0], k = Math.min(1, dt * 12);
+    const g = FACE.gaze;
+    const [lx, ly] = this.look ?? [0, 0], k = Math.min(1, dt * g.eyeFollow);
     this.look = [lx + (target[0] - lx) * k, ly + (target[1] - ly) * k];
     // 臉往視線方向移一點（頭畫得越小移越少），頭部圖層依 depth 跟著移：轉頭視差
     const h = -(this.rig.headTop ?? [6, -110])[1] / 110;
-    this.view.setFaceOffset([this.look[0] * 3 * h, this.look[1] * 2.5 * h]);
+    const [bx, by] = this.lookBias ?? [0, 0];      // 角度在兩個視角之間時，臉往那邊偏
+    const clamp1 = v => Math.max(-1, Math.min(1, v));
+    this.view.setFaceOffset([clamp1(this.look[0] + bx) * g.faceShiftX * h, clamp1(this.look[1] + by) * g.faceShiftY * h]);
   }
 
   // 頭頂在螢幕上的位置（特效錨點）

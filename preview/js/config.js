@@ -22,6 +22,9 @@ export const AUTO = Object.fromEntries(Object.entries(tuning.auto).filter(([, v]
 // 疊加層（呼吸、重心晃動）：data/motion.json（桌寵讀同一份）
 export const MOTION = await (await fetch(`${PATHS.data}/motion.json`)).json();
 
+// 表情、眨眼、視線、動嘴的參數：data/face.json（桌寵讀同一份，說明見 docs/CUSTOMIZE.md）
+export const FACE = await (await fetch(`${PATHS.data}/face.json`)).json();
+
 // 排球對打小遊戲（長度單位：螢幕 px；reach / hitHeight 為 Q 版單位，會依角色身材放大）
 export const VOLLEY = omitNotes(tuning.volley);
 

@@ -19,8 +19,9 @@ public sealed class Mouth
         timer -= dt;
         if (timer <= 0)
         {
-            shape = shape != "closed" ? "closed" : GD.Randf() < 0.4f ? "half" : "open";
-            timer = shape != "closed" ? 0.1f + GD.Randf() * 0.12f : 0.08f + GD.Randf() * 0.1f;
+            var t = Content.FaceConfig.Load().Talk;      // data/face.json
+            shape = shape != "closed" ? "closed" : GD.Randf() < t.HalfChance ? "half" : "open";
+            timer = shape != "closed" ? (float)GD.RandRange(t.OpenMin, t.OpenMax) : (float)GD.RandRange(t.ClosedMin, t.ClosedMax);
         }
         control.Request("talk", Control.Channel.Mouth, shape, Control.Priority.Talking);
         return true;

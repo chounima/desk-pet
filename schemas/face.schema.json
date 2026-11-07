@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "data/face.json：表情、眨眼、視線、動嘴的參數",
+  "type": "object",
+  "properties": {
+    "blink": {
+      "type": "object",
+      "properties": {
+        "intervalMin": {
+          "type": "number"
+        },
+        "intervalMax": {
+          "type": "number"
+        },
+        "duration": {
+          "type": "number"
+        },
+        "wholeFaceExpressions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "gaze": {
+      "type": "object",
+      "properties": {
+        "headFollow": {
+          "type": "number"
+        },
+        "eyeFollow": {
+          "type": "number"
+        },
+        "bodyFollow": {
+          "type": "number"
+        },
+        "headRatio": {
+          "type": "number"
+        },
+        "headMin": {
+          "type": "number"
+        },
+        "headMax": {
+          "type": "number"
+        },
+        "bodyRatio": {
+          "type": "number"
+        },
+        "faceShiftX": {
+          "type": "number"
+        },
+        "faceShiftY": {
+          "type": "number"
+        },
+        "range": {
+          "type": "number"
+        },
+        "lookDistance": {
+          "type": "number"
+        },
+        "stillLimit": {
+          "type": "number"
+        },
+        "glanceMin": {
+          "type": "number"
+        },
+        "glanceMax": {
+          "type": "number"
+        },
+        "glanceTimeMin": {
+          "type": "number"
+        },
+        "glanceTimeMax": {
+          "type": "number"
+        },
+        "lookActions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "talk": {
+      "type": "object",
+      "properties": {
+        "openMin": {
+          "type": "number"
+        },
+        "openMax": {
+          "type": "number"
+        },
+        "closedMin": {
+          "type": "number"
+        },
+        "closedMax": {
+          "type": "number"
+        },
+        "halfChance": {
+          "type": "number"
+        },
+        "wholeFace": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "expressions": {
+      "type": "object",
+      "description": "{ \"*\" 或角色 id: { 表情: { 圖層: 圖名, alpha: { 圖層: 不透明度 } } } }；底線開頭的 key 是說明、範例，不會用",
+      "patternProperties": {
+        "^[^_]": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "alpha": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "number"
+                }
+              }
+            },
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

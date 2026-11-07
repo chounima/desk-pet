@@ -8,19 +8,18 @@ namespace DeskPet.Game;
 
 public sealed class Gaze
 {
-    /// <summary>會看游標的動作（走路、睡覺、被抓等不看）</summary>
-    public static readonly HashSet<string> Lookable = new() { "idle", "sit", "sitEdge", "think", "wave", "peace", "cheer" };
+    static Content.FaceConfig.GazeConfig Cfg => Content.FaceConfig.Load().Gaze;     // data/face.json
 
-    const float Follow = 6;           // 轉頭的平滑速度
-    const float BodyFollow = 2;       // 身體跟著轉的平滑速度（比頭慢）
-    const float StillLimit = 8;       // 游標幾秒沒動就看回前方
+    /// <summary>會看游標的動作（走路、睡覺、被抓等不看）</summary>
+    public static HashSet<string> Lookable => Cfg.LookActions;
 
     float head, body, still, glanceIn = 6, glanceLeft;
     Vector2 face, look, glance;
     Vector2? lastTarget;
+    float? range;
 
-    /// <summary>游標離臉多遠以內才看（px，再乘 UiScale）；半身模式設很大，螢幕上哪裡都看得到</summary>
-    public float Range { get; set; } = 900;
+    /// <summary>游標離臉多遠以內才看（px，再乘 UiScale）；半身模式設很大，螢幕上哪裡都看得到。沒設 = data/face.json 的 range</summary>
+    public float Range { get => range ?? Cfg.Range; set => range = value; }
 
     /// <summary>要看的位置（視窗座標）；null = 不看</summary>
     public Vector2? Target { get; set; }
@@ -37,47 +36,52 @@ public sealed class Gaze
     /// <summary>視線方向 -1～1（右 = 前方、下為正），分層臉的瞳孔用</summary>
     public Vector2 Look => look;
 
+    /// <summary>額外的轉向（-1～1，半身模式的角度：在兩個視角之間時臉往那邊偏）</summary>
+    public Vector2 Bias { get; set; }
+
     public void Update(Pet pet, float dt)
     {
+        var c = Cfg;
         var u = DesktopWindow.UiScale;
         float targetHead = 0;
         Vector2 targetFace = Vector2.Zero, targetLook = Vector2.Zero;
+        var k = -pet.Rig.HeadTop[1] / 110f;     // 頭畫得越小（正常頭身），臉移動越少
 
         // 游標很久沒動：看回前方
         if (Target is { } moved && lastTarget is { } last && moved.DistanceTo(last) < 2 * u) still += dt;
         else still = 0;
         lastTarget = Target;
 
-        if (Target is { } t && still < StillLimit && Lookable.Contains(pet.Action))
+        if (Target is { } t && still < c.StillLimit && Lookable.Contains(pet.Action))
         {
             var eye = pet.FaceCenter();
             var dx = (t.X - eye.X) * pet.Facing;      // 正 = 在前方
             var dy = t.Y - eye.Y;                      // 正 = 在下方
             if (dx > -40 * u && new Vector2(dx, dy).Length() < Range * u)
             {
-                targetHead = Mathf.Clamp(Mathf.RadToDeg(Mathf.Atan2(dy, Mathf.Max(Mathf.Abs(dx), 80 * u))) * 0.4f, -12, 15);
-                var k = -pet.Rig.HeadTop[1] / 110f;     // 頭畫得越小（正常頭身），臉移動越少
-                targetLook = new Vector2(Mathf.Clamp(dx / (300 * u), -1, 1), Mathf.Clamp(dy / (300 * u), -1, 1));
-                targetFace = new Vector2(targetLook.X * 3 * k, targetLook.Y * 2.5f * k);
+                targetHead = Mathf.Clamp(Mathf.RadToDeg(Mathf.Atan2(dy, Mathf.Max(Mathf.Abs(dx), 80 * u))) * c.HeadRatio, c.HeadMin, c.HeadMax);
+                targetLook = new Vector2(Mathf.Clamp(dx / (c.LookDistance * u), -1, 1), Mathf.Clamp(dy / (c.LookDistance * u), -1, 1));
             }
             // 偶爾瞄別的地方一下：眼睛為主，頭只動一點
             if ((glanceIn -= dt) <= 0 && glanceLeft <= 0)
             {
-                glanceLeft = 0.5f + GD.Randf() * 0.5f;
+                glanceLeft = (float)GD.RandRange(c.GlanceTimeMin, c.GlanceTimeMax);
                 glance = new Vector2(GD.Randf() < 0.5f ? -0.8f : 0.8f, GD.Randf() - 0.5f);
             }
             if (glanceLeft > 0)
             {
                 targetLook = glance;
                 targetHead *= 0.5f;
-                if ((glanceLeft -= dt) <= 0) glanceIn = 6 + GD.Randf() * 8;
+                if ((glanceLeft -= dt) <= 0) glanceIn = (float)GD.RandRange(c.GlanceMin, c.GlanceMax);
             }
         }
+        var biased = (targetLook + Bias).Clamp(new Vector2(-1, -1), new Vector2(1, 1));
+        targetFace = new Vector2(biased.X * c.FaceShiftX * k, biased.Y * c.FaceShiftY * k);
 
-        var s = Mathf.Min(1, dt * Follow);
+        var s = Mathf.Min(1, dt * c.HeadFollow);
         head += (targetHead - head) * s;
         face += (targetFace - face) * s;
-        look += (targetLook - look) * Mathf.Min(1, dt * Follow * 2);      // 眼睛比頭快
-        body += (targetHead * 0.3f - body) * Mathf.Min(1, dt * BodyFollow);
+        look += (targetLook - look) * Mathf.Min(1, dt * c.EyeFollow);      // 眼睛比頭快
+        body += (targetHead * c.BodyRatio - body) * Mathf.Min(1, dt * c.BodyFollow);
     }
 }

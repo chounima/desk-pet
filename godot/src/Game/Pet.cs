@@ -129,7 +129,7 @@ public sealed class Pet
                 Gaze.Look.X, Gaze.Look.Y, own ? Animator.Mouth : null)));
         }
         else
-            View.SetFace(blink && face is "idle" or "focus" ? "blink" : face);
+            View.SetFace(blink && FaceConfig.Load().Blink.WholeFaceExpressions.Contains(face) ? "blink" : face);
         View.SetFaceOffset(Gaze.FaceOffset);
         View.SetProps(Animator.Props);
         View.SetAlt(Animator.Alt);
@@ -143,8 +143,9 @@ public sealed class Pet
         blinkTimer -= dt;
         if (blinkTimer <= 0)
         {
-            blinkLeft = 0.12f;
-            blinkTimer = 2.5f + GD.Randf() * 3;
+            var b = FaceConfig.Load().Blink;          // data/face.json
+            blinkLeft = b.Duration;
+            blinkTimer = b.IntervalMin + GD.Randf() * (b.IntervalMax - b.IntervalMin);
         }
         var blink = blinkLeft > 0;
         if (blink) blinkLeft -= dt;

@@ -1,5 +1,5 @@
 // 讀取角色骨架、動作、道具資料
-import { PATHS } from "../config.js";
+import { FACE, PATHS } from "../config.js";
 
 async function getJSON(url) {
   const res = await fetch(url);
@@ -27,7 +27,30 @@ export async function loadCharacters() {
   }));
   await applyPhysicsOverrides(rigs);
   await loadPackages(ids, rigs);
+  // data/face.json 的表情調整（部件包之後：部件包畫了整張臉時就沒有分層臉）
+  for (const [id, rig] of Object.entries(rigs))
+    for (const r of new Set([rig, ...Object.values(rig.forms ?? {}).map(f => f.data)])) applyFaceOverrides(r, id);
   return { ids, rigs };
+}
+
+// 把 data/face.json 的表情調整套到分層臉上（"*" 先、角色 id 後）；新的表情名從 idle 複製一份再改。和桌寵 FaceConfig.Apply 一樣
+export function applyFaceOverrides(rig, id) {
+  const face = rig?.face, all = FACE.expressions;
+  if (!face || !all) return;
+  for (const scope of ["*", id]) {
+    for (const [expr, spec] of Object.entries(all[scope] ?? {})) {
+      if (expr.startsWith("_") || typeof spec !== "object") continue;
+      const layers = (face.expressions[expr] ??= { ...(face.expressions.idle ?? {}) });
+      for (const [layer, value] of Object.entries(spec)) {
+        if (layer === "alpha") {
+          face.alpha ??= {};
+          Object.assign((face.alpha[expr] ??= { ...(face.alpha.idle ?? {}) }), value);
+        } else if (value) layers[layer] = value;
+        else delete layers[layer];
+      }
+      if (face.alpha && !face.alpha[expr] && face.alpha.idle) face.alpha[expr] = { ...face.alpha.idle };
+    }
+  }
 }
 
 // data/physics.json：{ 角色 或 角色@型態: { 骨骼: 參數 } }，蓋過 gen_art 產生的物理參數（動作編輯器調的；規則同桌寵）

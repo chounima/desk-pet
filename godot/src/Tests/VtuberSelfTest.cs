@@ -83,6 +83,17 @@ public static class VtuberSelfTest
         GD.Print($"[vtuber] 聲音分析每幀 {perFrame:0.000} ms");
         Check(perFrame < 1, $"聲音分析每幀 {perFrame:0.000} ms（要 < 1）");
 
+        // 9. data/face.json 的表情調整：改既有表情、新增表情（從 idle 複製）、拿掉圖層
+        var fc = System.Text.Json.JsonSerializer.Deserialize<FaceConfig>(
+            "{\"expressions\":{\"tk01\":{\"happy\":{\"mouth\":\"va\",\"alpha\":{\"blush\":1}},\"wink\":{\"eyes\":\"arc\",\"extras\":\"\"}}}}",
+            new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true })!;
+        var tk = ContentLoader.LoadCharacters().rigs["tk01"];
+        fc.Apply(tk, "tk01");
+        var faceRig = tk.Face!;
+        Check(faceRig.Expressions["happy"]["mouth"] == "va" && faceRig.Alpha!["happy"]["blush"] == 1, "改既有表情的嘴與腮紅");
+        Check(faceRig.Expressions["wink"]["eyes"] == "arc" && faceRig.Expressions["wink"]["mouth"] == faceRig.Expressions["idle"]["mouth"]
+              && !faceRig.Expressions["wink"].ContainsKey("extras") && faceRig.Alpha!.ContainsKey("wink"), "新表情從 idle 複製、空字串拿掉圖層");
+
         foreach (var f in failures) GD.Print($"[vtuber] ✗ {f}");
         GD.Print(failures.Count == 0 ? "[vtuber] 全部通過" : $"[vtuber] {failures.Count} 個失敗");
         return failures.Count == 0 ? 0 : 1;

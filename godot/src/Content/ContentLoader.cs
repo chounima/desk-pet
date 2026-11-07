@@ -62,6 +62,11 @@ public static class ContentLoader
         }
         ApplyPhysicsOverrides(rigs);
         LoadPackages(ids, rigs);
+        // data/face.json 的表情調整（套在部件包之後：部件包畫了整張臉時就沒有分層臉）
+        var faceConfig = FaceConfig.Load();
+        foreach (var (id, rig) in rigs)
+            foreach (var r in (rig.Forms?.Values.Select(f => f.Data).OfType<RigData>() ?? Enumerable.Empty<RigData>()).Append(rig).Distinct())
+                faceConfig.Apply(r, id);
         return (ids, rigs);
     }
 
