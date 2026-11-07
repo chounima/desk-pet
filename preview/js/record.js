@@ -20,12 +20,16 @@ const frames = Math.max(2, Number(q.get("frames") ?? 12));
 const cols = Number(q.get("cols") ?? 6);
 // 和 Godot 一樣：N 張平均分布在動作長度內（循環動作的最後一張不和第一張重複）
 const stepsPer = Math.max(1, Math.round(clip.duration / STEP / (clip.loop ? frames : frames - 1)));
+// 桌寵的速度是畫面像素（4K 300% 時再乘 3）；這裡依格子裡角色的縮放換算成一樣的 Q 版單位速度
+const vx = Number(q.get("vx") ?? 0) * (scaleOf() / TUNING.scale);
+const moveTime = stepsPer * STEP * (frames - 1) / 2;
 $("info").textContent = `${rig.name} ${clip.label} ${clipName}：${clip.duration}s，${frames} 張，每 ${stepsPer} 步一張`;
 
 const svg = $("grid");
 svg.setAttribute("width", cols * CELL.w);
 svg.setAttribute("height", Math.ceil(frames / cols) * CELL.h);
-const scale = CELL.scale * Math.min(1, CELL.fitHeight / (rig.height ?? CELL.fitHeight));
+function scaleOf() { return CELL.scale * Math.min(1, CELL.fitHeight / (rig.height ?? CELL.fitHeight)); }
+const scale = scaleOf();
 
 for (let k = 0; k < frames; k++) {
   const cx = (k % cols) * CELL.w, cy = Math.floor(k / cols) * CELL.h;
@@ -40,13 +44,23 @@ for (let k = 0; k < frames; k++) {
   layer.append(bg, label);
   svg.append(layer);
 
-  // 每一格各自從 0 秒模擬到第 k 張的時間（之後有物理時，甩動才會一樣）
+  // 每一格各自從 0 秒模擬到第 k 張的時間（有物理時，甩動才會一樣）
+  // &vx=300：前半段以這個速度平移（像素/秒，和桌寵的 --record-vx 一樣、乘上縮放比例），之後突然停下；畫的時候平移量扣掉，角色留在格子中間
   const pet = new Pet({ layer, rig, clipSets: sets, props, scale, crossfade: TUNING.crossfade });
-  pet.x = cx + CELL.w / 2;
+  const home = cx + CELL.w / 2;
+  let shift = -vx * moveTime / 2;
+  pet.x = home + shift;
   pet.y = cy + CELL.ground;
   pet.play(clipName, true);
   pet.animator.seek(0);
   pet.update(0);
-  for (let s = 0; s < k * stepsPer; s++) pet.update(STEP);
+  for (let s = 0, t = 0; s < k * stepsPer; s++) {
+    t += STEP;
+    if (t <= moveTime) shift += vx * STEP;
+    pet.x = home + shift;
+    pet.update(STEP);
+  }
+  pet.x = home;
+  pet.view.draw(pet.world, pet.x, pet.y, pet.facing, pet.scale);
 }
 document.title = "DONE";

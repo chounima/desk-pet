@@ -416,5 +416,16 @@
       ],
       "far": false
     }
-  ]
+  ],
+  "physics": {
+    "tail": {
+      "stiffness": 90,
+      "damping": 6,
+      "gravity": 0,
+      "inertia": 1.3,
+      "drag": 30,
+      "limit": 40,
+      "length": 114
+    }
+  }
 }

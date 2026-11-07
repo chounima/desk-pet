@@ -11,7 +11,7 @@
 //   --zones            印出身體各點判定成哪個部位
 //   --volley / --volley-bot  直接開始排球對打（bot = 模擬完美玩家自動回球）
 //   --guests=join:a@sera,speak:a,chat:a:嗨,leave:a  假的多人來源（見 ScriptSource）
-//   --record=資料夾    把 --action 的動作錄成 PNG（--record-frames=12），見 tools/record_clip.ps1
+//   --record=資料夾    把 --action 的動作錄成 PNG（--record-frames=12；--record-vx=300 前半段平移後突然停下，看物理甩動），見 tools/record_clip.ps1
 //   --perf=N           效能量測：開 N 個客人，量 10 秒後印出每幀耗時並結束（tools/perf.ps1）
 //   --no-single        自動測試用：不檢查單一實例（使用者的桌寵開著時也能跑）
 //   --twitch=頻道      連線某個 Twitch 聊天室（不存設定）

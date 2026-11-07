@@ -296,6 +296,12 @@
         },
         "limit": {
           "type": "number"
+        },
+        "drag": {
+          "type": "number"
+        },
+        "length": {
+          "type": "number"
         }
       }
     }

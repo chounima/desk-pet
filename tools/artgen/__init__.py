@@ -22,6 +22,27 @@ def _write(path: Path, text: str) -> None:
     path.write_text(text, encoding="utf-8")
 
 
+# 次級物理的預設參數（見 godot/src/Core/Spring.cs）：有尾巴、披布的角色自動開；角色可以用 PHYSICS 覆寫或加別的骨頭
+PHYSICS_DEFAULTS = {
+    "tail": {"stiffness": 90, "damping": 6, "gravity": 0, "inertia": 1.3, "drag": 30, "limit": 40},
+    "cape": {"stiffness": 140, "damping": 9, "gravity": 0, "inertia": 1, "drag": 25, "limit": 25},
+}
+
+
+def default_physics(slots: list[dict], overrides: dict) -> dict:
+    """{ 骨骼: 參數 }；length = 掛在這根骨頭上的部件離骨頭起點最遠的距離（慣性造成的轉動依長度換算）"""
+    result = {}
+    for bone, params in PHYSICS_DEFAULTS.items():
+        boxes = [s["box"] for s in slots if s["bone"] == bone]
+        if not boxes:
+            continue
+        reach = max(max(abs(x), abs(y)) for b in boxes for x, y in ((b[0], b[1]), (b[2], b[3])))
+        result[bone] = {**params, "length": round(reach, 1)}
+    for bone, params in overrides.items():
+        result[bone] = {**result.get(bone, {}), **params}
+    return result
+
+
 def build_character(char, out: Path, form=None) -> dict:
     """form：角色的其他型態（模組，提供 PARTS / FACES / PROPORTIONS，可選 VARIANTS / VOLLEY）。
     名稱、台詞、排球能力都沿用角色本身。"""
@@ -74,6 +95,9 @@ def build_character(char, out: Path, form=None) -> dict:
         "bones": [{"name": n, "parent": p, "x": x, "y": y} for n, p, x, y in rig.bones(prop)],
         "slots": sorted(slots, key=lambda s: s["z"]),
     }
+    physics = default_physics(slots, getattr(src, "PHYSICS", {}))
+    if physics:
+        data["physics"] = physics
     if hasattr(src, "VOLLEY"):
         data["volley"] = src.VOLLEY
     forms = getattr(char, "FORMS", {}) if form is None else {}

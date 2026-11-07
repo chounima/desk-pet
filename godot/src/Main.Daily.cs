@@ -93,6 +93,7 @@ public partial class Main
         var area = Area();
         pet.X = Mathf.Clamp(pet.X, area.Position.X + 40, area.End.X - 40);
         if (pet.Y > area.End.Y || behavior.Current == Behavior.State.Ground) pet.Y = Mathf.Min(pet.Y, area.End.Y);
+        pet.ResetPhysics();      // 被夾回範圍是瞬間移動，尾巴不要甩
         RefreshWindows();
         GD.Print($"[DeskPet] 螢幕變化：area={DesktopWindow.Area} uiScale={DesktopWindow.UiScale} scale={pet.Scale:0.00}");
     }

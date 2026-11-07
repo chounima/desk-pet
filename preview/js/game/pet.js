@@ -1,5 +1,6 @@
 // 寵物本體：位置、朝向、骨架、動作、表情，負責把這些組合後畫出來
 import { Animator, sampleTrack } from "../core/animator.js";
+import { Spring } from "../core/spring.js";
 import { apply } from "../core/math.js";
 import { Skeleton } from "../core/skeleton.js";
 import { PetView } from "../view/renderer.js";
@@ -33,6 +34,7 @@ export class Pet {
     }
     this.probeCache?.clear();
     this.skeleton = new Skeleton(rig.bones, rig.rootScale ?? 1, rig.trackScale ?? {});
+    this.motion = new Spring(rig.bones, rig.physics);          // 次級物理（尾巴、披布…）
     this.world = this.skeleton.compute(this.animator.pose);   // 第一幀前就能查詢骨骼位置
     this.view = new PetView(this.layer, rig, this.props);
     this.view.setAccessories(this.accessories ?? []);
@@ -63,8 +65,14 @@ export class Pet {
   // 目前動作的移動速度（依腿長放大）
   get speed() { return this.animator.move * (this.rig.rootScale ?? 1); }
 
+  // 次級物理歸零：瞬間移動、換大小時呼叫
+  resetPhysics() { this.motion.reset(); }
+
   update(dt) {
-    this.world = this.skeleton.compute(this.animator.update(dt));
+    const pose = this.animator.update(dt);
+    this.world = this.skeleton.compute(pose);
+    // 次級物理：用「只有動畫」的姿勢算偏移，再重算一次骨架（物理骨不參與 probe）
+    if (this.motion.active) this.world = this.skeleton.compute(pose, this.motion.update(dt, this.world, this.x, this.y, this.scale, this.facing));
     this.view.setFace(this.currentFace(dt));
     this.view.setProps(this.animator.props);
     this.view.setAlt(this.animator.alt);

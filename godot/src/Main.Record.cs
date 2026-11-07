@@ -4,6 +4,7 @@
 // 等距存 N 張，裁切角色附近的範圍。之後有物理時，甩動也會被錄下來（網頁版 preview/record.html 用同樣的方式模擬）。
 using System.Collections.Generic;
 using System.IO;
+using DeskPet.Platform;
 using Godot;
 
 namespace DeskPet;
@@ -14,6 +15,8 @@ public partial class Main
     const int RecordWarmup = 30;      // 開頭等幾幀，讓視窗與貼圖準備好
 
     string? recordDir;
+    Game.Drivers.StillDriver? recordDriver;
+    float recordVx, recordMoveTime, recordTime;     // --record-vx：前半段以這個速度平移（像素/秒，未乘縮放），之後突然停下
     int recordFrames = 12, recordStepsPer = 1, recordCaptured, recordWait;
     bool recordPending;
 
@@ -26,12 +29,19 @@ public partial class Main
         var action = args.GetValueOrDefault("action", "idle");
         var area = Area();
         pet.Facing = 1;
-        SetDriver(new Game.Drivers.StillDriver(pet, area.GetCenter().X, area.End.Y, action) { HoldLastFrame = true });   // 原地不動，只做這個動作
+        recordDriver = new Game.Drivers.StillDriver(pet, area.GetCenter().X, area.End.Y, action) { HoldLastFrame = true };   // 原地不動，只做這個動作
+        SetDriver(recordDriver);
         pet.Animator.Seek(0);
         // N 張平均分布在動作長度內（循環動作的最後一張不會和第一張重複）
         var duration = pet.Animator.Clip.Duration;
         recordStepsPer = Mathf.Max(1, Mathf.RoundToInt(duration / RecordStep / (pet.Animator.Clip.Loop ? recordFrames : recordFrames - 1)));
         recordWait = RecordWarmup;
+        if (args.TryGetValue("record-vx", out var vx))
+        {
+            recordVx = float.Parse(vx, System.Globalization.CultureInfo.InvariantCulture) * DesktopWindow.UiScale;
+            recordMoveTime = recordStepsPer * RecordStep * (recordFrames - 1) / 2;
+            recordDriver.X -= recordVx * recordMoveTime / 2;           // 從左邊開始，停在中間附近
+        }
         GD.Print($"[record] {pet.Rig.Id} {action} {duration:0.00}s → {recordFrames} 張，每 {recordStepsPer} 步一張 → {recordDir}");
     }
 
@@ -65,6 +75,8 @@ public partial class Main
 
     void StepRecord()
     {
+        recordTime += RecordStep;
+        if (recordDriver != null && recordTime <= recordMoveTime) recordDriver.X += recordVx * RecordStep;
         driver.Update(RecordStep);
         pet.Update(RecordStep);
     }

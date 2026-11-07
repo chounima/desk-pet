@@ -19,8 +19,9 @@ import { PATHS } from "../js/config.js";
 import { loadCharacters, loadAnimations, formRig } from "../js/core/loader.js";
 import { Skeleton } from "../js/core/skeleton.js";
 import { sampleTrack } from "../js/core/animator.js";
+import { Spring } from "../js/core/spring.js";
 
-const POS_TOLERANCE = 0.01, ANGLE_TOLERANCE = 0.01;
+const POS_TOLERANCE = 0.01, ANGLE_TOLERANCE = 0.01, PHYSICS_TOLERANCE = 0.05;
 const log = text => { document.getElementById("log").textContent += text + "\n"; };
 
 // 和 Godot ClipData.FaceAt 一樣：字串，或 [[時間, 表情], ...]
@@ -52,6 +53,27 @@ function compute(c, rigs, sets) {
   return { face: faceAt(clip, t), bones };
 }
 
+// 次級物理（tests/golden/physics.json）：和 Godot 的 Golden.SimulatePhysics 一樣，身體用 Q 版單位（縮放 1），每幀 1/60 秒
+function simulatePhysics(c, rigs, sets) {
+  const [id, form] = c.char.split("@");
+  const rig = formRig(rigs[id], form);
+  const clip = (sets[rig.body ?? "humanoid"] ?? sets.humanoid)[c.clip];
+  const skeleton = new Skeleton(rig.bones, rig.rootScale ?? 1, rig.trackScale ?? {});
+  const spring = new Spring(rig.bones, rig.physics);
+  const dt = 1 / 60, result = {};
+  let x = 0, facing = 1;
+  for (let n = 0; n < c.frames; n++) {
+    if (n < c.moveUntil) x += c.vx * dt;
+    if (n === c.flipAt) facing = -facing;
+    const t = Math.fround((n * dt) % Math.fround(clip.duration));
+    const pose = {};
+    for (const [ch, keys] of Object.entries(clip.tracks)) pose[ch] = sampleTrack(keys, t);
+    const offsets = spring.update(dt, skeleton.compute(pose), x, 0, 1, facing);
+    if (c.samples.includes(n)) result[n] = { ...offsets };
+  }
+  return result;
+}
+
 const angleDiff = (a, b) => { const d = Math.abs(a - b) % 360; return d > 180 ? 360 - d : d; };
 
 function* compare(expected, actual) {
@@ -77,7 +99,15 @@ try {
     for (const problem of compare(doc.expected[i], compute(c, rigs, sets)))
       if (failures++ < 30) log(`✗ ${c.char} ${c.clip} frac=${c.frac}：${problem}`);
   });
-  status.textContent = failures ? `✗ ${failures} 個不一致` : `✓ 全部通過（${doc.cases.length} 個案例）`;
+  const phys = await (await fetch(`${PATHS.art}/../tests/golden/physics.json`)).json();
+  phys.cases.forEach((c, i) => {
+    const got = simulatePhysics(c, rigs, sets);
+    for (const [frame, bones] of Object.entries(phys.expected[i] ?? {}))
+      for (const [bone, want] of Object.entries(bones))
+        if (!(Math.abs(want - (got[frame]?.[bone] ?? NaN)) <= PHYSICS_TOLERANCE) && failures++ < 30)
+          log(`✗ 物理 ${c.char} ${c.clip} 第 ${frame} 幀 ${bone}：${want} ≠ ${got[frame]?.[bone]}`);
+  });
+  status.textContent = failures ? `✗ ${failures} 個不一致` : `✓ 全部通過（姿勢 ${doc.cases.length} 個、物理 ${phys.cases.length} 個案例）`;
   status.className = failures ? "fail" : "pass";
   document.title = failures ? `FAIL ${failures}` : "PASS";
 } catch (e) {

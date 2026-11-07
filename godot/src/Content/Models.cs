@@ -30,8 +30,8 @@ public sealed class RigData
     public Dictionary<string, PropOverride> PropOverrides { get; set; } = new();
     /// <summary>錨點：配件（hat、eyes、neck、back）、嘴巴（mouth，講話的聲波）…，開放的字典</summary>
     public Dictionary<string, AnchorData> Anchors { get; set; } = new();
-    /// <summary>（第 1 階段）次級物理 { 骨骼: 參數 }</summary>
-    public Dictionary<string, JsonElement>? Physics { get; set; }
+    /// <summary>次級物理 { 骨骼: 參數 }（尾巴、披布、頭髮…，見 Core/Spring.cs）</summary>
+    public Dictionary<string, PhysicsParams>? Physics { get; set; }
     /// <summary>（第 3 階段）分層表情：eyes、pupils、brows、mouth</summary>
     public JsonElement? Face { get; set; }
     /// <summary>（第 6 階段）其他視角（bust = 正面半身）與半身取景</summary>
@@ -53,6 +53,25 @@ public sealed class RigData
     /// <summary>部件圖的完整路徑：絕對路徑（自訂角色的表情）直接用，否則接在角色資料夾後面</summary>
     public string Resolve(string file) =>
         System.IO.Path.IsPathRooted(file) || file.Contains("://") ? file : BasePath + file;
+}
+
+/// <summary>次級物理參數（rig.json 的 physics）。數值意義見 Core/Spring.cs</summary>
+public sealed class PhysicsParams
+{
+    /// <summary>彈簧強度（1/秒²）：越大越快回到動畫的角度</summary>
+    public double Stiffness { get; set; } = 120;
+    /// <summary>阻尼（1/秒）：越大越快停下來、甩的次數越少</summary>
+    public double Damping { get; set; } = 8;
+    /// <summary>重力（弧度/秒²）：往下垂的程度，0 = 不受重力</summary>
+    public double Gravity { get; set; }
+    /// <summary>慣性倍率：身體加速、急停時甩動的程度</summary>
+    public double Inertia { get; set; } = 1;
+    /// <summary>空氣阻力：移動時往後拖的程度（拖的角度和速度成正比），停下時會彈回並甩過頭</summary>
+    public double Drag { get; set; }
+    /// <summary>最多偏離動畫幾度</summary>
+    public double Limit { get; set; } = 35;
+    /// <summary>骨頭長度（Q 版單位）：越長慣性造成的轉動越小</summary>
+    public double Length { get; set; } = 60;
 }
 
 public sealed class AnchorData

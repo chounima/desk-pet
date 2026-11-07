@@ -1,4 +1,4 @@
-// 共用測試（tests/golden/pose.json）：角色＋動作＋時間 → 各骨骼世界座標與表情，和網頁版（preview/tests/golden.html）比對同一份答案
+﻿// 共用測試（tests/golden/pose.json）：角色＋動作＋時間 → 各骨骼世界座標與表情，和網頁版（preview/tests/golden.html）比對同一份答案
 //
 // --selftest=golden          比對 expected，全部通過結束碼 0
 // --selftest=golden --update 用目前的計算結果重寫 expected（改了動作或骨架、確認畫面正確之後才用）
@@ -19,8 +19,12 @@ public static class Golden
     const float PosTolerance = 0.01f, AngleTolerance = 0.01f;
 
     static string FilePath => $"{ContentLoader.Root}/tests/golden/pose.json";
+    static string PhysicsPath => $"{ContentLoader.Root}/tests/golden/physics.json";
+    const float PhysicsTolerance = 0.05f;
 
-    public static int Run(bool update)
+    public static int Run(bool update) => RunPose(update) + RunPhysics(update) == 0 ? 0 : 1;
+
+    static int RunPose(bool update)
     {
         var doc = JsonNode.Parse(File.ReadAllText(ProjectSettings.GlobalizePath(FilePath)))!;
         var (_, rigs) = ContentLoader.LoadCharacters();
@@ -106,5 +110,70 @@ public static class Golden
     {
         var d = MathF.Abs(a - b) % 360;
         return d > 180 ? 360 - d : d;
+    }
+
+    // ---------- 次級物理（tests/golden/physics.json） ----------
+
+    static int RunPhysics(bool update)
+    {
+        var doc = JsonNode.Parse(File.ReadAllText(ProjectSettings.GlobalizePath(PhysicsPath)))!;
+        var (_, rigs) = ContentLoader.LoadCharacters();
+        var bodies = rigs.Values.SelectMany(r => (r.Forms?.Values.Select(f => f.Data) ?? new[] { r }).Append(r)).Select(r => r.Body);
+        var (_, sets) = ContentLoader.LoadAnimations(bodies);
+        var results = doc["cases"]!.AsArray().Select(c => SimulatePhysics(c!, rigs, sets)).ToList();
+        if (update)
+        {
+            doc["expected"] = new JsonArray(results.Select(r => (JsonNode)r).ToArray());
+            File.WriteAllText(ProjectSettings.GlobalizePath(PhysicsPath), doc.ToJsonString(new JsonSerializerOptions { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping }) + "\n");
+            GD.Print($"[golden] 物理：已更新 {results.Count} 個案例");
+            return 0;
+        }
+        var expected = doc["expected"]!.AsArray();
+        if (expected.Count != results.Count)
+        {
+            GD.Print($"[golden] ✗ 物理 expected 有 {expected.Count} 個，cases 有 {results.Count} 個（先跑 --update）");
+            return 1;
+        }
+        var failures = 0;
+        for (var i = 0; i < results.Count; i++)
+            foreach (var (frame, bones) in expected[i]!.AsObject())
+                foreach (var (bone, value) in bones!.AsObject())
+                {
+                    var want = value!.GetValue<float>();
+                    var got = results[i][frame]?[bone]?.GetValue<float>() ?? float.NaN;
+                    if (!(MathF.Abs(want - got) <= PhysicsTolerance) && failures++ < 20)
+                        GD.Print($"[golden] ✗ 物理 {Describe(doc["cases"]![i]!)} 第 {frame} 幀 {bone}：{want} ≠ {got}");
+                }
+        GD.Print(failures == 0 ? $"[golden] 物理全部通過（{results.Count} 個案例）" : $"[golden] ✗ 物理 {failures} 個不一致");
+        return failures == 0 ? 0 : 1;
+    }
+
+    // 和 Pet.Update 一樣：取樣動作 → 骨架 → 次級物理；身體位置用 Q 版單位（縮放 1），每幀 1/60 秒
+    static JsonObject SimulatePhysics(JsonNode c, Dictionary<string, RigData> rigs, Dictionary<string, Dictionary<string, ClipData>> sets)
+    {
+        var spec = c["char"]!.GetValue<string>().Split('@');
+        var rig = ContentLoader.FormRig(rigs[spec[0]], spec.Length > 1 ? spec[1] : null);
+        var clip = (sets.GetValueOrDefault(rig.Body) ?? sets["humanoid"])[c["clip"]!.GetValue<string>()];
+        var skeleton = new Skeleton(rig.Bones, rig.RootScale, rig.TrackScale);
+        var spring = new Spring(rig.Bones, rig.Physics);
+        int frames = c["frames"]!.GetValue<int>(), moveUntil = c["moveUntil"]!.GetValue<int>(), flipAt = c["flipAt"]!.GetValue<int>();
+        var vx = c["vx"]!.GetValue<double>();
+        var samples = c["samples"]!.AsArray().Select(v => v!.GetValue<int>()).ToHashSet();
+        const double dt = 1.0 / 60;
+        double x = 0;
+        var facing = 1;
+        var result = new JsonObject();
+        for (var n = 0; n < frames; n++)
+        {
+            if (n < moveUntil) x += vx * dt;
+            if (n == flipAt) facing = -facing;
+            var t = (float)(n * dt % clip.Duration);
+            var pose = new Dictionary<string, float>();
+            foreach (var (ch, keys) in clip.Tracks) pose[ch] = Animator.SampleTrack(keys, t);
+            var offsets = spring.Update(dt, skeleton.Compute(pose), x, 0, 1, facing);
+            if (samples.Contains(n))
+                result[n.ToString()] = new JsonObject(offsets.Select(kv => new KeyValuePair<string, JsonNode?>(kv.Key, MathF.Round(kv.Value, 4))));
+        }
+        return result;
     }
 }

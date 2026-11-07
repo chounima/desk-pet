@@ -13,12 +13,13 @@ export class Skeleton {
   }
 
   // pose: { 骨骼名: 角度, "骨骼名.x": 位移, "骨骼名.y": 位移 }
-  compute(pose) {
+  // offsets: 額外加的角度（度，不乘角度倍率），例如次級物理的偏移
+  compute(pose, offsets = null) {
     const s = this.moveScale;
     for (const b of this.bones) {
       const tx = b.x + (pose[`${b.name}.x`] ?? 0) * s;
       const ty = b.y + (pose[`${b.name}.y`] ?? 0) * s;
-      const angle = (pose[b.name] ?? 0) * (this.angleScale[b.name] ?? 1);
+      const angle = (pose[b.name] ?? 0) * (this.angleScale[b.name] ?? 1) + (offsets?.[b.name] ?? 0);
       const local = mul(translate(tx, ty), rotate(angle));
       this.world[b.name] = b.parent ? mul(this.world[b.parent], local) : local;
     }

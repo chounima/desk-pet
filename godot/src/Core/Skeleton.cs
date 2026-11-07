@@ -1,4 +1,4 @@
-// 骨架：依姿勢（各骨骼角度與位移）算出每根骨骼的世界變換（移植自 preview/js/core/skeleton.js）
+﻿// 骨架：依姿勢（各骨骼角度與位移）算出每根骨骼的世界變換（移植自 preview/js/core/skeleton.js）
 using System.Collections.Generic;
 using DeskPet.Content;
 using Godot;
@@ -23,13 +23,15 @@ public sealed class Skeleton
     }
 
     /// <param name="pose">{ 骨骼名: 角度, "骨骼名.x": 位移, "骨骼名.y": 位移 }</param>
-    public Dictionary<string, Transform2D> Compute(IReadOnlyDictionary<string, float> pose)
+    /// <param name="offsets">額外加的角度（度，不乘角度倍率），例如次級物理的偏移</param>
+    public Dictionary<string, Transform2D> Compute(IReadOnlyDictionary<string, float> pose, IReadOnlyDictionary<string, float>? offsets = null)
     {
         foreach (var b in bones)
         {
             var tx = b.X + Get(pose, b.Name + ".x") * moveScale;
             var ty = b.Y + Get(pose, b.Name + ".y") * moveScale;
-            var angle = Get(pose, b.Name) * (angleScale.TryGetValue(b.Name, out var s) ? s : 1);
+            var angle = Get(pose, b.Name) * (angleScale.TryGetValue(b.Name, out var s) ? s : 1)
+                        + (offsets != null && offsets.TryGetValue(b.Name, out var off) ? off : 0);
             var local = new Transform2D(Mathf.DegToRad(angle), new Vector2(tx, ty));
             World[b.Name] = b.Parent is null ? local : World[b.Parent] * local;
         }

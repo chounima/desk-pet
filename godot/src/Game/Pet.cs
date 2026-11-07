@@ -55,6 +55,7 @@ public sealed class Pet
         }
         probeCache.Clear();
         skeleton = new Skeleton(rig.Bones, rig.RootScale, rig.TrackScale);
+        motion = new Spring(rig.Bones, rig.Physics);
         world = skeleton.Compute(Animator.Pose);
         View = new PetView(rig, props, Scale);
         View.SetAccessories(accessories);
@@ -97,12 +98,19 @@ public sealed class Pet
     /// <summary>目前動作的移動速度（px/s）：依腿長與顯示大小放大</summary>
     public float Speed => Animator.Move * Rig.RootScale * (Scale / Tuning.Scale);
 
+    Spring motion = null!;
+
+    /// <summary>次級物理（尾巴、披布…）歸零：瞬間移動、換大小、螢幕變化時呼叫（換角色會自動重建）</summary>
+    public void ResetPhysics() => motion.Reset();
+
     public void Update(float dt)
     {
         var pose = Animator.Update(dt);
         Gaze.Update(this, dt);
         pose["head"] = pose.GetValueOrDefault("head") + Gaze.HeadAngle;
         world = skeleton.Compute(pose);
+        // 次級物理：用「只有動畫」的姿勢算出偏移，再重算一次骨架（物理骨不參與 Probe）
+        if (motion.Active) world = skeleton.Compute(pose, motion.Update(dt, world, X, Y, Scale, Facing));
         View.SetFace(CurrentFace(dt));
         View.SetFaceOffset(Gaze.FaceOffset);
         View.SetProps(Animator.Props);
