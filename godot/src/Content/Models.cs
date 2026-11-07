@@ -180,9 +180,17 @@ public sealed class SlotData
     public Dictionary<string, string>? Variants { get; set; }
     /// <summary>部件替換圖：{ 替換名: { file, box } }</summary>
     public Dictionary<string, AltData>? Alt { get; set; }
-    /// <summary>（第 4 階段）網格變形</summary>
-    public JsonElement? Mesh { get; set; }
+    /// <summary>網格變形（選配，見 Core/Mesh.cs）：關節附近跟著兩根骨頭彎</summary>
+    public MeshData? Mesh { get; set; }
     [JsonExtensionData] public Dictionary<string, JsonElement>? Extra { get; set; }
+}
+
+/// <summary>插槽的網格：部件範圍鋪 Cols × Rows 格，頂點依距離自動分配給 Bones 的權重</summary>
+public sealed class MeshData
+{
+    public int Cols { get; set; } = 2;
+    public int Rows { get; set; } = 4;
+    public List<string> Bones { get; set; } = new();
 }
 
 public sealed class AltData

@@ -354,7 +354,29 @@
         },
         "mesh": {
           "type": "object",
-          "description": "（第 4 階段）網格變形"
+          "description": "網格變形（選配）：部件範圍鋪 cols × rows 格，頂點依到各骨頭的距離自動算權重，關節彎曲時部件跟著彎（Core/Mesh.cs、core/mesh.js）",
+          "required": [
+            "bones"
+          ],
+          "properties": {
+            "cols": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 2
+            },
+            "rows": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 4
+            },
+            "bones": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            }
+          }
         },
         "depth": {
           "type": "number",

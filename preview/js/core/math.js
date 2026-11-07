@@ -19,3 +19,8 @@ export function rotate(deg) {
 }
 
 export const apply = (m, x, y) => [m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5]];
+
+export function invert(m) {
+  const det = m[0] * m[3] - m[1] * m[2];
+  return [m[3] / det, -m[1] / det, -m[2] / det, m[0] / det, (m[2] * m[5] - m[3] * m[4]) / det, (m[1] * m[4] - m[0] * m[5]) / det];
+}

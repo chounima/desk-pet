@@ -1,14 +1,68 @@
 // 把角色部件畫成 SVG <image>，每幀套用骨骼矩陣
+// 有網格（slot.mesh）的部件：每個三角形一張裁切過的 <image>，依頂點位置做仿射變換（core/mesh.js 算頂點）
 import { mul } from "../core/math.js";
+import { MeshDeform } from "../core/mesh.js";
+import { Skeleton } from "../core/skeleton.js";
 
 const NS = "http://www.w3.org/2000/svg";
+const SEAM = 1;           // 三角形往外多裁一點，接縫才不會露出細縫
+let meshIds = 0;
 
-function setImage(img, href, [x0, y0, x1, y1]) {
+// 網格部件：img 是陣列（每個三角形一張），換圖時全部一起換
+function setImage(img, href, box) {
+  if (Array.isArray(img)) { for (const i of img) setImage(i, href, box); return; }
+  const [x0, y0, x1, y1] = box;
   img.setAttribute("href", href);
   img.setAttribute("x", x0);
   img.setAttribute("y", y0);
   img.setAttribute("width", x1 - x0);
   img.setAttribute("height", y1 - y0);
+}
+
+// 三角形 (u0,u1,u2) → (p0,p1,p2) 的仿射矩陣 [a, b, c, d, e, f]
+function affine([u0, u1, u2], [p0, p1, p2]) {
+  const du1 = [u1[0] - u0[0], u1[1] - u0[1]], du2 = [u2[0] - u0[0], u2[1] - u0[1]];
+  const dp1 = [p1[0] - p0[0], p1[1] - p0[1]], dp2 = [p2[0] - p0[0], p2[1] - p0[1]];
+  const det = du1[0] * du2[1] - du2[0] * du1[1];
+  const a = (dp1[0] * du2[1] - dp2[0] * du1[1]) / det, c = (dp2[0] * du1[0] - dp1[0] * du2[0]) / det;
+  const b = (dp1[1] * du2[1] - dp2[1] * du1[1]) / det, d = (dp2[1] * du1[0] - dp1[1] * du2[0]) / det;
+  return [a, b, c, d, p0[0] - a * u0[0] - c * u0[1], p0[1] - b * u0[0] - d * u0[1]];
+}
+
+// 三角形每條邊往外推 SEAM（頂點移到相鄰兩條外推邊的交點），細長的三角形也蓋得住接縫
+function grow(p) {
+  const cx = (p[0][0] + p[1][0] + p[2][0]) / 3, cy = (p[0][1] + p[1][1] + p[2][1]) / 3;
+  // 邊的法向量，朝三角形外面（和重心反方向）
+  const normal = (a, b) => {
+    const dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy) || 1;
+    const n = [dy / len, -dx / len];
+    return n[0] * ((a[0] + b[0]) / 2 - cx) + n[1] * ((a[1] + b[1]) / 2 - cy) < 0 ? [-n[0], -n[1]] : n;
+  };
+  return p.map((v, i) => {
+    const n1 = normal(p[(i + 2) % 3], v), n2 = normal(v, p[(i + 1) % 3]);
+    const k = SEAM / Math.max(0.2, 1 + n1[0] * n2[0] + n1[1] * n2[1]);
+    return [v[0] + (n1[0] + n2[0]) * k, v[1] + (n1[1] + n2[1]) * k];
+  });
+}
+
+// 網格部件的 DOM：每個三角形 <g clip-path><image transform/></g>，裁切多邊形放在 <defs>
+function makeMesh(el, href, box, mesh) {
+  const defs = document.createElementNS(NS, "defs");
+  el.append(defs);
+  return mesh.triangles.map(() => {
+    const id = `mesh${++meshIds}`;
+    const clip = document.createElementNS(NS, "clipPath");
+    clip.id = id;
+    const poly = document.createElementNS(NS, "polygon");
+    clip.append(poly);
+    defs.append(clip);
+    const g = document.createElementNS(NS, "g");
+    g.setAttribute("clip-path", `url(#${id})`);
+    const img = makeImage(href, box);
+    g.append(img);
+    el.append(g);
+    return { poly, img };
+  });
 }
 
 function makeImage(href, box) {
@@ -25,6 +79,7 @@ function preload(urls) {
 const resolve = (rig, file) => /^[a-z]+:/i.test(file) ? file : rig.base + file;
 
 export class PetView {
+  static meshDisabled = new URLSearchParams(location.search).has("nomesh");     // 比較用（?nomesh）
   constructor(layer, rig, props) {
     this.rig = rig;
     this.g = document.createElementNS(NS, "g");
@@ -33,10 +88,20 @@ export class PetView {
 
     const items = [];
     this.altSlots = [];       // 有替換圖的插槽
+    let rest = null;          // 靜止姿勢（網格算權重用）
     for (const slot of rig.slots) {
       const el = document.createElementNS(NS, "g");
-      const img = makeImage(rig.base + (slot.variants ? slot.variants.idle : slot.file), slot.box);
-      el.append(img);
+      const href = rig.base + (slot.variants ? slot.variants.idle : slot.file);
+      let img, mesh = null, tris = null;
+      if (slot.mesh?.bones?.length && !PetView.meshDisabled) {
+        rest ??= { ...new Skeleton(rig.bones, rig.rootScale ?? 1, rig.trackScale ?? {}).compute({}) };
+        mesh = new MeshDeform(slot, rest, rig.bones, rig.slots, rig.rootScale ?? 1);
+        tris = makeMesh(el, href, slot.box, mesh);
+        img = tris.map(t => t.img);
+      } else {
+        img = makeImage(href, slot.box);
+        el.append(img);
+      }
       if (slot.far) el.classList.add("far");
       if (slot.variants) {
         this.faceImg = img;
@@ -61,7 +126,7 @@ export class PetView {
         preload(Object.values(slot.alt).map(a => rig.base + a.file));
       }
       // depth：轉頭視差，位移 = 臉的位移 × depth（沒寫時表情插槽算 1）
-      items.push({ z: slot.z, bone: slot.bone, el, slot, img, depth: slot.depth ?? (slot.variants ? 1 : 0) });
+      items.push({ z: slot.z, bone: slot.bone, el, slot, img, mesh, tris, depth: slot.depth ?? (slot.variants ? 1 : 0) });
     }
 
     // 道具以 Q 版身材設計，依角色腿長等比放大
@@ -189,6 +254,7 @@ export class PetView {
     const [fx, fy] = this.faceOffset ?? [0, 0];
     this.g.setAttribute("transform", `translate(${x} ${y}) scale(${facing * scale} ${scale})`);
     for (const it of this.items) {
+      if (it.mesh) { this.drawMesh(it, world, fx * it.depth, fy * it.depth); continue; }
       let m = it.offset ? mul(world[it.bone], it.offset) : world[it.bone];
       if ((it.depth && (fx || fy)) || it.shift) {
         const [sx, sy] = it.shift ?? [0, 0];
@@ -196,6 +262,17 @@ export class PetView {
       }
       it.el.setAttribute("transform", `matrix(${m.join(" ")})`);
     }
+  }
+
+  // 網格：算頂點，每個三角形設定裁切多邊形（往外擴一點）與圖片的仿射矩陣
+  drawMesh(it, world, sx, sy) {
+    const verts = it.mesh.compute(world).map(([x, y]) => [x + sx, y + sy]);
+    it.verts = verts;
+    it.mesh.triangles.forEach((t, k) => {
+      const p = t.map(i => verts[i]);
+      it.tris[k].poly.setAttribute("points", grow(p).map(([x, y]) => `${x},${y}`).join(" "));
+      it.tris[k].img.setAttribute("transform", `matrix(${affine(t.map(i => it.mesh.uv[i]), p).join(" ")})`);
+    });
   }
 
   destroy() {

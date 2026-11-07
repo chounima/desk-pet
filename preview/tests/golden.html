@@ -22,6 +22,7 @@ import { sampleTrack } from "../js/core/animator.js";
 import { Spring } from "../js/core/spring.js";
 import { overlayDeltas } from "../js/core/overlay.js";
 import { faceLayers } from "../js/game/faceDriver.js";
+import { MeshDeform } from "../js/core/mesh.js";
 import { MOTION } from "../js/config.js";
 
 const POS_TOLERANCE = 0.01, ANGLE_TOLERANCE = 0.01, PHYSICS_TOLERANCE = 0.05;
@@ -130,7 +131,24 @@ try {
     });
     if (!same && failures++ < 30) log(`✗ 分層臉 ${JSON.stringify(c)}：${JSON.stringify(want)} ≠ ${JSON.stringify(got)}`);
   });
-  status.textContent = failures ? `✗ ${failures} 個不一致` : `✓ 全部通過（姿勢 ${doc.cases.length} 個、物理 ${phys.cases.length} 個、曲線 ${curves.samples.length} 個、疊加層 ${ov.cases.length} 個、分層臉 ${fc.cases.length} 個）`;
+  // 網格：頂點位置
+  const mc = await (await fetch(`${PATHS.art}/../tests/golden/mesh.json`)).json();
+  mc.cases.forEach((c, i) => {
+    const rig = rigs[c.char];
+    const clip = sets.for(rig)[c.clip];
+    const t = Math.fround(Math.fround(c.frac) * Math.fround(clip.duration));
+    const pose = {};
+    for (const [ch, keys] of Object.entries(clip.tracks)) pose[ch] = sampleTrack(keys, t);
+    for (const [ch, v] of Object.entries(c.add ?? {})) pose[ch] = (pose[ch] ?? 0) + v;
+    const skeleton = new Skeleton(rig.bones, rig.rootScale ?? 1, rig.trackScale ?? {});
+    const rest = { ...skeleton.compute({}) };
+    const world = skeleton.compute(pose);
+    const found = rig.slots.find(s => s.name === c.slot), slot = { ...found, mesh: c.mesh ?? found.mesh };
+    const got = new MeshDeform(slot, rest, rig.bones, rig.slots, rig.rootScale ?? 1).compute(world), want = mc.expected[i] ?? [];
+    const same = want.length === got.length && got.every(([x, y], j) => Math.abs(x - want[j][0]) <= 0.01 && Math.abs(y - want[j][1]) <= 0.01);
+    if (!same && failures++ < 30) log(`✗ 網格 ${JSON.stringify(c)}：第一個頂點 ${JSON.stringify(want[0])} ≠ ${JSON.stringify(got[0])}`);
+  });
+  status.textContent = failures ? `✗ ${failures} 個不一致` : `✓ 全部通過（姿勢 ${doc.cases.length} 個、物理 ${phys.cases.length} 個、曲線 ${curves.samples.length} 個、疊加層 ${ov.cases.length} 個、分層臉 ${fc.cases.length} 個、網格 ${mc.cases.length} 個）`;
   status.className = failures ? "fail" : "pass";
   document.title = failures ? `FAIL ${failures}` : "PASS";
 } catch (e) {

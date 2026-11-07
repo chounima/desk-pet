@@ -65,6 +65,7 @@
 |---|---|---|
 | `face_parts/` | 第 3 階段：分層表情、動嘴、眼睛跟游標 | 檔名 = `圖層_圖名`，和佔位角色 `art/characters/tk01/face_parts/` 一樣：眼眶 `eyes_open`、`eyes_half`、`eyes_sharp`、`eyes_wide`（**不含瞳孔**）、閉眼 `eyes_line`（眨眼、睡覺）、`eyes_arc`（開心 ^ ^）；瞳孔 `pupils_open`…（和睜眼的眼眶同名，會跟著視線位移，四周留 2～3 單位不要畫到眼眶外）；眼線 `lids_open`…（蓋在瞳孔上面）；嘴 `mouth_flat`、`mouth_smile`、`mouth_cat`、`mouth_open`、`mouth_o`、`mouth_pout`、`mouth_gasp`，母音 `mouth_va`、`mouth_vi`、`mouth_vu`、`mouth_ve`、`mouth_vo`；`blush_on`（腮紅，不透明度由表情決定）；`extras_on`（淚痣、鬍鬚等，選配）；眉毛 `brows_*`（選配）。全部同樣大小、同樣位置（和 `faces/` 一樣的臉框）。**目前部件包還不會讀 `face_parts/`**（先備好，接上前用 `faces/` 整張臉） |
 | `hair_parts/` | 第 3 階段：頭髮飄動 | 長頭髮切成 2～3 節：`hairB_1..3`（後面，已支援：見 `tools/artgen/__init__.py` 的 `HAIR_CHAINS`），`hairF_*`、`hairS_*`（前面、側邊，格式相同）；每節的原點在上緣中間、往下畫，上端要和上一節重疊、上緣不要畫線 |
+| 網格（`rig.json` 插槽的 `mesh`） | 第 4 階段：關節彎曲時部件跟著彎 | 不用另外畫。適合**畫成一整條、跨過關節**的部件（長髮、整條手臂）；關節畫成圓頭重疊的部件不要開（圓頭會被拉歪） |
 | `bust/` | 第 6 階段：半身模式 | **正面**的上半身：`head`、`hair_back`、`hair_front`、`torso`、`arm_u`、`arm_l`、`hand`，以及正面的 `face_parts`（同上的名字） |
 
 ## 規格

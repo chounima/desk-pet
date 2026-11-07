@@ -3,6 +3,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using DeskPet.Content;
+using DeskPet.Core;
 using Godot;
 
 namespace DeskPet.View;
@@ -27,6 +28,9 @@ public partial class PetView : Node2D
         public string? FaceFile;          // 分層臉的圖層：目前顯示的檔案
         public Vector2 FaceShift;         // 分層臉的圖層：這一刻的位移（瞳孔看游標）
         public float Depth;               // 轉頭視差：位移 = 臉的位移 × Depth
+        public MeshDeform? Mesh;          // 網格變形（有的話由 Poly 畫，Sprite 本身透明）
+        public Polygon2D? Poly;
+        public Vector2[]? Verts;          // 這一幀的頂點（PetView 座標，點擊判定用）
     }
 
     readonly RigData rig;
@@ -38,6 +42,9 @@ public partial class PetView : Node2D
     string face = "idle";
     string propsKey = "";
 
+    /// <summary>比較用（--no-mesh）：不用網格變形，部件照舊整張貼在骨頭上</summary>
+    public static bool MeshDisabled { get; set; }
+
     // Godot 需要無參數建構子（引擎重新載入腳本時使用），實際使用請走下面的建構子
     public PetView() { rig = new RigData(); res = 1; }
 
@@ -46,6 +53,7 @@ public partial class PetView : Node2D
         this.rig = rig;
         res = displayScale * Oversample;
         var entries = new List<(float z, Item item)>();
+        Dictionary<string, Transform2D>? rest = null;       // 靜止姿勢（網格算權重用）
 
         foreach (var slot in rig.Slots)
         {
@@ -53,6 +61,17 @@ public partial class PetView : Node2D
             var item = MakeItem(rig.Resolve(file), slot.Box, slot.Bone, null);
             item.Slot = slot;
             item.Depth = slot.Depth ?? (slot.Variants != null ? 1 : 0);
+            if (slot.Mesh is { Bones.Count: > 0 } mesh && !MeshDisabled)
+            {
+                rest ??= new Dictionary<string, Transform2D>(new Skeleton(rig.Bones, rig.RootScale, rig.TrackScale).Compute(new Dictionary<string, float>()));
+                item.Mesh = new MeshDeform(slot, mesh, rest, rig.Bones, rig.Slots, rig.RootScale);
+                item.Poly = new Polygon2D { TextureFilter = TextureFilterEnum.Linear, Antialiased = false };
+                item.Poly.Polygons = new Godot.Collections.Array(Enumerable.Range(0, item.Mesh.Triangles.Length / 3)
+                    .Select(i => Variant.From(item.Mesh.Triangles[(i * 3)..(i * 3 + 3)])).ToArray());
+                item.Sprite.SelfModulate = new Color(1, 1, 1, 0);       // 圖由網格畫，Sprite 只負責圖層順序與顯示
+                item.Sprite.AddChild(item.Poly);
+                SyncMeshTexture(item);
+            }
             if (slot.Far) item.Sprite.Modulate = FarTint;
             if (slot.Variants != null) faceItem = item;
             item.Z = slot.Z;
@@ -112,6 +131,14 @@ public partial class PetView : Node2D
         item.Sprite.Texture = tex.Texture;
         item.Image = tex.Image;
         item.Box = box;
+        if (item.Poly != null) SyncMeshTexture(item);
+    }
+
+    // 網格的貼圖與 UV：頂點在部件裡的位置 → 貼圖像素（換衣服、替換圖時圖的範圍可能不一樣）
+    void SyncMeshTexture(Item item)
+    {
+        item.Poly!.Texture = item.Sprite.Texture;
+        item.Poly.UV = item.Mesh!.Uv.Select(p => new Vector2((p.X - item.Box[0]) * res, (p.Y - item.Box[1]) * res)).ToArray();
     }
 
     /// <summary>這個角色有分層臉（用 SetFaceLayers，不用 SetFace）</summary>
@@ -227,6 +254,16 @@ public partial class PetView : Node2D
         foreach (var item in items)
         {
             if (!item.Sprite.Visible) continue;
+            if (item.Mesh != null)
+            {
+                // 網格：頂點直接算在 PetView 座標，Sprite 不用變換
+                var shift = faceOffset * item.Depth;
+                item.Verts = item.Mesh.Compute(world);
+                if (shift != Vector2.Zero) for (var i = 0; i < item.Verts.Length; i++) item.Verts[i] += shift;
+                item.Sprite.Transform = Transform2D.Identity;
+                item.Poly!.Polygon = item.Verts;
+                continue;
+            }
             var m = world[item.Bone];
             if (item.Offset is { } offset) m *= offset;
             if (item.Depth != 0 || item.FaceFile != null) m *= new Transform2D(0, faceOffset * item.Depth + item.FaceShift);
@@ -246,6 +283,11 @@ public partial class PetView : Node2D
         {
             var item = items[i];
             if (!item.Sprite.Visible) continue;
+            if (item.Mesh != null)
+            {
+                if (MeshPixel(item, Transform.AffineInverse() * point) is { } px && px.A > 0.1f) return item.Slot?.Name ?? "prop";
+                continue;
+            }
             var local = (Transform * item.Sprite.Transform).AffineInverse() * point;
             int x = (int)local.X, y = (int)local.Y;
             if (x < 0 || y < 0 || x >= item.Image.GetWidth() || y >= item.Image.GetHeight()) continue;
@@ -262,6 +304,16 @@ public partial class PetView : Node2D
         foreach (var item in items)
         {
             if (!item.Sprite.Visible) continue;
+            if (item.Verts != null)
+            {
+                foreach (var v in item.Verts)
+                {
+                    var p = Transform * v;
+                    rect = first ? new Rect2(p, Vector2.Zero) : rect.Expand(p);
+                    first = false;
+                }
+                continue;
+            }
             var m = Transform * item.Sprite.Transform;
             var size = item.Image.GetSize();
             foreach (var c in new[] { Vector2.Zero, new Vector2(size.X, 0), new Vector2(0, size.Y), (Vector2)size })
@@ -272,5 +324,28 @@ public partial class PetView : Node2D
             }
         }
         return rect;
+    }
+
+    // 網格部件上某一點（PetView 座標）的像素：找到點在哪個三角形，用重心座標換回原圖位置
+    static Color? MeshPixel(Item item, Vector2 p)
+    {
+        if (item.Verts == null) return null;
+        var tris = item.Mesh!.Triangles;
+        for (var t = 0; t < tris.Length; t += 3)
+        {
+            Vector2 a = item.Verts[tris[t]], b = item.Verts[tris[t + 1]], c = item.Verts[tris[t + 2]];
+            var d = (b.Y - c.Y) * (a.X - c.X) + (c.X - b.X) * (a.Y - c.Y);
+            if (Mathf.Abs(d) < 1e-6f) continue;
+            var l1 = ((b.Y - c.Y) * (p.X - c.X) + (c.X - b.X) * (p.Y - c.Y)) / d;
+            var l2 = ((c.Y - a.Y) * (p.X - c.X) + (a.X - c.X) * (p.Y - c.Y)) / d;
+            var l3 = 1 - l1 - l2;
+            if (l1 < 0 || l2 < 0 || l3 < 0) continue;
+            var uv = item.Mesh.Uv[tris[t]] * l1 + item.Mesh.Uv[tris[t + 1]] * l2 + item.Mesh.Uv[tris[t + 2]] * l3;
+            var res = item.Image.GetWidth() / (item.Box[2] - item.Box[0]);
+            int x = (int)((uv.X - item.Box[0]) * res), y = (int)((uv.Y - item.Box[1]) * res);
+            if (x < 0 || y < 0 || x >= item.Image.GetWidth() || y >= item.Image.GetHeight()) return null;
+            return item.Image.GetPixel(x, y);
+        }
+        return null;
     }
 }

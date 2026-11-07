@@ -48,6 +48,10 @@ def hair_chains(src, out: Path) -> tuple[list, list, dict]:
                           "file": f"parts/{bone}.svg", "box": part.box, "far": False, "depth": spec.get("depth", rig.DEPTH["hair_back"])})
             physics[bone] = {**HAIR_PHYSICS, "length": length, **spec.get("physics", {})}
             parent, (x, y) = bone, (0, length)
+        names = ["head"] + [f"{chain}_{i}" for i in range(1, len(spec["segments"]) + 1)]
+        for s in slots:
+            if s["bone"] in names:
+                s["mesh"] = {"cols": rig.HAIR_MESH[0], "rows": rig.HAIR_MESH[1], "bones": names}
     return bones, slots, physics
 
 
@@ -107,6 +111,10 @@ def build_character(char, out: Path, form=None) -> dict:
         "variants": {e: f"faces/{e}.svg" for e in rig.EXPRESSIONS if e in src.FACES},
     })
     prop = getattr(src, "PROPORTIONS", rig.CHIBI)
+    bone_names = {n for n, *_ in rig.bones(prop)}
+    for s in slots:
+        if (m := rig.MESH.get(s["name"])) and all(b in bone_names for b in m[2]):
+            s["mesh"] = {"cols": m[0], "rows": m[1], "bones": m[2]}
     data = {
         "version": 1,       # 角色格式版本（schemas/rig.schema.json）
         "id": char.ID, "name": char.NAME, "description": char.DESCRIPTION,

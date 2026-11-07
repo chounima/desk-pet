@@ -201,7 +201,16 @@
         56
       ],
       "far": false,
-      "depth": -0.4
+      "depth": -0.4,
+      "mesh": {
+        "cols": 2,
+        "rows": 4,
+        "bones": [
+          "head",
+          "hairB_1",
+          "hairB_2"
+        ]
+      }
     },
     {
       "name": "hairB_2",
@@ -215,7 +224,16 @@
         60
       ],
       "far": false,
-      "depth": -0.4
+      "depth": -0.4,
+      "mesh": {
+        "cols": 2,
+        "rows": 4,
+        "bones": [
+          "head",
+          "hairB_1",
+          "hairB_2"
+        ]
+      }
     },
     {
       "name": "armFar_u",
@@ -358,7 +376,15 @@
         32,
         6
       ],
-      "far": false
+      "far": false,
+      "mesh": {
+        "cols": 2,
+        "rows": 4,
+        "bones": [
+          "hips",
+          "torso"
+        ]
+      }
     },
     {
       "name": "head",

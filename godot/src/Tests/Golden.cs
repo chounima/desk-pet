@@ -22,7 +22,53 @@ public static class Golden
     static string PhysicsPath => $"{ContentLoader.Root}/tests/golden/physics.json";
     const float PhysicsTolerance = 0.05f;
 
-    public static int Run(bool update) => RunPose(update) + RunPhysics(update) + RunCurves(update) + RunOverlay(update) + RunFace(update) == 0 ? 0 : 1;
+    public static int Run(bool update) => RunPose(update) + RunPhysics(update) + RunCurves(update) + RunOverlay(update) + RunFace(update) + RunMesh(update) == 0 ? 0 : 1;
+
+    // ---------- 網格（tests/golden/mesh.json）：角色＋動作＋時間（＋額外角度）＋插槽 → 頂點位置 ----------
+
+    static int RunMesh(bool update)
+    {
+        var path = ProjectSettings.GlobalizePath($"{ContentLoader.Root}/tests/golden/mesh.json");
+        var doc = JsonNode.Parse(File.ReadAllText(path))!;
+        var (_, rigs) = ContentLoader.LoadCharacters();
+        var bodies = rigs.Values.Select(r => r.Body);
+        var (_, sets) = ContentLoader.LoadAnimations(bodies);
+        var results = doc["cases"]!.AsArray().Select(c =>
+        {
+            var rig = rigs[c!["char"]!.GetValue<string>()];
+            var clip = sets.For(rig)[c["clip"]!.GetValue<string>()];
+            var t = c["frac"]!.GetValue<float>() * clip.Duration;
+            var pose = new Dictionary<string, float>();
+            foreach (var (ch, keys) in clip.Tracks) pose[ch] = Animator.SampleTrack(keys, t);
+            foreach (var (ch, v) in c["add"]?.AsObject() ?? new JsonObject()) pose[ch] = pose.GetValueOrDefault(ch) + v!.GetValue<float>();
+            var skeleton = new Skeleton(rig.Bones, rig.RootScale, rig.TrackScale);
+            var rest = new Dictionary<string, Transform2D>(skeleton.Compute(new Dictionary<string, float>()));
+            var world = skeleton.Compute(pose);
+            var slot = rig.Slots.First(s => s.Name == c["slot"]!.GetValue<string>());
+            var spec = c["mesh"] is { } m ? m.Deserialize<MeshData>(new JsonSerializerOptions { PropertyNameCaseInsensitive = true })! : slot.Mesh!;
+            var mesh = new MeshDeform(slot, spec, rest, rig.Bones, rig.Slots, rig.RootScale);
+            return new JsonArray(mesh.Compute(world).Select(v => (JsonNode)new JsonArray(MathF.Round(v.X, 3), MathF.Round(v.Y, 3))).ToArray());
+        }).ToList();
+        if (update)
+        {
+            doc["expected"] = new JsonArray(results.Select(r => (JsonNode)r).ToArray());
+            File.WriteAllText(path, doc.ToJsonString(new JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping }) + "\n");
+            GD.Print($"[golden] 網格：已更新 {results.Count} 個案例");
+            return 0;
+        }
+        var expected = doc["expected"]!.AsArray();
+        var failures = 0;
+        for (var i = 0; i < results.Count; i++)
+        {
+            var e = expected.Count > i ? expected[i]!.AsArray() : new JsonArray();
+            var ok = e.Count == results[i].Count && e.Zip(results[i]).All(p =>
+                MathF.Abs(p.First![0]!.GetValue<float>() - p.Second![0]!.GetValue<float>()) <= 0.01f &&
+                MathF.Abs(p.First![1]!.GetValue<float>() - p.Second![1]!.GetValue<float>()) <= 0.01f);
+            if (!ok && failures++ < 10) GD.Print($"[golden] ✗ 網格 {doc["cases"]![i]!.ToJsonString()}");
+        }
+        GD.Print(failures == 0 ? $"[golden] 網格全部通過（{results.Count} 個案例）" : $"[golden] ✗ 網格 {failures} 個不一致");
+        return failures == 0 ? 0 : 1;
+    }
 
     // ---------- 分層臉（tests/golden/face.json）：角色＋表情＋眨眼／嘴型／視線 → 每層 [名稱, 檔案, 不透明度, dx, dy] ----------
 

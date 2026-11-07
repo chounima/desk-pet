@@ -215,18 +215,19 @@ data/animations/<動作>.json                                  共用（現在�
 
 ## 第 4 階段：網格變形（兩邊都做）
 
+> **改變做法（2026-11-07）**：網頁**不換 PixiJS**。所有頁面（預覽、動作總覽、編輯器、動作編輯器、測試頁）都建立在 SVG 上，整個換掉風險大；網格部件改用「每個三角形一張裁切過的 `<image>`＋仿射矩陣」畫，其他部件照舊，點擊判定沿用 SVG（裁切範圍外點不到）。網格部件多時效能不夠再考慮換。
+
 | 步驟 | Godot | 網頁 | 內容 |
 |---|---|---|---|
-| 4a | — | `preview/vendor/pixi.min.js`（新） | 放入固定版本的 PixiJS（放在專案裡，不連 CDN，離線也能用） |
-| 4b | — | `view/renderer.js` | **網頁繪製從 SVG 換成 PixiJS**，先做到畫面跟現在一模一樣（還沒有網格），所有頁面（預覽、動作總覽、編輯器、測試頁）確認正常 |
-| 4c | — | `view/hitTest.js`（新） | 換成 PixiJS 後的點擊判定 |
-| 4d | `Core/Mesh.cs`（新） | `core/mesh.js`（新） | **網格計算**（純計算，兩邊共用測試）：鋪格子、依距離自動算骨骼權重、每幀算頂點位置 |
-| 4e | `Content/Models.cs` ＋ schema | — | 插槽加選配 `mesh: { cols, rows, bones, weights }` |
-| 4f / 4g | `View/MeshPart.cs`（新） | `view/meshPart.js`（新） | 用 `Polygon2D`／PixiJS Mesh 畫網格部件 |
-| 4h / 4i | `View/PetView.cs` | `view/renderer.js` | 有 `mesh` 的插槽用網格部件，沒有的照舊 |
-| 4j / 4k | `View/PetView.cs` | `view/hitTest.js` | 網格部件的點擊判定（點在哪個三角形 → 換算回原圖像素） |
-| 4l | 角色資料 | — | 先套在手肘、腰、頭髮骨鏈；半身模式的臉頰、瀏海也可以用（轉頭時臉形變） |
-| 4m | `js/animator/` | — | 動作編輯器顯示網格、可調權重 |
+| 4a～4c | — | — | ~~PixiJS~~（見上，不換） |
+| 4d ✅ | `Core/Mesh.cs`（新） | `core/mesh.js`（新） | **網格計算**：部件範圍鋪 cols × rows 格，權重依頂點到各骨頭線段的距離（`1/(d+1)^4`，太小的丟掉），每幀混合骨骼變換。`tests/golden/mesh.json` 兩邊比對（含大角度彎曲） |
+| 4e ✅ | `Content/Models.cs` ＋ schema | — | 插槽加選配 `mesh: { cols, rows, bones }`（`MeshData`） |
+| 4f～4i ✅ | `View/PetView.cs`（Sprite 透明、子節點 `Polygon2D` 畫） | `view/renderer.js`（三角形裁切，邊沿法向量外推 1 單位蓋接縫） | 有 `mesh` 的插槽用網格畫，沒有的照舊；換衣服、替換圖會更新貼圖與 UV。`--no-mesh`／`?nomesh` 比較用 |
+| 4j / 4k ✅ | `View/PetView.cs` | （SVG 本身） | 網格部件的點擊判定（找到三角形 → 重心座標換回原圖像素）、外框用頂點 |
+| 4l ✅ | `tools/artgen/rig.py` | — | 套在**頭髮骨鏈**（整條鏈＋頭一起算權重，彎成連續曲線）與**上半身**（hips＋torso）。**手腳不套**：佔位美術的關節是圓頭重疊，試過後膝蓋的圓頭會被小腿拉歪、比不套難看；部件包畫成跨過關節的一整條手腳時再開 |
+| 4m | `js/animator/` | — | 動作編輯器顯示網格、可調權重（之後：等部件包真的用到網格再做） |
+
+效能（8 個客人）：網格 2.74 ms／幀、不用網格 2.24 ms（+0.5 ms）。
 
 完成標準：手肘、腰不會折出硬角；長髮是連續彎曲的曲線；兩邊畫面一致，網格頂點共用測試通過；點擊穿透與部位判定跟現在一樣準。
 

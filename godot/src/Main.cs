@@ -128,6 +128,7 @@ public partial class Main : Node2D
             return;
         }
         Pet.MotionDisabled = args0.ContainsKey("no-motion");     // 效能比較用
+        View.PetView.MeshDisabled = args0.ContainsKey("no-mesh");       // 網格變形前後比較、效能比較用
         settings = Settings.Load();
         I18n.Load(args0.GetValueOrDefault("lang", settings.Language));     // --lang=en：測試用，不存設定
         DesktopWindow.Screen = settings.Screen;
