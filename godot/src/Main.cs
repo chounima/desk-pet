@@ -11,6 +11,7 @@
 //   --zones            印出身體各點判定成哪個部位
 //   --volley / --volley-bot  直接開始排球對打（bot = 模擬完美玩家自動回球）
 //   --guests=join:a@sera,speak:a,chat:a:嗨,leave:a  假的多人來源（見 ScriptSource）
+//   --record=資料夾    把 --action 的動作錄成 PNG（--record-frames=12），見 tools/record_clip.ps1
 //   --no-single        自動測試用：不檢查單一實例（使用者的桌寵開著時也能跑）
 //   --twitch=頻道      連線某個 Twitch 聊天室（不存設定）
 //   --discord=ClientID 連線 Discord 本機 RPC（不存設定、不存 token）
@@ -208,6 +209,7 @@ public partial class Main : Node2D
         SetupCustom();
         SetupGuests(ids, clips, props);
         SetupFeatures(ids, clips, props);
+        SetupRecord();
         if (args.TryGetValue("hub", out var hubTab)) hub.Open(hubTab);     // --hub=shop：一開始就打開視窗（截圖用）
 
         GD.Print($"[DeskPet] content={ContentLoader.Root} characters={string.Join(",", ids)} " +
@@ -248,6 +250,7 @@ public partial class Main : Node2D
     public override void _Process(double delta)
     {
         if (duplicate) return;
+        if (UpdateRecord()) return;          // --record：錄影模式
         var dt = Mathf.Min((float)delta, 0.05f);
 
         var newKeys = 0;

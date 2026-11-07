@@ -20,7 +20,7 @@ try {
     $args = @("--headless=new", "--disable-gpu", "--user-data-dir=`"$profile`"", "--virtual-time-budget=$Budget", "--dump-dom", $url)
     Start-Process -FilePath $edge -ArgumentList $args -RedirectStandardOutput $dom -Wait -WindowStyle Hidden
     if ($Shot) {
-        Start-Process -FilePath $edge -ArgumentList @("--headless=new", "--disable-gpu", "--user-data-dir=`"$profile`"", "--window-size=1100,900",
+        Start-Process -FilePath $edge -ArgumentList @("--headless=new", "--disable-gpu", "--user-data-dir=`"$profile`"", "--window-size=1300,900",
             "--virtual-time-budget=$Budget", "--screenshot=`"$Shot`"", $url) -Wait -WindowStyle Hidden
     }
     $html = Get-Content $dom -Raw -Encoding utf8

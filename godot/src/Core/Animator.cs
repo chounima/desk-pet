@@ -1,4 +1,4 @@
-// 動作播放器：取樣關鍵影格，切換動作時做交叉淡化（移植自 preview/js/core/animator.js）
+﻿// 動作播放器：取樣關鍵影格，切換動作時做交叉淡化（移植自 preview/js/core/animator.js）
 using System;
 using System.Collections.Generic;
 using DeskPet.Content;
@@ -65,6 +65,13 @@ public sealed class Animator
         this.mods = mods ?? NoMods;
         time = 0;
         Finished = false;
+    }
+
+    /// <summary>直接跳到某個時間點（不做淡化）：錄影、截圖用</summary>
+    public void Seek(float t)
+    {
+        time = t;
+        blend = 1;
     }
 
     public float LocalTime => Clip.Loop ? time % Clip.Duration : Math.Min(time, Clip.Duration);
