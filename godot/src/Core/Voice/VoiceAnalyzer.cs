@@ -30,9 +30,10 @@ public sealed class VoiceAnalyzer
 
     readonly int decimate;
     readonly double rate, hop;
-    readonly double[] buf = new double[Window];
+    readonly double[] ring = new double[Window];       // 環狀緩衝區（最新的樣本寫在 head）
+    readonly double[] buf = new double[Window];        // 分析時排成一列（最舊 → 最新）
     double acc, sinceHop, holdLeft;
-    int accN;
+    int accN, head;
 
     /// <summary>噪音底線（dB，校正後設定）</summary>
     public double Floor { get; set; }
@@ -54,8 +55,8 @@ public sealed class VoiceAnalyzer
             acc += v;
             if (++accN == decimate)
             {
-                Array.Copy(buf, 1, buf, 0, buf.Length - 1);
-                buf[^1] = acc / decimate;
+                ring[head] = acc / decimate;
+                head = (head + 1) % Window;
                 acc = 0;
                 accN = 0;
             }
@@ -70,6 +71,8 @@ public sealed class VoiceAnalyzer
 
     void Analyze()
     {
+        Array.Copy(ring, head, buf, 0, Window - head);
+        Array.Copy(ring, 0, buf, Window - head, head);
         double sum = 0;
         foreach (var v in buf) sum += v * v;
         var db = 10 * Math.Log10(sum / buf.Length + 1e-12);
@@ -86,11 +89,15 @@ public sealed class VoiceAnalyzer
         var n = x.Length;
         int minLag = (int)Math.Floor(rate / MaxPitch), maxLag = Math.Min(n - 32, (int)Math.Ceiling(rate / MinPitch));
         var r = new double[maxLag + 2];
+        // 能量的前綴和：sq[k] = x[0]² + … + x[k-1]²（每個延遲的 xx、yy 不用重算）
+        var sq = new double[n + 1];
+        for (var i = 0; i < n; i++) sq[i + 1] = sq[i] + x[i] * x[i];
         double best = 0;
         for (var lag = minLag; lag <= maxLag + 1; lag++)
         {
-            double xy = 0, xx = 0, yy = 0;
-            for (var i = 0; i + lag < n; i++) { xy += x[i] * x[i + lag]; xx += x[i] * x[i]; yy += x[i + lag] * x[i + lag]; }
+            double xy = 0;
+            for (var i = 0; i + lag < n; i++) xy += x[i] * x[i + lag];
+            double xx = sq[n - lag], yy = sq[n] - sq[lag];
             r[lag] = xy / (Math.Sqrt(xx * yy) + 1e-12);
             if (lag <= maxLag) best = Math.Max(best, r[lag]);
         }

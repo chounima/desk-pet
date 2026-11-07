@@ -348,15 +348,7 @@
         36,
         34
       ],
-      "far": false,
-      "mesh": {
-        "cols": 2,
-        "rows": 4,
-        "bones": [
-          "hips",
-          "torso"
-        ]
-      }
+      "far": false
     },
     {
       "name": "head",

@@ -116,6 +116,7 @@ public sealed class Pet
         if (!MotionDisabled) overlay.Apply(pose, Animator.Name, dt);         // 呼吸、重心晃動（data/motion.json）
         Gaze.Update(this, dt);
         pose["head"] = pose.GetValueOrDefault("head") + Gaze.HeadAngle;
+        if (Gaze.BodyAngle != 0) pose["torso"] = pose.GetValueOrDefault("torso") + Gaze.BodyAngle;
         world = skeleton.Compute(pose);
         // 次級物理：用「只有動畫」的姿勢算出偏移，再重算一次骨架（物理骨不參與 Probe）
         if (motion.Active && !MotionDisabled) world = skeleton.Compute(pose, motion.Update(dt, world, X, Y, Scale, Facing));

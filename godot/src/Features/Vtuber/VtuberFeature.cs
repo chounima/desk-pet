@@ -100,6 +100,7 @@ public sealed class VtuberFeature : IFeature
         pet = new Pet(stage, host.RigOf(id), host.Clips, host.Props, 1);
         control = new ControlArbiter(a => driver?.TryStart(a) == true, Now);
         attach = new PetAttachments(stage, pet);
+        pet.Gaze.Range = 100000;        // 螢幕上哪裡都看得到
         Layout();
         if (script == null) mic.Start(string.IsNullOrEmpty(Settings.MicDevice) ? null : Settings.MicDevice);
         mic.Floor = cal.Floor;

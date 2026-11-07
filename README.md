@@ -50,6 +50,7 @@ Godot 4.7 .NET（C#）。直接讀取專案根目錄的 `art/` 與 `data/`，和
 | 成就 | 15 個（`data/achievements.json`），依統計數字自動解鎖並送點數；收藏分頁最下面看進度。之後接 Steam 見「接上 Steam」 |
 | 多螢幕 | 設定分頁「螢幕」選要顯示在哪個螢幕（`DesktopWindow.Screen`）；角色不會跨螢幕走 |
 | 多人／直播模式 | Desk Pet 視窗「👥 多人」分頁。外部來源的事件統一成 `PresenceEvent`（出現、離開、講話、靜音、聊天、表情），變成**客人角色**（`Game/Guests/`、`Main.Guests.cs`）：頭上有名牌，講話時動嘴＋名牌綠框，聊天顯示在泡泡，關鍵字／表情做動作（`data/guests.json`）。客人可以點、拖、右鍵（換角色會記住這個人用哪隻）；不影響收集進度、不參加小遊戲。也可以手動加入角色 |
+| 半身 VTuber 模式 | Desk Pet 視窗「🎥 半身」分頁（`Features/Vtuber/`）：螢幕角落放大顯示角色上半身，跟著麥克風動嘴（認得あいうえお）、依音量／音調換表情或做動作（`data/vtuber.json`）、Ctrl+Alt+1～9 快捷鍵表情、眼睛跟著游標。拖曳換位置、滾輪縮放、右鍵開設定；全螢幕遊戲時可以照樣顯示（直播擷取桌面）。聲音只在記憶體裡分析，不錄音。測試：`--vtuber --vtuber-voice=talk:2,loud:0.3,high:1 --vtuber-shot=x.png --vtuber-shot-quit`；網頁版 `preview/bust.html` |
 | Twitch | `Platform/Live/TwitchChat.cs`：匿名（justinfan）連 `wss://irc-ws.chat.twitch.tv` 讀聊天室，不用登入或申請。留言的人出現，太久沒講話離開；滿了換掉最久沒講話的（剛來 15 秒內不換）。測試：`--twitch=頻道` |
 | Discord | `Platform/Live/DiscordRpc.cs`：本機 RPC（named pipe `discord-ipc-N`），讀自己所在語音頻道裡的人、誰在講話（`SPEAKING_START/STOP`）、靜音，跟著換頻道。需要自己建立 Discord 應用程式（Client ID／Secret；OAuth2 Redirects **至少要有一個**（例如 `http://localhost`），但 RPC 的 AUTHORIZE **不能帶** redirect_uri，Discord 會自動用第一個），第一次會在 Discord 裡授權，token 存在設定。自己講話 → 主角色動嘴。測試：`--discord=ClientID[:token]` |
 | 會議軟體（音量） | `Platform/Live/AudioWatch.cs`：Windows 音量表（直接呼叫 COM vtable，Godot 可卸載組件不能用 ComImport）。麥克風有聲音 → 主角色動嘴；`meetingApps` 裡的程式（Teams、Zoom、LINE…）有聲音 → 「XX 通話」客人動嘴，程式關掉就離開。只讀音量，不錄音。測試：`--audio=mic+apps+powershell` |
@@ -73,7 +74,7 @@ godot/src/
 |---|---|
 | `python tools/validate.py` | 檢查 `art/`、`data/` 的格式（`schemas/`）與引用（骨骼、插槽、圖檔、動作名稱、翻譯缺漏）；有錯結束碼 1。需要 `pip install -r tools/requirements.txt` |
 | `--selftest=golden`（`--update` 重寫答案）／`tools/web_test.ps1` | 共用測試 `tests/golden/`（姿勢、物理、曲線、疊加層、分層臉）：桌寵與網頁算出來要一樣。`-Page preview/tests/faces.html`：分層臉疊起來和整張臉逐像素一致 |
-| `--selftest=progress`／`live`／`control`／`apps` | 收集系統、多人（Twitch 解析、規則、機密存檔、設定搬移）、動作與表情的優先順序、程式分類 |
+| `--selftest=progress`／`live`／`control`／`apps`／`vtuber` | 收集系統、多人（Twitch 解析、規則、機密存檔、設定搬移）、動作與表情的優先順序、程式分類、半身模式的聲音規則與效能 |
 | `tools/test_discord.ps1` | 假的 Discord RPC 伺服器（`tools/mock_discord.ps1`）跑完整劇本 |
 | `tools/record_clip.ps1 -Char sera -Clip walk` | 桌寵與網頁各錄一張比較圖到 `build/record/`（`--record`、`preview/record.html`；`-Vx` 平移急停看物理、`-Extra "--look=x,y"` 看視線） |
 | `tools/perf.ps1` | 1、8、20 隻客人時每幀處理時間，結果附加到 `build/perf.txt` |

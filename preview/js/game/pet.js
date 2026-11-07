@@ -122,14 +122,14 @@ export class Pet {
     return this.probeCache.get(key);
   }
 
-  // 視線：看著畫面上的點（null = 不看），分層臉的瞳孔慢慢轉過去（和桌寵 Gaze 一樣，離臉 300 px 算看到底）
-  lookAt(point, dt) {
+  // 視線：看著畫面上的點（null = 不看），分層臉的瞳孔慢慢轉過去（和桌寵 Gaze 一樣，離臉 range（預設 300 px）算看到底）
+  lookAt(point, dt, range = 300) {
     let target = [0, 0];
     if (point) {
       const [hx, hy] = this.rig.headTop ?? [6, -110];
       const [px, py] = apply(this.world.head, hx * 0.5, hy * 0.5);
       const clamp = v => Math.max(-1, Math.min(1, v));
-      target = [clamp((point.x - this.x - px * this.facing * this.scale) * this.facing / 300), clamp((point.y - this.y - py * this.scale) / 300)];
+      target = [clamp((point.x - this.x - px * this.facing * this.scale) * this.facing / range), clamp((point.y - this.y - py * this.scale) / range)];
     }
     const [lx, ly] = this.look ?? [0, 0], k = Math.min(1, dt * 12);
     this.look = [lx + (target[0] - lx) * k, ly + (target[1] - ly) * k];

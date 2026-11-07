@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>半身預覽</title>
+<link rel="stylesheet" href="css/base.css">
+<style>
+  body { display: flex; min-height: 100vh; margin: 0; }
+  #side { width: 300px; padding: 16px; background: var(--panel); border-right: 1px solid var(--line); }
+  #side h1 { font-size: 18px; margin: 0 0 8px; }
+  #side .hint { color: var(--muted); font-size: 13px; line-height: 1.6; }
+  #side button, #side select { margin: 4px 4px 4px 0; }
+  #meter { height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; margin: 8px 0; }
+  #meter div { height: 100%; width: 0; background: #ff7d8a; }
+  #stats { font: 13px/1.6 ui-monospace, monospace; color: #ffd75e; white-space: pre; }
+  #stage { flex: 1; display: flex; align-items: center; justify-content: center; background:
+    linear-gradient(45deg, #2f3242 25%, transparent 25%) 0 0 / 24px 24px,
+    linear-gradient(45deg, transparent 75%, #2f3242 75%) 0 0 / 24px 24px, #343747; }
+  #bust { height: 80vh; aspect-ratio: 0.85; }
+</style>
+</head>
+<body>
+  <aside id="side">
+    <h1>🎥 半身預覽</h1>
+    <p class="hint">對著麥克風講話：角色動嘴（認得あいうえお）、眼睛跟著游標。數字鍵 1～5 換表情（開心、驚訝、生氣、害羞、認真），0 換回來。和桌寵的半身模式用同一套聲音分析（<code>core/voice.js</code>）與分層臉。聲音只在瀏覽器裡分析，不會錄音或上傳。</p>
+    <select id="char"></select>
+    <div>
+      <button id="mic">🎙 開麥克風</button>
+      <button id="test">🔊 測試音（あいうえお）</button>
+    </div>
+    <div id="meter"><div></div></div>
+    <div id="stats"></div>
+  </aside>
+  <main id="stage"><svg id="bust"></svg></main>
+  <script>
+    addEventListener("error", e => { document.title = `ERROR ${e.message}`; });
+    addEventListener("unhandledrejection", e => { document.title = `ERROR ${e.reason?.message ?? e.reason}`; });
+  </script>
+  <script type="module" src="js/bust.js"></script>
+</body>
+</html>

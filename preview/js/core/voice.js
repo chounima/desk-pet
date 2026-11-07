@@ -43,7 +43,9 @@ export class VoiceAnalyzer {
     this.rate = sampleRate / this.decimate;
     this.hop = sampleRate / VOICE.fps;
     this.floor = floorDb;               // 噪音底線（校正後設定）
-    this.buf = new Float64Array(VOICE.window);
+    this.ring = new Float64Array(VOICE.window);     // 環狀緩衝區（最新的樣本寫在 head）
+    this.head = 0;
+    this.buf = new Float64Array(VOICE.window);      // 分析時排成一列（最舊 → 最新）
     this.acc = 0; this.accN = 0;        // 降取樣：幾個樣本取平均
     this.sinceHop = 0;
     this.holdLeft = 0;
@@ -55,8 +57,8 @@ export class VoiceAnalyzer {
     for (let i = 0; i < samples.length; i++) {
       this.acc += samples[i];
       if (++this.accN === this.decimate) {
-        this.buf.copyWithin(0, 1);
-        this.buf[this.buf.length - 1] = this.acc / this.decimate;
+        this.ring[this.head] = this.acc / this.decimate;
+        this.head = (this.head + 1) % VOICE.window;
         this.acc = 0; this.accN = 0;
       }
       if (++this.sinceHop >= this.hop) {
@@ -68,6 +70,9 @@ export class VoiceAnalyzer {
   }
 
   analyze() {
+    const h = this.head, w = VOICE.window;
+    this.buf.set(this.ring.subarray(h), 0);
+    this.buf.set(this.ring.subarray(0, h), w - h);
     const x = this.buf, n = x.length;
     let sum = 0;
     for (let i = 0; i < n; i++) sum += x[i] * x[i];
@@ -83,10 +88,14 @@ export class VoiceAnalyzer {
     const x = this.buf, n = x.length;
     const minLag = Math.floor(this.rate / VOICE.maxPitch), maxLag = Math.min(n - 32, Math.ceil(this.rate / VOICE.minPitch));
     const r = new Float64Array(maxLag + 2);
+    // 能量的前綴和：sq[k] = x[0]² + … + x[k-1]²（每個延遲的 xx、yy 不用重算）
+    const sq = new Float64Array(n + 1);
+    for (let i = 0; i < n; i++) sq[i + 1] = sq[i] + x[i] * x[i];
     let best = 0;
     for (let lag = minLag; lag <= maxLag + 1; lag++) {
-      let xy = 0, xx = 0, yy = 0;
-      for (let i = 0; i + lag < n; i++) { xy += x[i] * x[i + lag]; xx += x[i] * x[i]; yy += x[i + lag] * x[i + lag]; }
+      let xy = 0;
+      for (let i = 0; i + lag < n; i++) xy += x[i] * x[i + lag];
+      const xx = sq[n - lag], yy = sq[n] - sq[lag];
       r[lag] = xy / (Math.sqrt(xx * yy) + 1e-12);
       if (lag <= maxLag) best = Math.max(best, r[lag]);
     }

@@ -34,7 +34,7 @@
 
 ## 功能模組
 
-功能（專注、音樂、日常、收集、自訂內容，之後的半身模式）原本是 `Main` 的 `partial` 檔，共用 `Main` 的欄位。目標是每個功能一個資料夾 `godot/src/Features/<功能>/`，實作 `IFeature`（0k）。已經搬好的：**多人**（`Features/Guests/`）。
+功能（專注、音樂、日常、收集、自訂內容，之後的半身模式）原本是 `Main` 的 `partial` 檔，共用 `Main` 的欄位。目標是每個功能一個資料夾 `godot/src/Features/<功能>/`，實作 `IFeature`（0k）。已經搬好的：**多人**（`Features/Guests/`）、**半身 VTuber 模式**（`Features/Vtuber/`：麥克風 `Platform/Voice/MicCapture`、聲音分析 `Core/Voice/`、規則 `Game/Vtuber/VoiceRules`、分頁 `UI/Hub/VtuberTab`）。
 
 | 介面要提供的 | 用途 |
 |---|---|

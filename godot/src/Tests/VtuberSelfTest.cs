@@ -1,5 +1,6 @@
 // --selftest=vtuber：半身模式的聲音規則（直接餵聲音分析結果，不用麥克風、不開畫面）
 using System.Collections.Generic;
+using System;
 using DeskPet.Content;
 using DeskPet.Core.Voice;
 using DeskPet.Game.Control;
@@ -67,6 +68,20 @@ public static class VtuberSelfTest
         // 7. 快捷鍵：data/vtuber.json 的組合鍵都要認得
         Check(new Platform.Hotkeys(cfg.Hotkeys.Keys).Count == cfg.Hotkeys.Count, "快捷鍵都要認得");
         Check(new Platform.Hotkeys(new[] { "Ctrl+Alt+F5", "Shift+Q", "Ctrl+?" }).Count == 2, "F5、字母可以，其他符號略過");
+
+        // 8. 效能：10 秒的母音（48 kHz）分析＋校正＋規則，平均每幀（1/60 秒）不超過 1 ms
+        var audio = VoiceAnalyzer.Synth("vowel", 180, 0.3, new double[] { 800, 1200 }, 10, 48000);
+        var analyzer = new VoiceAnalyzer(48000);
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        for (var i = 0; i < 600; i++)
+        {
+            var frame = analyzer.Feed(audio.AsSpan(i * 800, 800));
+            cal.Update(frame);
+            rules.Update(frame, cal, dt, control, now += dt);
+        }
+        var perFrame = sw.Elapsed.TotalMilliseconds / 600;
+        GD.Print($"[vtuber] 聲音分析每幀 {perFrame:0.000} ms");
+        Check(perFrame < 1, $"聲音分析每幀 {perFrame:0.000} ms（要 < 1）");
 
         foreach (var f in failures) GD.Print($"[vtuber] ✗ {f}");
         GD.Print(failures.Count == 0 ? "[vtuber] 全部通過" : $"[vtuber] {failures.Count} 個失敗");
