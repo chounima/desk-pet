@@ -24,9 +24,10 @@ public sealed class Spring
     {
         public required string Name;
         public required PhysicsParams P;
-        public string? PhysicsParent;            // 最近的物理祖先（偏移要加上去）
+        public int Parent = -1;                  // 最近的物理祖先在 bones 裡的位置（偏移要加上去）
         public double Theta, Omega;
         public double PrevX, PrevY, VelX, VelY;
+        public double Ax, Ay, Vx, Vy;            // 這一幀起點的加速度、速度（子步驟裡當常數）
         public bool HasPrev, HasVel;
     }
 
@@ -50,7 +51,7 @@ public sealed class Spring
             if (!physics.TryGetValue(b.Name, out var p)) continue;
             string? ancestor = b.Parent;
             while (ancestor != null && !physics.ContainsKey(ancestor)) ancestor = parents.GetValueOrDefault(ancestor);
-            bones.Add(new Bone { Name = b.Name, P = p, PhysicsParent = ancestor });
+            bones.Add(new Bone { Name = b.Name, P = p, Parent = ancestor == null ? -1 : bones.FindIndex(x => x.Name == ancestor) });
         }
     }
 
@@ -90,7 +91,6 @@ public sealed class Spring
         prevFacing = facing;
 
         // 每根骨頭起點的加速度（每幀估一次，子步驟裡當常數）
-        var accel = new Dictionary<string, (double X, double Y, double Vx, double Vy)>();
         foreach (var b in bones)
         {
             var o = world[b.Name].Origin;
@@ -117,7 +117,7 @@ public sealed class Spring
                 }
             }
             (b.PrevX, b.PrevY, b.HasPrev) = (gx, gy, true);
-            accel[b.Name] = (ax, ay, b.HasVel ? b.VelX : 0, b.HasVel ? b.VelY : 0);
+            (b.Ax, b.Ay, b.Vx, b.Vy) = (ax, ay, b.HasVel ? b.VelX : 0, b.HasVel ? b.VelY : 0);
         }
 
         accumulator += dt;
@@ -130,9 +130,8 @@ public sealed class Spring
             {
                 var p = b.P;
                 var angle = AnimatedAngle(world, b) + b.Theta;
-                var (ax, ay, vx, vy) = accel[b.Name];
-                var fx = p.Inertia * ax + p.Drag * vx;
-                var fy = p.Inertia * ay + p.Drag * vy;
+                var fx = p.Inertia * b.Ax + p.Drag * b.Vx;
+                var fy = p.Inertia * b.Ay + p.Drag * b.Vy;
                 var alpha = -p.Stiffness * b.Theta - p.Damping * b.Omega
                             + p.Gravity * Math.Cos(angle)
                             + (fx * Math.Sin(angle) - fy * Math.Cos(angle)) / Math.Max(1, p.Length);
@@ -157,12 +156,7 @@ public sealed class Spring
     double AnimatedAngle(IReadOnlyDictionary<string, Transform2D> world, Bone b)
     {
         var angle = (double)world[b.Name].Rotation;
-        for (var parent = b.PhysicsParent; parent != null;)
-        {
-            var pb = bones.Find(x => x.Name == parent)!;
-            angle += pb.Theta;
-            parent = pb.PhysicsParent;
-        }
+        for (var i = b.Parent; i >= 0; i = bones[i].Parent) angle += bones[i].Theta;
         return angle;
     }
 }

@@ -105,15 +105,18 @@ public sealed class Pet
 
     readonly Overlay overlay = new(MotionConfig.Load());
 
+    /// <summary>效能比較用（--no-motion）：關掉物理與疊加層</summary>
+    public static bool MotionDisabled { get; set; }
+
     public void Update(float dt)
     {
         var pose = Animator.Update(dt);
-        overlay.Apply(pose, Animator.Name, dt);         // 呼吸、重心晃動（data/motion.json）
+        if (!MotionDisabled) overlay.Apply(pose, Animator.Name, dt);         // 呼吸、重心晃動（data/motion.json）
         Gaze.Update(this, dt);
         pose["head"] = pose.GetValueOrDefault("head") + Gaze.HeadAngle;
         world = skeleton.Compute(pose);
         // 次級物理：用「只有動畫」的姿勢算出偏移，再重算一次骨架（物理骨不參與 Probe）
-        if (motion.Active) world = skeleton.Compute(pose, motion.Update(dt, world, X, Y, Scale, Facing));
+        if (motion.Active && !MotionDisabled) world = skeleton.Compute(pose, motion.Update(dt, world, X, Y, Scale, Facing));
         View.SetFace(CurrentFace(dt));
         View.SetFaceOffset(Gaze.FaceOffset);
         View.SetProps(Animator.Props);
