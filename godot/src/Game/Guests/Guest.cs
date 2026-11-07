@@ -124,26 +124,38 @@ public sealed class Guest
     }
 
     /// <summary>聊天訊息：顯示在泡泡裡，關鍵字對應的動作會做出來</summary>
-    public void Chat(string text, int maxChars, string? action)
+    /// <summary>聊天訊息：顯示在泡泡裡，符合的規則（關鍵字）照做</summary>
+    public void Chat(string text, int maxChars, Rules.Rule? rule)
     {
         Touch();
         var shown = text.Length > maxChars ? text[..maxChars] + "…" : text;
         bubble.Say(shown, Math.Clamp(2.5f + shown.Length * 0.08f, 3, 7));
-        if (action != null) Do(action);
+        if (rule != null) Apply(rule, sayLine: false);       // 泡泡已經在顯示聊天內容，不再說台詞
     }
 
-    public void React(string emoji, string? action)
+    public void React(string emoji, Rules.Rule? rule)
     {
         Touch();
         fx.Burst(emoji, Pet.HeadTop(), Colors.White, 30);
-        if (action != null) Do(action);
+        if (rule != null) Apply(rule);
+    }
+
+    /// <summary>照規則的 do 做：動作、表情（維持 Seconds 秒）、台詞、特效</summary>
+    public void Apply(Rules.Rule rule, bool sayLine = true)
+    {
+        if (Leaving) return;
+        var d = rule.Do;
+        if (d.Action != null) Do(d.Action, rule.Priority);
+        if (d.Face != null) Control.Request("rule", Channel.Face, d.Face, rule.Priority, d.Seconds);
+        if (d.Line != null && sayLine) SayLine(d.Line);
+        if (d.Fx != null) fx.Burst(d.Fx, Pet.HeadTop(), Colors.White, 30);
     }
 
     /// <summary>做某個動作；這個體型沒有就改成跳一下</summary>
-    public void Do(string action)
+    public void Do(string action, int priority = Priority.Reaction)
     {
         if (Leaving) return;
-        Control.TryAct("chat", Pet.Clips.ContainsKey(action) || action is "climb" or "hopDown" ? action : "jump", Priority.Reaction, 2.5f);
+        Control.TryAct("chat", Pet.Clips.ContainsKey(action) || action is "climb" or "hopDown" ? action : "jump", priority, 2.5f);
     }
 
     public void Say(string text, float seconds = 2.8f) => bubble.Say(text, seconds);

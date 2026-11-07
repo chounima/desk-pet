@@ -30,33 +30,8 @@
     "appThreshold": {
       "type": "number"
     },
-    "chatTriggers": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "match": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "minItems": 1
-          },
-          "action": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "match",
-          "action"
-        ]
-      }
-    },
-    "reactions": {
-      "type": "object",
-      "additionalProperties": {
-        "type": "string"
-      }
+    "rules": {
+      "$ref": "rules.schema.json"
     }
   }
 }

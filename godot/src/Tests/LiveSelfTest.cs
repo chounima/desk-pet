@@ -1,4 +1,4 @@
-// --selftest=live：多人功能的規則測試（Twitch 訊息解析、頻道名稱、聊天關鍵字），不用連網路
+﻿// --selftest=live：多人功能的規則測試（Twitch 訊息解析、頻道名稱、聊天關鍵字），不用連網路
 // Discord 的協定用假伺服器測：tools/test_discord.ps1
 using System;
 using System.Collections.Generic;
@@ -49,7 +49,19 @@ public static class LiveSelfTest
         }
         Check(cfg.ActionForReaction("👍") == "peace", "表情 👍");
         Check(cfg.ActionForReaction("❤️") == "cheer", "表情 ❤️（含 FE0F）");
-        Check(cfg.ActionForReaction("🦄") == cfg.Reactions["*"], "其他表情用 *");
+        Check(cfg.ActionForReaction("🦄") == "jump", "其他表情用 *（jump）");
+
+        // 統一規則格式：冷卻時間、舊格式轉換
+        var rule = new Game.Rules.Rule { When = new() { Source = "chat", Match = new() { "gg" } }, Do = new() { Action = "peace" }, Cooldown = 5 };
+        var set = new Game.Rules.RuleSet(new() { rule });
+        Check(set.First("chat", "gg", "a", 0) == rule, "第一次觸發");
+        Check(set.First("chat", "gg", "a", 3) == null, "冷卻中不觸發");
+        Check(set.First("chat", "gg", "b", 3) == rule, "冷卻只算同一個人");
+        Check(set.First("chat", "gg", "a", 6) == rule, "冷卻結束可以再觸發");
+        var legacy0 = System.Text.Json.JsonSerializer.Deserialize<GuestConfig>("{\"chatTriggers\":[{\"match\":[\"yo\"],\"action\":\"wave\"}],\"reactions\":{\"*\":\"jump\",\"👍\":\"peace\"}}",
+            new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true })!;
+        legacy0.GetType().GetMethod("ConvertLegacy", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!.Invoke(legacy0, null);
+        Check(legacy0.ActionForChat("yo!") == "wave" && legacy0.ActionForReaction("👍") == "peace" && legacy0.ActionForReaction("🦄") == "jump", "舊格式轉換（* 放最後）");
 
         // Discord 機密：存檔加密、讀回來一樣；舊的明文設定也讀得到
         var settings = new Save.Settings { DiscordClientSecret = "abc密碼123", DiscordAccessToken = "tok" };

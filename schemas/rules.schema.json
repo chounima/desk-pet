@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "rules.schema.json",
+  "title": "觸發規則（data/guests.json 的 rules，之後的 vtuber.json 也用這個格式）",
+  "type": "array",
+  "items": {
+    "$ref": "#/$defs/rule"
+  },
+  "$defs": {
+    "rule": {
+      "type": "object",
+      "required": [
+        "when",
+        "do"
+      ],
+      "properties": {
+        "when": {
+          "type": "object",
+          "required": [
+            "source"
+          ],
+          "properties": {
+            "source": {
+              "type": "string",
+              "description": "chat、reaction；之後 voice、hotkey…"
+            },
+            "match": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "description": "chat：關鍵字（英數字整個字相符，中日文出現就算）"
+            },
+            "emoji": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "description": "reaction：emoji，\"*\" = 其他"
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "source": {
+                    "const": "chat"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "match"
+                ]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "source": {
+                    "const": "reaction"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "emoji"
+                ]
+              }
+            }
+          ]
+        },
+        "do": {
+          "type": "object",
+          "minProperties": 1,
+          "properties": {
+            "action": {
+              "type": "string"
+            },
+            "face": {
+              "type": "string"
+            },
+            "line": {
+              "type": "string"
+            },
+            "fx": {
+              "type": "string"
+            },
+            "seconds": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          }
+        },
+        "cooldown": {
+          "type": "number",
+          "minimum": 0
+        },
+        "priority": {
+          "type": "integer"
+        }
+      }
+    }
+  }
+}

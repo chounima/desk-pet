@@ -1,9 +1,9 @@
-﻿// 客人角色的規則（data/guests.json）：人數上限、聊天關鍵字 → 動作、表情反應 → 動作
+﻿// 客人角色的設定（data/guests.json）：人數上限、會議軟體、觸發規則（聊天關鍵字、表情反應 → 動作，格式見 Game/Rules/Rule.cs）
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using DeskPet.Content;
+using DeskPet.Game.Rules;
 
 namespace DeskPet.Game.Guests;
 
@@ -22,37 +22,48 @@ public sealed class GuestConfig
     /// <summary>音量（0～1 峰值）超過多少算在講話：麥克風、會議軟體</summary>
     public float MicThreshold { get; set; } = 0.06f;
     public float AppThreshold { get; set; } = 0.02f;
-    public List<Trigger> ChatTriggers { get; set; } = new();
-    /// <summary>{ emoji: 動作 }，"*" = 其他 emoji</summary>
-    public Dictionary<string, string> Reactions { get; set; } = new();
+    /// <summary>觸發規則（依順序找第一個符合的）</summary>
+    public List<Rule> Rules { get; set; } = new();
 
-    public sealed class Trigger
+    // 舊格式（2026-11-07 前）：讀到時轉成 Rules
+    public List<LegacyTrigger>? ChatTriggers { get; set; }
+    public Dictionary<string, string>? Reactions { get; set; }
+
+    public sealed class LegacyTrigger
     {
         public List<string> Match { get; set; } = new();
         public string Action { get; set; } = "";
-        Regex? regex;
-
-        // 英數字的關鍵字要整個字相符（hi 不會配到 this），中日文直接找有沒有出現
-        public bool IsMatch(string text) => (regex ??= new Regex(string.Join("|", Match.Select(Pattern)),
-            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)).IsMatch(text);
-
-        static string Pattern(string word)
-        {
-            var p = Regex.Escape(word);
-            // 只看前後是不是英數字：「hi大家」也算 hi
-            if (word.Length > 0 && char.IsAsciiLetterOrDigit(word[0])) p = "(?<![A-Za-z0-9])" + p;
-            if (word.Length > 0 && char.IsAsciiLetterOrDigit(word[^1])) p += "(?![A-Za-z0-9])";
-            return p;
-        }
     }
 
-    /// <summary>聊天內容對應的動作（第一個符合的關鍵字）；沒有就回傳 null</summary>
-    public string? ActionForChat(string text) => ChatTriggers.FirstOrDefault(t => t.IsMatch(text))?.Action;
+    RuleSet? set;
+    public RuleSet RuleSet => set ??= new RuleSet(Rules);
 
-    public string? ActionForReaction(string emoji) =>
-        Reactions.GetValueOrDefault(emoji) ?? Reactions.GetValueOrDefault(emoji.TrimEnd('️')) ?? Reactions.GetValueOrDefault("*");
+    /// <summary>聊天內容對應的規則（第一個符合的）；key = 冷卻時間算在誰身上</summary>
+    public Rule? ForChat(string text, string? key = null, double now = 0) => RuleSet.First("chat", text, key, now);
 
-    public static GuestConfig Load() =>
-        JsonSerializer.Deserialize<GuestConfig>(ContentLoader.ReadText($"{ContentLoader.Root}/data/guests.json"),
+    public Rule? ForReaction(string emoji, string? key = null, double now = 0) => RuleSet.First("reaction", emoji, key, now);
+
+    /// <summary>測試用：聊天內容對應的動作</summary>
+    public string? ActionForChat(string text) => ForChat(text)?.Do.Action;
+
+    public string? ActionForReaction(string emoji) => ForReaction(emoji)?.Do.Action;
+
+    public static GuestConfig Load()
+    {
+        var cfg = JsonSerializer.Deserialize<GuestConfig>(ContentLoader.ReadText($"{ContentLoader.Root}/data/guests.json"),
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new();
+        cfg.ConvertLegacy();
+        return cfg;
+    }
+
+    void ConvertLegacy()
+    {
+        foreach (var t in ChatTriggers ?? new())
+            Rules.Add(new Rule { When = new RuleWhen { Source = "chat", Match = t.Match }, Do = new RuleDo { Action = t.Action } });
+        // "*" 是預設，放最後
+        foreach (var (emoji, action) in (Reactions ?? new()).OrderBy(kv => kv.Key == "*"))
+            Rules.Add(new Rule { When = new RuleWhen { Source = "reaction", Emoji = new() { emoji } }, Do = new RuleDo { Action = action } });
+        ChatTriggers = null;
+        Reactions = null;
+    }
 }

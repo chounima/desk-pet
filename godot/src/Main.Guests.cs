@@ -226,11 +226,11 @@ public partial class Main
             case PresenceKind.Chat:
                 g ??= AddGuest(e.Key, e.Source, e.Name);
                 g?.Rename(e.Name);
-                g?.Chat(e.Text, guestCfg.ChatMaxChars, guestCfg.ActionForChat(e.Text));
+                g?.Chat(e.Text, guestCfg.ChatMaxChars, guestCfg.ForChat(e.Text, e.Key, Time.GetTicksMsec() / 1000.0));
                 break;
             case PresenceKind.Reaction:
                 g ??= src.ChatOnly ? AddGuest(e.Key, e.Source, e.Name) : null;
-                g?.React(e.Text, guestCfg.ActionForReaction(e.Text));
+                g?.React(e.Text, guestCfg.ForReaction(e.Text, e.Key, Time.GetTicksMsec() / 1000.0));
                 break;
         }
         if (dumpState || src is ScriptSource)

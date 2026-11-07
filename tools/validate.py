@@ -51,7 +51,11 @@ def check_schema(report: Report, root: Path, schema: Draft202012Validator, path:
 
 
 def schemas(root: Path) -> dict[str, Draft202012Validator]:
-    return {p.name.removesuffix(".schema.json"): Draft202012Validator(load(p)) for p in (root / "schemas").glob("*.schema.json")}
+    """各 schema 的檢查器；schema 之間用 $ref（例如 guests → rules）互相引用"""
+    from referencing import Registry, Resource
+    docs = {p.name: load(p) for p in (root / "schemas").glob("*.schema.json")}
+    registry = Registry().with_resources((name, Resource.from_contents(doc)) for name, doc in docs.items())
+    return {name.removesuffix(".schema.json"): Draft202012Validator(doc, registry=registry) for name, doc in docs.items()}
 
 
 # ---------- 動作 ----------
@@ -179,6 +183,10 @@ def action_refs(root: Path) -> list[tuple[str, str]]:
 
     if (d / "guests.json").exists():
         g = load(d / "guests.json")
+        for i, r in enumerate(g.get("rules", [])):
+            w = r.get("when", {})
+            add(f"guests.json rules[{i}] {(w.get('match') or w.get('emoji') or ['?'])[0]}", r.get("do", {}).get("action"))
+        # 舊格式（2026-11-07 前）
         for t in g.get("chatTriggers", []):
             add(f"guests.json chatTriggers {t['match'][0]}", t["action"])
         for emoji, a in g.get("reactions", {}).items():
