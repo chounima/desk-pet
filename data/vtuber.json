@@ -1,0 +1,108 @@
+{
+  "_說明": "半身 VTuber 模式（Features/Vtuber/）：聲音觸發規則與快捷鍵。音量用「比平常講話大幾 dB」、音調用「比平常高幾個半音」（負數 = 低），平常值會自動校正。表情名見 rig.json 的表情，動作名見 data/animations/。",
+  "bust": {
+    "height": 420,
+    "margin": 0.06
+  },
+  "mouth": {
+    "openDb": 6
+  },
+  "rules": [
+    {
+      "id": "surprise",
+      "when": {
+        "jumpDb": 12
+      },
+      "face": "surprised",
+      "seconds": 1.2,
+      "cooldown": 4
+    },
+    {
+      "id": "excited",
+      "when": {
+        "loudDb": 8,
+        "forSeconds": 2
+      },
+      "face": "happy",
+      "action": "cheer",
+      "seconds": 2.5,
+      "cooldown": 12
+    },
+    {
+      "id": "happy",
+      "when": {
+        "semitones": 4,
+        "forSeconds": 0.6
+      },
+      "face": "happy",
+      "seconds": 1.5,
+      "cooldown": 3
+    },
+    {
+      "id": "serious",
+      "when": {
+        "semitones": -3,
+        "forSeconds": 1.5
+      },
+      "face": "focus",
+      "seconds": 2,
+      "cooldown": 6
+    },
+    {
+      "id": "bored",
+      "when": {
+        "silentSeconds": 30
+      },
+      "action": "stretch",
+      "seconds": 3,
+      "cooldown": 45
+    },
+    {
+      "id": "sleepy",
+      "when": {
+        "silentSeconds": 90
+      },
+      "face": "sleep",
+      "seconds": 4,
+      "cooldown": 60
+    }
+  ],
+  "hotkeys": {
+    "Ctrl+Alt+1": {
+      "face": "happy",
+      "seconds": 3
+    },
+    "Ctrl+Alt+2": {
+      "face": "surprised",
+      "seconds": 3
+    },
+    "Ctrl+Alt+3": {
+      "face": "angry",
+      "seconds": 3
+    },
+    "Ctrl+Alt+4": {
+      "face": "shy",
+      "seconds": 3
+    },
+    "Ctrl+Alt+5": {
+      "face": "focus",
+      "seconds": 3
+    },
+    "Ctrl+Alt+6": {
+      "action": "wave",
+      "seconds": 2
+    },
+    "Ctrl+Alt+7": {
+      "action": "peace",
+      "seconds": 2
+    },
+    "Ctrl+Alt+8": {
+      "action": "cheer",
+      "seconds": 2
+    },
+    "Ctrl+Alt+9": {
+      "action": "think",
+      "seconds": 3
+    }
+  }
+}

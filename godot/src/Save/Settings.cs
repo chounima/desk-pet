@@ -51,6 +51,8 @@ public sealed class Settings
     public string Language { get; set; } = "auto";
     /// <summary>多人功能（直播／會議模式、Twitch、Discord、客人上限…）</summary>
     public GuestSettings Guests { get; set; } = new();
+    /// <summary>半身 VTuber 模式</summary>
+    public VtuberSettings Vtuber { get; set; } = new();
     /// <summary>還不認得或舊格式的欄位：讀進來保留（存檔時寫回去），舊格式由 Migrate 搬到各功能的段落</summary>
     [JsonExtensionData] public Dictionary<string, JsonElement>? Other { get; set; }
     /// <summary>每日按鍵次數 { "2026-10-10": 1234 }，保留最近 30 天</summary>

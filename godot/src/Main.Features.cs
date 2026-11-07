@@ -23,6 +23,7 @@ public partial class Main
         };
         // 新功能在這裡加：AddFeature(new Features.Xxx.XxxFeature());
         AddFeature(guestsFeature = new Features.Guests.GuestsFeature());
+        AddFeature(new Features.Vtuber.VtuberFeature());
     }
 
     /// <summary>換主角色的驅動者；null = 換回桌面漫遊（Behavior）</summary>

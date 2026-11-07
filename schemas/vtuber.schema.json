@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "data/vtuber.json：半身模式的聲音規則與快捷鍵",
+  "type": "object",
+  "properties": {
+    "_說明": {
+      "type": "string"
+    },
+    "bust": {
+      "type": "object",
+      "properties": {
+        "height": {
+          "type": "number",
+          "description": "預設高度（px，再乘 UI 縮放）"
+        },
+        "margin": {
+          "type": "number",
+          "description": "頭頂上面留多少（取景高度的比例）"
+        }
+      }
+    },
+    "mouth": {
+      "type": "object",
+      "properties": {
+        "openDb": {
+          "type": "number",
+          "description": "比平常講話小不到這麼多 dB 算「全開」，更小聲算「半開」（沒認出母音時）"
+        }
+      }
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "when"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "when": {
+            "type": "object",
+            "properties": {
+              "jumpDb": {
+                "type": "number",
+                "description": "音量比前 1 秒的平均突然大這麼多 dB"
+              },
+              "loudDb": {
+                "type": "number",
+                "description": "比平常講話大這麼多 dB"
+              },
+              "semitones": {
+                "type": "number",
+                "description": "比平常高（正）或低（負）幾個半音以上"
+              },
+              "forSeconds": {
+                "type": "number",
+                "description": "條件要持續幾秒"
+              },
+              "silentSeconds": {
+                "type": "number",
+                "description": "安靜幾秒"
+              }
+            }
+          },
+          "face": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string"
+          },
+          "seconds": {
+            "type": "number"
+          },
+          "cooldown": {
+            "type": "number",
+            "description": "觸發後幾秒內不再觸發"
+          },
+          "priority": {
+            "type": "integer",
+            "description": "預設 10（反應）；講話動嘴 20、快捷鍵 40"
+          }
+        }
+      }
+    },
+    "hotkeys": {
+      "type": "object",
+      "description": "{ \"Ctrl+Alt+1\": { face、action、seconds } }；修飾鍵 Ctrl、Alt、Shift，按鍵 0～9、A～Z、F1～F12",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "face": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string"
+          },
+          "seconds": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        }
+      }
+    }
+  }
+}

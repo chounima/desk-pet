@@ -93,6 +93,13 @@ public partial class Main : Node2D
             GetTree().Quit(SafeRun(() => Tests.ControlSelfTest.Run()));
             return;
         }
+        // --selftest=vtuber：半身模式的聲音規則
+        if (OS.GetCmdlineUserArgs().Contains("--selftest=vtuber"))
+        {
+            duplicate = true;
+            GetTree().Quit(SafeRun(() => Tests.VtuberSelfTest.Run()));
+            return;
+        }
         // --selftest=live：多人功能的規則測試（Twitch 解析、聊天關鍵字）
         if (OS.GetCmdlineUserArgs().Contains("--selftest=live"))
         {

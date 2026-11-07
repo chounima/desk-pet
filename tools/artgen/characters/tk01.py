@@ -19,7 +19,8 @@ L = stroke(OL)
 def hair_back() -> Part:
     # 頭上的那一片（下面的長髮是 HAIR_CHAINS 的兩節，會飄）
     back = "M-44,-60 C-54,-112 64,-114 56,-60 L57,-14 Q6,-6 -46,-14 Z"
-    return Part(f'<path d="{back}" fill="{HAIR_SHADE}" {L}/>', HEAD_BOX)
+    edge = "M-46,-14 L-44,-60 C-54,-112 64,-114 56,-60 L57,-14"       # 下緣不描線（接著長髮，描了會看到一條橫線）
+    return Part(f'<path d="{back}" fill="{HAIR_SHADE}"/><path d="{edge}" fill="none" {L}/>', HEAD_BOX)
 
 
 def _hair_segment(top_w: tuple[float, float], bottom_w: tuple[float, float], length: float, tip: bool) -> Part:

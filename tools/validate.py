@@ -241,6 +241,11 @@ def action_refs(root: Path) -> list[tuple[str, str]]:
     if (d / "tuning.json").exists():
         for a in load(d / "tuning.json").get("auto", {}):
             add("tuning.json auto", a)
+    if (d / "vtuber.json").exists():
+        v = load(d / "vtuber.json")
+        for r in v.get("rules", []) + list(v.get("hotkeys", {}).values()):
+            if "action" in r:
+                add("vtuber.json", r["action"])
     return refs
 
 
@@ -313,7 +318,7 @@ def validate(root: Path) -> Report:
     check_character_clips(report, root, sch, bodies, {c.split("/")[0]: b for c, b in chars if "/" not in c})
     check_packages(report, root, sch, {c.split("/")[0] for c, _ in chars})
     check_tracks_and_props(report, root, bones | {"root"})
-    for name in ("tuning", "guests"):
+    for name in ("tuning", "guests", "vtuber"):
         if (root / "data" / f"{name}.json").exists():
             check_schema(report, root, sch[name], root / "data" / f"{name}.json")
     check_refs(report, root, chars, bodies)

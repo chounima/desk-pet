@@ -31,3 +31,7 @@ project/assembly_name="DeskPet"
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
 viewport/transparent_background=true
+
+[audio]
+
+driver/enable_input=true

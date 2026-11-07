@@ -273,12 +273,34 @@ public partial class PetView : Node2D
         }
     }
 
+    /// <summary>掛在某根骨骼上的部件，實際畫出來（不透明像素）的最高點（部件座標 y，取景用）；沒有就 null</summary>
+    public float? VisibleTop(string bone)
+    {
+        float? top = null;
+        foreach (var item in items.Where(i => i.Bone == bone && i.Offset == null && i.Sprite.Visible && i.Mesh == null))
+        {
+            var img = item.Image;
+            var scale = img.GetHeight() / (item.Box[3] - item.Box[1]);
+            for (var y = 0; y < img.GetHeight(); y += 2)
+            {
+                var hit = false;
+                for (var x = 0; x < img.GetWidth() && !hit; x += 3) hit = img.GetPixel(x, y).A > 0.3f;
+                if (!hit) continue;
+                var v = item.Box[1] + y / scale;
+                top = top == null ? v : Mathf.Min(top.Value, v);
+                break;
+            }
+        }
+        return top;
+    }
+
     /// <summary>point（父節點座標）是否點在角色不透明的像素上</summary>
     public bool HitTest(Vector2 point) => HitSlot(point) != null;
 
     /// <summary>point 點到的最上層插槽名稱（道具回傳 "prop"）；沒點到回傳 null</summary>
     public string? HitSlot(Vector2 point)
     {
+        if (!IsVisibleInTree()) return null;         // 藏起來的角色點不到
         for (var i = items.Count - 1; i >= 0; i--)
         {
             var item = items[i];
