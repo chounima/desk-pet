@@ -39,6 +39,21 @@ public partial class Tray : Node
     public event Action? GuitarToggled;
     public event Action? FocusToggled;
     readonly List<string> charLabels = new();
+    // 功能模組加的項目（AddFeatureItem）：{ id: 按下時做什麼 }
+    readonly Dictionary<long, Action> featureItems = new();
+    const int IdFeature = 3000;
+
+    /// <summary>功能模組加一個系統匣項目，放在「設定」上面；回傳 id（之後改文字用 SetFeatureItemText）</summary>
+    public long AddFeatureItem(string text, Action onPressed)
+    {
+        var id = IdFeature + featureItems.Count;
+        featureItems[id] = onPressed;
+        menu.AddItem(text, (int)id);
+        menu.SetItemIndex(menu.GetItemIndex((int)id), menu.GetItemIndex(IdSettings));
+        return id;
+    }
+
+    public void SetFeatureItemText(long id, string text) => menu.SetItemText(menu.GetItemIndex((int)id), text);
 
     public void Build(IList<RigData> characters, Settings settings, bool autostart, Texture2D icon)
     {
@@ -178,6 +193,11 @@ public partial class Tray : Node
 
     void OnId(long id)
     {
+        if (featureItems.TryGetValue(id, out var feature))
+        {
+            feature();
+            return;
+        }
         switch (id)
         {
             case IdQuit:

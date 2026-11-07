@@ -23,6 +23,17 @@ public partial class HubWindow : Window
     public WardrobeTab Wardrobe { get; private set; } = null!;
     public GuestsTab Guests { get; private set; } = null!;
 
+    // 功能模組加的分頁（AddTab）：{ 名稱: (分頁, 重建, 每幀更新) }
+    readonly Dictionary<string, (Control Tab, System.Action? Refresh, System.Action<float>? Tick)> featureTabs = new();
+
+    /// <summary>功能模組加一個分頁，放在設定前面；name 給 Open(name) 用</summary>
+    public void AddTab(string name, Control tab, System.Action? refresh = null, System.Action<float>? tick = null)
+    {
+        featureTabs[name] = (tab, refresh, tick);
+        tabs.AddChild(tab);
+        tabs.MoveChild(tab, Settings.GetIndex());
+    }
+
     public HubWindow(Progress progress, Shop shop, Settings settings, List<RigData> characters,
                      Dictionary<string, PropData> props, Dictionary<string, AccessoryData> accessories,
                      System.Func<bool> autostart, System.Func<string> currentChar)
@@ -97,7 +108,7 @@ public partial class HubWindow : Window
     /// <summary>tab：collection | shop | music | settings | dev；shopCategory 指定商店分類</summary>
     public void Open(string tab, string? shopCategory = null)
     {
-        Control target = tab switch { "shop" => Shop, "music" => (Control?)Music ?? Shop, "focus" => (Control?)Focus ?? Collection, "wardrobe" => (Control?)Wardrobe ?? Collection, "guests" => (Control?)Guests ?? Collection, "settings" => Settings, "dev" => Dev, _ => Collection };
+        Control target = featureTabs.TryGetValue(tab, out var ft) ? ft.Tab : tab switch { "shop" => Shop, "music" => (Control?)Music ?? Shop, "focus" => (Control?)Focus ?? Collection, "wardrobe" => (Control?)Wardrobe ?? Collection, "guests" => (Control?)Guests ?? Collection, "settings" => Settings, "dev" => Dev, _ => Collection };
         tabs.CurrentTab = tabs.GetTabIdxFromControl(target);
         if (shopCategory != null) Shop.ShowCategory(shopCategory);
         RefreshAll();
@@ -118,6 +129,7 @@ public partial class HubWindow : Window
         else if (current == Guests) Guests.Refresh();
         else if (current == Settings) Settings.Refresh();
         else if (current == Dev) Dev.Refresh();
+        else foreach (var (_, ft) in featureTabs) if (current == ft.Tab) ft.Refresh?.Invoke();
     }
 
     public override void _Process(double delta)
@@ -125,6 +137,7 @@ public partial class HubWindow : Window
         if (!Visible) return;
         points.Text = $"💎 {progress.State.Points}";
         if (tabs.GetCurrentTabControl() == Guests) Guests.Tick();     // 誰在講話要即時顯示
+        foreach (var (_, ft) in featureTabs) if (tabs.GetCurrentTabControl() == ft.Tab) ft.Tick?.Invoke((float)delta);
         // 收藏分頁的進度條每秒更新一次（陪伴時間、打字點數會一直變）
         if ((refreshTimer -= (float)delta) <= 0)
         {

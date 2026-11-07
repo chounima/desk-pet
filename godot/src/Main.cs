@@ -181,7 +181,7 @@ public partial class Main : Node2D
             settings.Save();
         };
         tray.FormChosen += ChooseForm;
-        tray.SizeChosen += size => { pet.SetScale(PetScale(size)); settings.Size = size; settings.Save(); RescaleGuests(); };
+        tray.SizeChosen += size => { pet.SetScale(PetScale(size)); settings.Size = size; settings.Save(); RescaleGuests(); FeaturesDisplayChanged(); };
         tray.AutoToggled += on => { behavior.Auto = on; settings.Auto = on; settings.Save(); };
         tray.AutostartToggled += Autostart.Set;
         tray.VolleyToggled += volley.SetActive;
@@ -198,6 +198,7 @@ public partial class Main : Node2D
         SetupFocus();
         SetupCustom();
         SetupGuests(ids, clips, props);
+        SetupFeatures(ids, clips, props);
         if (args.TryGetValue("hub", out var hubTab)) hub.Open(hubTab);     // --hub=shop：一開始就打開視窗（截圖用）
 
         GD.Print($"[DeskPet] content={ContentLoader.Root} characters={string.Join(",", ids)} " +
@@ -276,15 +277,18 @@ public partial class Main : Node2D
         UpdateFocus(dt);
         UpdateDrag();
         pet.Gaze.Target = lookOverride ?? DesktopWindow.CursorInWindow();
+        FeaturesBeforeBehavior(dt);
         behavior.Update(dt);
         UpdateMainMouth(dt);
+        FeaturesAfterBehavior(dt);
         volley.Tick(dt, DesktopWindow.CursorInWindow());
         pet.Update(dt);
         fx.UpdateFx(dt, pet.Animator.Fx, pet.HeadTop());
         bubble.UpdateBubble(dt, pet.HeadTop());
         UpdateGuests(dt);
+        FeaturesAfterPet(dt);
         UpdateClickThrough();
-        if (dumpState && Engine.GetProcessFrames() % 120 == 0) { DumpState(); DumpGuests(); }
+        if (dumpState && Engine.GetProcessFrames() % 120 == 0) { DumpState(); DumpGuests(); DumpFeatures(); }
     }
 
     // ---------- 測試用 ----------
@@ -370,6 +374,8 @@ public partial class Main : Node2D
             progress.OnInteraction(pet.Rig.Id);
             return;
         }
+        // 主角色的點擊優先，沒點到主角色才交給功能模組
+        if (e is InputEventMouseButton mbe && ZoneAt(mbe.Position) == null && FeaturesHandleInput(e)) return;
         if (e is InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: true } mb)
         {
             if (ZoneAt(mb.Position) is { } zone) drag = new Drag { Start = mb.Position, Zone = zone };
@@ -424,7 +430,7 @@ public partial class Main : Node2D
         if (presence.Hidden) return;       // 隱藏中一律穿透（OnPresenceChanged 已設好）
         var cursor = DesktopWindow.CursorInWindow();
         // 對打中球和角色都要能點（角色用來按右鍵叫選單）
-        var over = drag != null || (volley.Active && volley.HitBall(cursor)) || pet.View.HitTest(cursor) || (!volley.Active && GuestAt(cursor) != null);
+        var over = drag != null || (volley.Active && volley.HitBall(cursor)) || pet.View.HitTest(cursor) || (!volley.Active && (GuestAt(cursor) != null || FeaturesWantMouse(cursor)));
         DesktopWindow.SetClickThrough(!over);
     }
 
@@ -432,6 +438,7 @@ public partial class Main : Node2D
     {
         if (settings == null) return;    // 重複啟動、還沒初始化就結束的實例
         GlobalInput.Stop();
+        FeaturesShutdown();
         foreach (var s in sources) s.Stop();
         settings.Save();
         if (!sandbox) progressState?.Save();
