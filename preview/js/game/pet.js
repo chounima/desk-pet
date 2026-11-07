@@ -29,7 +29,8 @@ export class Pet {
     this.view?.destroy();
     this.rig = rig;
     // 換體型時換一套動作，並用新的姿勢重播目前的動作
-    const clips = this.clipSets[rig.body ?? "humanoid"] ?? this.clipSets.humanoid;
+    // 動作組：角色專屬（sets.for）＞ 體型 ＞ 共用
+    const clips = this.clipSets.for?.(rig) ?? this.clipSets[rig.body ?? "humanoid"] ?? this.clipSets.humanoid;
     if (clips !== this.animator.clips) {
       this.animator.clips = clips;
       this.animator.play(this.animator.name ?? "idle", true);

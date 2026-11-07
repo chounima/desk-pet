@@ -15,11 +15,14 @@ export async function loadCharacters() {
     const base = `${PATHS.art}/characters/${id}/`;
     const rig = await getJSON(`${base}rig.json`);
     rig.base = base;
+    rig.animSource = id;                 // 用哪個角色的專屬動作
     rigs[id] = rig;
-    await Promise.all(Object.values(rig.forms ?? {}).map(async f => {
-      if (!f.rig) { f.data = rig; return; }
+    await Promise.all(Object.entries(rig.forms ?? {}).map(async ([formName, f]) => {
+      if (!f.rig) { f.data = rig; rig.formName = formName; return; }
       f.data = await getJSON(`${base}${f.rig}rig.json`);
       f.data.base = `${base}${f.rig}`;
+      f.data.animSource = id;
+      f.data.formName = formName;
     }));
   }));
   await loadPackages(ids, rigs);
@@ -52,6 +55,8 @@ export function applyPackage(id, pkg, folder, rigs) {
   const rig = JSON.parse(JSON.stringify(rest));          // 複製範本（不含型態，型態的 data 會指回自己）
   rig.base = template.base;
   rig.id = id;
+  rig.animSource = template.animSource ?? template.id;     // 動作沿用範本角色的（含專屬動作）
+  rig.formName = template.formName;
   rig.name = pkg.name || id;
   rig.description = pkg.description ?? "";
   const url = file => new URL(file, new URL(folder, location.href)).href;
@@ -101,7 +106,54 @@ export async function loadAnimations(bodies = []) {
     }
     sets[body] = set;
   }));
+  await attachCharacterClips(sets, dir);
   return { names, clips, sets };
+}
+
+// 角色專屬動作（data/animations/characters/index.json，規則同桌寵的 ClipLibrary）：
+// 共用 → 體型 → 角色 → 角色＋型態，後面蓋前面；可以只寫差異 { extends, tracks }。
+// sets.for(rig) 回傳這個角色要用的動作組（依角色｜型態快取）；for 不會出現在 Object.keys(sets)
+async function attachCharacterClips(sets, dir) {
+  const res = await fetch(`${dir}/characters/index.json`);
+  const index = res.ok ? await res.json() : {};
+  const files = {};
+  await Promise.all(Object.entries(index).filter(([id]) => !id.startsWith("_")).flatMap(([id, entry]) => [
+    ...(entry.clips ?? []).map(name => [`${id}/${name}`, `${dir}/characters/${id}/${name}.json`]),
+    ...Object.entries(entry.forms ?? {}).flatMap(([form, names]) => names.map(name => [`${id}/forms/${form}/${name}`, `${dir}/characters/${id}/forms/${form}/${name}.json`])),
+  ].map(async ([key, url]) => { files[key] = await getJSON(url); })));
+  const cache = {};
+  const apply = (set, names, prefix) => {
+    for (const name of names) {
+      const file = files[`${prefix}${name}`];
+      set[name] = { name, ...(file.extends ? extendClip(set[file.extends], file) : file) };
+    }
+  };
+  Object.defineProperty(sets, "for", {
+    enumerable: false,
+    value(rig) {
+      const body = sets[rig.body ?? "humanoid"] ?? sets.humanoid;
+      const id = rig.animSource ?? rig.id, entry = index[id];
+      if (!entry) return body;
+      const key = `${id}|${rig.formName ?? ""}|${rig.body ?? "humanoid"}`;
+      if (cache[key]) return cache[key];
+      const set = { ...body };
+      apply(set, entry.clips ?? [], `${id}/`);
+      if (rig.formName && entry.forms?.[rig.formName]) apply(set, entry.forms[rig.formName], `${id}/forms/${rig.formName}/`);
+      return (cache[key] = set);
+    },
+  });
+}
+
+// 差異合併：以 base 為底，覆蓋列出的欄位；tracks 只覆蓋列出的軌道（null = 拿掉那條軌道）
+export function extendClip(base, diff) {
+  if (!base) throw new Error(`extends 的 ${diff.extends} 不存在`);
+  const { extends: _, tracks, ...rest } = diff;
+  const merged = { ...base, ...rest, tracks: { ...base.tracks } };
+  for (const [ch, keys] of Object.entries(tracks ?? {})) {
+    if (keys === null) delete merged.tracks[ch];
+    else merged.tracks[ch] = keys;
+  }
+  return merged;
 }
 
 // 收集系統的參數；開發者模式的暫存覆寫（JSON 字串）優先

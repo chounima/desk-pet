@@ -90,28 +90,28 @@ public partial class Main : Node2D
         if (OS.GetCmdlineUserArgs().Contains("--selftest=control"))
         {
             duplicate = true;
-            GetTree().Quit(Tests.ControlSelfTest.Run());
+            GetTree().Quit(SafeRun(() => Tests.ControlSelfTest.Run()));
             return;
         }
         // --selftest=live：多人功能的規則測試（Twitch 解析、聊天關鍵字）
         if (OS.GetCmdlineUserArgs().Contains("--selftest=live"))
         {
             duplicate = true;
-            GetTree().Quit(Tests.LiveSelfTest.Run());
+            GetTree().Quit(SafeRun(() => Tests.LiveSelfTest.Run()));
             return;
         }
         // --selftest=golden [--update]：共用測試（tests/golden/），和網頁版比對同一份答案
         if (OS.GetCmdlineUserArgs().Contains("--selftest=golden"))
         {
             duplicate = true;
-            var code = Tests.Golden.Run(OS.GetCmdlineUserArgs().Contains("--update"));
+            var code = SafeRun(() => Tests.Golden.Run(OS.GetCmdlineUserArgs().Contains("--update")));
             GetTree().Quit(code);
             return;
         }
         if (OS.GetCmdlineUserArgs().Contains("--selftest=progress"))
         {
             duplicate = true;
-            var code = Game.Progression.ProgressSelfTest.Run();
+            var code = SafeRun(Game.Progression.ProgressSelfTest.Run);
             GetTree().Quit(code);
             return;
         }
@@ -470,6 +470,17 @@ public partial class Main : Node2D
         if (!sandbox) settings.Save();      // --sandbox（測試）不寫回使用者的設定
         if (!sandbox) progressState?.Save();
         SingleInstance.Release();
+    }
+
+    /// <summary>自我測試丟出例外時印出來並以結束碼 1 結束（不然視窗會一直開著、測試卡住）</summary>
+    static int SafeRun(System.Func<int> test)
+    {
+        try { return test(); }
+        catch (System.Exception e)
+        {
+            GD.PrintErr($"[selftest] ✗ 例外：{e}");
+            return 1;
+        }
     }
 
     static Dictionary<string, string> ParseArgs()

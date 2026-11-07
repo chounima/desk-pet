@@ -50,11 +50,14 @@ public static class ContentLoader
             rig.BasePath = dir;
             WarnNewerFormat(rig);
             rigs[id] = rig;
-            foreach (var form in rig.Forms?.Values ?? Enumerable.Empty<FormData>())
+            rig.AnimSource = id;
+            foreach (var (formName, form) in rig.Forms ?? new())
             {
-                if (form.Rig == "") { form.Data = rig; continue; }
+                if (form.Rig == "") { form.Data = rig; rig.FormName = formName; continue; }
                 form.Data = ReadJson<RigData>($"{dir}{form.Rig}rig.json");
                 form.Data.BasePath = $"{dir}{form.Rig}";
+                form.Data.AnimSource = id;
+                form.Data.FormName = formName;
             }
         }
         LoadPackages(ids, rigs);
@@ -110,7 +113,7 @@ public static class ContentLoader
     /// 共用動作＋各體型的專屬動作：sets[體型][動作名]。
     /// 體型專屬版放在 data/animations/&lt;體型&gt;/，沒有的依 alias 借用相近的姿勢。
     /// </summary>
-    public static (List<string> names, Dictionary<string, Dictionary<string, ClipData>> sets) LoadAnimations(IEnumerable<string> bodies)
+    public static (List<string> names, ClipLibrary sets) LoadAnimations(IEnumerable<string> bodies)
     {
         var dir = $"{Root}/data/animations";
         var names = ReadJson<List<string>>($"{dir}/index.json");
@@ -121,7 +124,7 @@ public static class ContentLoader
             clip.Name = name;
             clips[name] = clip;
         }
-        var sets = new Dictionary<string, Dictionary<string, ClipData>> { ["humanoid"] = clips };
+        var sets = new ClipLibrary(dir) { ["humanoid"] = clips };
         foreach (var body in bodies.Distinct().Where(b => b != "humanoid"))
         {
             var index = ReadJson<BodyIndex>($"{dir}/{body}/index.json");

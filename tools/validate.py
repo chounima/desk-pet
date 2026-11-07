@@ -75,7 +75,7 @@ def check_animations(report: Report, root: Path, sch) -> dict[str, set[str]]:
             report.warn(rel(f, root), "沒有列在 index.json，不會被載入")
 
     bodies = {"humanoid": set(shared)}
-    for sub in (p for p in anim_dir.iterdir() if p.is_dir()):
+    for sub in (p for p in anim_dir.iterdir() if p.is_dir() and p.name != "characters"):
         index = check_schema(report, root, sch["body-index"], sub / "index.json") if (sub / "index.json").exists() else None
         if index is None:
             report.error(rel(sub, root), "體型資料夾沒有 index.json")
@@ -94,6 +94,32 @@ def check_animations(report: Report, root: Path, sch) -> dict[str, set[str]]:
             names.add(name)
         bodies[sub.name] = names
     return bodies
+
+
+def check_character_clips(report: Report, root: Path, sch, bodies, char_bodies: dict[str, str]):
+    """角色專屬動作：清單、檔案、extends 的目標（依角色體型的動作組）"""
+    folder = root / "data" / "animations" / "characters"
+    if not (folder / "index.json").exists():
+        return
+    index = check_schema(report, root, sch["character-animations"], folder / "index.json") or {}
+    for cid, entry in index.items():
+        if cid.startswith("_"):
+            continue
+        if cid not in char_bodies:
+            report.error(rel(folder / "index.json", root), f"角色 {cid} 不存在")
+            continue
+        available = set(bodies.get(char_bodies[cid], set()))
+        layers = [(folder / cid, entry.get("clips", []))] + [(folder / cid / "forms" / f, names) for f, names in (entry.get("forms") or {}).items()]
+        for sub, names in layers:
+            for name in names:
+                f = sub / f"{name}.json"
+                if not f.exists():
+                    report.error(rel(folder / "index.json", root), f"{cid} 的 {name} 沒有 {rel(f, root)}")
+                    continue
+                clip = check_schema(report, root, sch["animation"], f)
+                if clip and clip.get("extends") and clip["extends"] not in available:
+                    report.error(rel(f, root), f"extends 的 {clip['extends']} 不存在")
+                available.add(name)
 
 
 def check_tracks_and_props(report: Report, root: Path, bones: set[str]):
@@ -284,6 +310,7 @@ def validate(root: Path) -> Report:
     sch = schemas(root)
     bodies = check_animations(report, root, sch)
     chars, bones = check_characters(report, root, sch, bodies)
+    check_character_clips(report, root, sch, bodies, {c.split("/")[0]: b for c, b in chars if "/" not in c})
     check_packages(report, root, sch, {c.split("/")[0] for c, _ in chars})
     check_tracks_and_props(report, root, bones | {"root"})
     for name in ("tuning", "guests"):

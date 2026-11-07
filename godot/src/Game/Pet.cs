@@ -47,7 +47,8 @@ public sealed class Pet
         View?.QueueFree();
         Rig = rig;
         // 換體型時換一套動作，並用新的姿勢重播目前的動作
-        var clips = clipSets.GetValueOrDefault(rig.Body) ?? clipSets["humanoid"];
+        // 動作組：角色專屬（ClipLibrary.For）＞ 體型 ＞ 共用
+        var clips = clipSets is ClipLibrary library ? library.For(rig) : clipSets.GetValueOrDefault(rig.Body) ?? clipSets["humanoid"];
         if (clips != Animator.Clips)
         {
             Animator.Clips = clips;

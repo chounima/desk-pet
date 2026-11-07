@@ -1,0 +1,4 @@
+{
+  "_說明": "有專屬動作的角色：data/animations/characters/<角色>/<動作>.json（clips）、forms/<型態>/<動作>.json（forms）。可以只寫差異：extends 一個動作，tracks 只列要改的軌道。",
+  "chouma": { "clips": ["walk"] }
+}

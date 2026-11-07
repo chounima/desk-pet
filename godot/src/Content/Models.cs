@@ -42,6 +42,11 @@ public sealed class RigData
     public List<BoneData> Bones { get; set; } = new();
     public List<SlotData> Slots { get; set; } = new();
 
+    /// <summary>用哪個角色的專屬動作（部件包、自訂角色沿用範本的；預設 = Id）</summary>
+    [JsonIgnore] public string? AnimSource { get; set; }
+    /// <summary>這是哪個型態（有型態的角色才有；角色＋型態的專屬動作用）</summary>
+    [JsonIgnore] public string? FormName { get; set; }
+
     /// <summary>角色資料夾路徑（載入後設定），部件圖檔以此為基準。</summary>
     public string BasePath { get; set; } = "";
 

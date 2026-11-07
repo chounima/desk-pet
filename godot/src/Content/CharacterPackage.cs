@@ -69,6 +69,8 @@ public static class CharacterPackage
         var rig = JsonSerializer.Deserialize<RigData>(JsonSerializer.Serialize(template, Options), Options)!;
         rig.BasePath = template.BasePath;
         rig.Id = id;
+        rig.AnimSource = template.AnimSource ?? template.Id;     // 動作沿用範本角色的（含專屬動作）
+        rig.FormName = template.FormName;
         rig.Version = Math.Max(c.Version, rig.Version);
         rig.Name = string.IsNullOrWhiteSpace(c.Name) ? Path.GetFileName(folder.TrimEnd('/', '\\')) : c.Name;
         rig.Description = c.Description;

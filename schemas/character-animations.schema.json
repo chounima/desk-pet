@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "character-animations.schema.json",
+  "title": "角色專屬動作清單 data/animations/characters/index.json",
+  "type": "object",
+  "patternProperties": {
+    "^_": {}
+  },
+  "additionalProperties": {
+    "type": "object",
+    "properties": {
+      "clips": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "forms": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

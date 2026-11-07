@@ -3,9 +3,7 @@
   "$id": "animation.schema.json",
   "title": "動作 data/animations/<名稱>.json",
   "type": "object",
-  "required": [
-    "tracks"
-  ],
+  "required": [],
   "properties": {
     "label": {
       "type": "string"
@@ -99,6 +97,21 @@
         "minItems": 1
       },
       "description": "{ 軌道（骨骼名、root.x、root.y、骨骼.sx…）: [關鍵影格…] }"
+    },
+    "_說明": {
+      "type": "string"
     }
-  }
+  },
+  "anyOf": [
+    {
+      "required": [
+        "tracks"
+      ]
+    },
+    {
+      "required": [
+        "extends"
+      ]
+    }
+  ]
 }

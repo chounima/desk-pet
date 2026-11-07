@@ -40,8 +40,7 @@ function faceAt(clip, t) {
 function compute(c, rigs, sets) {
   const [id, form] = c.char.split("@");
   const rig = formRig(rigs[id], form);
-  const clips = sets[rig.body ?? "humanoid"] ?? sets.humanoid;
-  const clip = clips[c.clip];
+  const clip = sets.for(rig)[c.clip];
   // Godot 用 float（32 位元）算 frac × duration，這裡也轉成 32 位元，時間才會一致
   const t = Math.fround(Math.fround(c.frac) * Math.fround(clip.duration));
   const pose = {};
@@ -59,7 +58,7 @@ function compute(c, rigs, sets) {
 function simulatePhysics(c, rigs, sets) {
   const [id, form] = c.char.split("@");
   const rig = formRig(rigs[id], form);
-  const clip = (sets[rig.body ?? "humanoid"] ?? sets.humanoid)[c.clip];
+  const clip = sets.for(rig)[c.clip];
   const skeleton = new Skeleton(rig.bones, rig.rootScale ?? 1, rig.trackScale ?? {});
   const spring = new Spring(rig.bones, rig.physics);
   const dt = 1 / 60, result = {};

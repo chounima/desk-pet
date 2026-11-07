@@ -116,11 +116,11 @@ public static class Golden
     static string Describe(JsonNode c) => $"{c["char"]} {c["clip"]} frac={c["frac"]}";
 
     // 和 Pet.Probe 一樣：直接取樣關鍵影格（不含交叉淡化、視線），再算骨架
-    static JsonObject Compute(JsonNode c, Dictionary<string, RigData> rigs, Dictionary<string, Dictionary<string, ClipData>> sets)
+    static JsonObject Compute(JsonNode c, Dictionary<string, RigData> rigs, ClipLibrary sets)
     {
         var spec = c["char"]!.GetValue<string>().Split('@');
         var rig = ContentLoader.FormRig(rigs[spec[0]], spec.Length > 1 ? spec[1] : null);
-        var clips = sets.GetValueOrDefault(rig.Body) ?? sets["humanoid"];
+        var clips = sets.For(rig);
         var clip = clips[c["clip"]!.GetValue<string>()];
         var t = c["frac"]!.GetValue<float>() * clip.Duration;
         var mods = c["mods"]?.AsObject().ToDictionary(kv => kv.Key, kv => kv.Value!.GetValue<float>());
@@ -206,11 +206,11 @@ public static class Golden
     }
 
     // 和 Pet.Update 一樣：取樣動作 → 骨架 → 次級物理；身體位置用 Q 版單位（縮放 1），每幀 1/60 秒
-    static JsonObject SimulatePhysics(JsonNode c, Dictionary<string, RigData> rigs, Dictionary<string, Dictionary<string, ClipData>> sets)
+    static JsonObject SimulatePhysics(JsonNode c, Dictionary<string, RigData> rigs, ClipLibrary sets)
     {
         var spec = c["char"]!.GetValue<string>().Split('@');
         var rig = ContentLoader.FormRig(rigs[spec[0]], spec.Length > 1 ? spec[1] : null);
-        var clip = (sets.GetValueOrDefault(rig.Body) ?? sets["humanoid"])[c["clip"]!.GetValue<string>()];
+        var clip = sets.For(rig)[c["clip"]!.GetValue<string>()];
         var skeleton = new Skeleton(rig.Bones, rig.RootScale, rig.TrackScale);
         var spring = new Spring(rig.Bones, rig.Physics);
         int frames = c["frames"]!.GetValue<int>(), moveUntil = c["moveUntil"]!.GetValue<int>(), flipAt = c["flipAt"]!.GetValue<int>();

@@ -20,7 +20,7 @@ if (pkgId) {
   document.title = `組裝預覽 ${pkgId}`;
 }
 const rig = formRig(rigs[charId], q.get("form"));
-const clips = sets[rig.body ?? "humanoid"] ?? sets.humanoid;
+const clips = sets.for(rig);
 const freezeAt = q.has("t") ? Number(q.get("t")) : null;
 
 // 角色切換
