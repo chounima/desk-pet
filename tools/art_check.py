@@ -59,7 +59,7 @@ def analyze(p: Part) -> None:
     p.stats["px/單位"] = f"{ppu:.1f}"
     if ppu < MIN_PX:
         p.errors.append(f"解析度太低（每單位 {ppu:.1f} 像素，至少 {MIN_PX}，建議 {GOOD_PX}）：4K 放大會糊")
-    elif ppu < GOOD_PX:
+    elif ppu < GOOD_PX - 0.05:          # 範圍不是整數時會差一點點
         p.warnings.append(f"解析度偏低（每單位 {ppu:.1f} 像素，建議 {GOOD_PX}）")
     elif ppu > MAX_PX:
         p.warnings.append(f"解析度太高（每單位 {ppu:.1f} 像素），浪費記憶體，可以縮小到 {GOOD_PX}～8")
