@@ -20,7 +20,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using DeskPet.Content;
 using DeskPet.Signals;
-using DeskPet.Save;
 
 namespace DeskPet.Platform.Live;
 
@@ -49,12 +48,13 @@ public sealed class DiscordRpc : PresenceSource, IVoiceSource
     /// <summary>授權後拿到新的 token：主執行緒取走後存進設定</summary>
     public (string Access, string Refresh)? NewTokens;
 
-    public DiscordRpc(Settings settings)
+    /// <param name="accessToken">上次授權存下來的 token（沒有就空字串，連線時會請使用者授權）</param>
+    public DiscordRpc(string clientId, string clientSecret, string accessToken, string refreshToken)
     {
-        clientId = settings.DiscordClientId.Trim();
-        clientSecret = settings.DiscordClientSecret.Trim();
-        accessToken = settings.DiscordAccessToken;
-        refreshToken = settings.DiscordRefreshToken;
+        this.clientId = clientId.Trim();
+        this.clientSecret = clientSecret.Trim();
+        this.accessToken = accessToken;
+        this.refreshToken = refreshToken;
     }
 
     public override string Id => "discord";

@@ -46,8 +46,8 @@ public partial class GuestsTab : ScrollContainer
 
         // 直播／會議模式
         body.AddChild(Ui.Heading(I18n.T("guests.live")));
-        var live = new CheckBox { Text = I18n.T("guests.live"), ButtonPressed = settings.LiveMode, FocusMode = FocusModeEnum.None };
-        live.Toggled += on => { settings.LiveMode = on; settings.Save(); LiveChanged?.Invoke(); };
+        var live = new CheckBox { Text = I18n.T("guests.live"), ButtonPressed = settings.Guests.LiveMode, FocusMode = FocusModeEnum.None };
+        live.Toggled += on => { settings.Guests.LiveMode = on; settings.Save(); LiveChanged?.Invoke(); };
         body.AddChild(live);
         body.AddChild(Ui.Text(I18n.T("guests.liveHint"), Ui.Muted, 13, wrap: true));
         status = new VBoxContainer();
@@ -55,15 +55,15 @@ public partial class GuestsTab : ScrollContainer
 
         // Twitch
         body.AddChild(Ui.Heading(I18n.T("guests.twitch")));
-        var twitch = Field(settings.TwitchChannel, "twitch.tv/…");
+        var twitch = Field(settings.Guests.TwitchChannel, "twitch.tv/…");
         body.AddChild(twitch);
         body.AddChild(Ui.Text(I18n.T("guests.twitchHint"), Ui.Muted, 13, wrap: true));
         body.AddChild(Ui.Text(I18n.T("guests.chatTip"), Ui.Muted, 13, wrap: true));
 
         // Discord
         body.AddChild(Ui.Heading(I18n.T("guests.discord")));
-        var clientId = Field(settings.DiscordClientId, I18n.T("guests.clientId"));
-        var secret = Field(settings.DiscordClientSecret, I18n.T("guests.clientSecret"));
+        var clientId = Field(settings.Guests.DiscordClientId, I18n.T("guests.clientId"));
+        var secret = Field(settings.Guests.DiscordClientSecret, I18n.T("guests.clientSecret"));
         secret.Secret = true;
         body.AddChild(clientId);
         body.AddChild(secret);
@@ -71,9 +71,9 @@ public partial class GuestsTab : ScrollContainer
 
         // 其他會議軟體：偵測音量
         body.AddChild(Ui.Heading(I18n.T("guests.audio")));
-        var micTalk = new CheckBox { Text = I18n.T("guests.micTalk"), ButtonPressed = settings.MicTalk, FocusMode = FocusModeEnum.None,
+        var micTalk = new CheckBox { Text = I18n.T("guests.micTalk"), ButtonPressed = settings.Guests.MicTalk, FocusMode = FocusModeEnum.None,
                                      AutowrapMode = TextServer.AutowrapMode.WordSmart, SizeFlagsHorizontal = SizeFlags.ExpandFill };
-        var meeting = new CheckBox { Text = I18n.T("guests.meetingAudio"), ButtonPressed = settings.MeetingAudio, FocusMode = FocusModeEnum.None,
+        var meeting = new CheckBox { Text = I18n.T("guests.meetingAudio"), ButtonPressed = settings.Guests.MeetingAudio, FocusMode = FocusModeEnum.None,
                                      AutowrapMode = TextServer.AutowrapMode.WordSmart, SizeFlagsHorizontal = SizeFlags.ExpandFill };
         body.AddChild(micTalk);
         body.AddChild(meeting);
@@ -82,19 +82,19 @@ public partial class GuestsTab : ScrollContainer
         body.AddChild(Ui.Row(
             Ui.Button(I18n.T("guests.apply"), () =>
             {
-                settings.TwitchChannel = twitch.Text.Trim();
+                settings.Guests.TwitchChannel = twitch.Text.Trim();
                 // 換了應用程式，舊的授權就不能用了
-                if (clientId.Text.Trim() != settings.DiscordClientId) settings.DiscordAccessToken = settings.DiscordRefreshToken = "";
-                settings.DiscordClientId = clientId.Text.Trim();
-                settings.DiscordClientSecret = secret.Text.Trim();
-                settings.MicTalk = micTalk.ButtonPressed;
-                settings.MeetingAudio = meeting.ButtonPressed;
+                if (clientId.Text.Trim() != settings.Guests.DiscordClientId) settings.Guests.DiscordAccessToken = settings.Guests.DiscordRefreshToken = "";
+                settings.Guests.DiscordClientId = clientId.Text.Trim();
+                settings.Guests.DiscordClientSecret = secret.Text.Trim();
+                settings.Guests.MicTalk = micTalk.ButtonPressed;
+                settings.Guests.MeetingAudio = meeting.ButtonPressed;
                 settings.Save();
                 LiveChanged?.Invoke();
             }),
             Ui.Button(I18n.T("guests.resetDiscord"), () =>
             {
-                settings.DiscordAccessToken = settings.DiscordRefreshToken = "";
+                settings.Guests.DiscordAccessToken = settings.Guests.DiscordRefreshToken = "";
                 settings.Save();
                 LiveChanged?.Invoke();
             })));
@@ -108,8 +108,8 @@ public partial class GuestsTab : ScrollContainer
             flow.AddChild(Ui.Button(I18n.T("guests.add", c.Name), () => AddRequested?.Invoke(id)));
         }
         body.AddChild(flow);
-        var max = new SpinBox { MinValue = 1, MaxValue = 20, Value = settings.MaxGuests ?? 8, FocusMode = FocusModeEnum.None };
-        max.ValueChanged += v => { settings.MaxGuests = (int)v; settings.Save(); };
+        var max = new SpinBox { MinValue = 1, MaxValue = 20, Value = settings.Guests.MaxGuests ?? 8, FocusMode = FocusModeEnum.None };
+        max.ValueChanged += v => { settings.Guests.MaxGuests = (int)v; settings.Save(); };
         body.AddChild(Ui.Row(Ui.Text(I18n.T("guests.max")), max));
 
         present = new VBoxContainer();

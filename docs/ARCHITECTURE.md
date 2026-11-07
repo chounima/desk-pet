@@ -28,7 +28,6 @@
 |---|---|---|
 | `Game/Pet.cs` 建立並持有 `View/PetView` | 移植網頁版時角色與畫面寫在一起 | 0r（角色本體和驅動方式分開）、0u（掛件跟著錨點） |
 | `Game/Guests/Guest.cs`、`Game/Volley/VolleySession.cs` 建立節點（泡泡、特效、名牌、球） | 同上 | 0u |
-| `Platform/Live/DiscordRpc.cs` 引用 `Save.Settings` | 建構時直接讀設定 | 0v（設定依功能分段）時改成傳入需要的值 |
 | `View/SpeechWaves.cs` 寫死嘴巴座標 | 還沒有臉部錨點 | 0p、3h |
 
 新程式**不可以增加例外**；碰到需要跨層時，先想能不能用事件或介面反過來。
@@ -61,7 +60,7 @@
 | 規則與參數 | `data/*.json`（互動、選單、日常、專注、收集、排球、音樂、客人…） | 手寫 |
 | 翻譯 | `data/i18n/` | `tools/i18n/build.py` 與手寫 |
 | 使用者自訂內容 | `文件\DeskPet\`（配件、衣服、角色、音樂） | 使用者、自訂編輯器 |
-| 使用者設定與進度 | `user://settings.json`、`user://progress.json` | 程式 |
+| 使用者設定與進度 | `user://settings.json`、`user://progress.json` | 程式。設定依功能分段（`Guests` …，`Save/GuestSettings.cs`）；舊格式讀到時由 `Settings.Migrate` 搬過去，不認得的欄位保留 |
 | 打包用的資料複本 | `godot/content/`（不進 git） | `tools/sync_content.py` |
 
 規則：

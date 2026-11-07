@@ -1,4 +1,4 @@
-// 多人功能模組：客人角色（直播聊天室、Discord 語音裡的人，或從選單手動加的角色）
+﻿// 多人功能模組：客人角色（直播聊天室、Discord 語音裡的人，或從選單手動加的角色）
 //
 // 主角色照舊負責收集、排球、專注、彈吉他；客人只有動畫與反應，可以點、可以拖、可以按右鍵。
 // 外部來源的事件（Signals.PresenceEvent）在這裡變成「出現、講話、聊天、離開」。
@@ -45,7 +45,7 @@ public sealed class GuestsFeature : IFeature
     /// <summary>--perf 用：暫時改客人上限（不改設定）</summary>
     public int? MaxGuestsOverride { get; set; }
 
-    int MaxGuests => MaxGuestsOverride ?? Mathf.Clamp(host.Settings.MaxGuests ?? cfg.MaxGuests, 1, 20);
+    int MaxGuests => MaxGuestsOverride ?? Mathf.Clamp(host.Settings.Guests.MaxGuests ?? cfg.MaxGuests, 1, 20);
     float GuestScale() => host.PetScale() * cfg.Scale;
     static double Now() => Time.GetTicksMsec() / 1000.0;
 
@@ -79,7 +79,7 @@ public sealed class GuestsFeature : IFeature
         if (args.TryGetValue("guests", out var script)) AddSource(new ScriptSource(script));
         if (args.TryGetValue("twitch", out var channel)) AddSource(new TwitchChat(channel));
         if (args.TryGetValue("discord", out var client))       // --discord=ClientID 或 ClientID:token
-            AddSource(new DiscordRpc(new Save.Settings { DiscordClientId = client.Split(':')[0], DiscordAccessToken = client.Split(':').ElementAtOrDefault(1) ?? "" }));
+            AddSource(new DiscordRpc(client.Split(':')[0], "", client.Split(':').ElementAtOrDefault(1) ?? "", ""));
         if (args.TryGetValue("audio", out var audio))         // --audio=mic+apps；其他名字當成額外的會議軟體（例如 +powershell）
         {
             var parts = audio.Split('+');
@@ -114,11 +114,12 @@ public sealed class GuestsFeature : IFeature
         liveSources.Clear();
         // --sandbox（測試）不連設定裡的直播來源，只用命令列給的（--twitch、--discord、--audio）
         var settings = host.Settings;
-        if (!settings.LiveMode || host.Sandbox) return;
-        if (!string.IsNullOrWhiteSpace(settings.TwitchChannel)) liveSources.Add(new TwitchChat(settings.TwitchChannel));
-        if (!string.IsNullOrWhiteSpace(settings.DiscordClientId)) liveSources.Add(new DiscordRpc(settings));
-        if (settings.MicTalk || settings.MeetingAudio)
-            liveSources.Add(new AudioWatch(settings.MicTalk, settings.MeetingAudio, cfg.MeetingApps, cfg.MicThreshold, cfg.AppThreshold));
+        if (!settings.Guests.LiveMode || host.Sandbox) return;
+        if (!string.IsNullOrWhiteSpace(settings.Guests.TwitchChannel)) liveSources.Add(new TwitchChat(settings.Guests.TwitchChannel));
+        var g = settings.Guests;
+        if (!string.IsNullOrWhiteSpace(g.DiscordClientId)) liveSources.Add(new DiscordRpc(g.DiscordClientId, g.DiscordClientSecret, g.DiscordAccessToken, g.DiscordRefreshToken));
+        if (settings.Guests.MicTalk || settings.Guests.MeetingAudio)
+            liveSources.Add(new AudioWatch(settings.Guests.MicTalk, settings.Guests.MeetingAudio, cfg.MeetingApps, cfg.MicThreshold, cfg.AppThreshold));
         foreach (var s in liveSources) AddSource(s);
     }
 
@@ -181,7 +182,7 @@ public sealed class GuestsFeature : IFeature
     string PickCharacter(string key, string name)
     {
         foreach (var k in new[] { key, name })
-            if (host.Settings.GuestCharacters.TryGetValue(k, out var chosen) && host.Rigs.ContainsKey(chosen)) return chosen;
+            if (host.Settings.Guests.Characters.TryGetValue(k, out var chosen) && host.Rigs.ContainsKey(chosen)) return chosen;
         var ids = host.CharacterIds;
         var pool = ids.Where(host.Progress.CharacterUnlocked).ToList();
         if (pool.Count == 0) pool = ids.ToList();
@@ -206,7 +207,7 @@ public sealed class GuestsFeature : IFeature
         g.SetHidden(host.Presence.Hidden);
         if (g.Source != "manual")
         {
-            host.Settings.GuestCharacters[g.Key] = charId;      // 記住這個人要用哪個角色
+            host.Settings.Guests.Characters[g.Key] = charId;      // 記住這個人要用哪個角色
             host.Settings.Save();
         }
     }
@@ -259,8 +260,8 @@ public sealed class GuestsFeature : IFeature
             if (src is DiscordRpc { NewTokens: { } t } d && liveSources.Contains(src))      // 測試用的連線不存
             {
                 d.NewTokens = null;
-                host.Settings.DiscordAccessToken = t.Access;
-                host.Settings.DiscordRefreshToken = t.Refresh;
+                host.Settings.Guests.DiscordAccessToken = t.Access;
+                host.Settings.Guests.DiscordRefreshToken = t.Refresh;
                 host.Settings.Save();
             }
         }

@@ -65,13 +65,20 @@ public static class LiveSelfTest
         Check(legacy0.ActionForChat("yo!") == "wave" && legacy0.ActionForReaction("👍") == "peace" && legacy0.ActionForReaction("🦄") == "jump", "舊格式轉換（* 放最後）");
 
         // Discord 機密：存檔加密、讀回來一樣；舊的明文設定也讀得到
-        var settings = new Save.Settings { DiscordClientSecret = "abc密碼123", DiscordAccessToken = "tok" };
+        var settings = new Save.Settings { Guests = { DiscordClientSecret = "abc密碼123", DiscordAccessToken = "tok" } };
         var json = System.Text.Json.JsonSerializer.Serialize(settings);
         Check(!json.Contains("abc密碼123") && !json.Contains("\"tok\"") && json.Contains("dpapi:"), "設定檔裡不能有明文機密");
-        var back = System.Text.Json.JsonSerializer.Deserialize<Save.Settings>(json)!;
-        Check(back.DiscordClientSecret == "abc密碼123" && back.DiscordAccessToken == "tok", "加密後讀回來要一樣");
-        var legacy = System.Text.Json.JsonSerializer.Deserialize<Save.Settings>("{\"DiscordClientSecret\":\"old-plain\"}")!;
-        Check(legacy.DiscordClientSecret == "old-plain", "舊的明文設定要讀得到");
+        var back = Save.Settings.Parse(json);
+        Check(back.Guests.DiscordClientSecret == "abc密碼123" && back.Guests.DiscordAccessToken == "tok", "加密後讀回來要一樣");
+
+        // 設定分段：舊的攤平格式（2026-11-07 前）讀到時搬到 Guests，其他欄位照舊，不認得的欄位保留
+        var old = Save.Settings.Parse("{\"Character\":\"sera\",\"LiveMode\":true,\"DiscordClientSecret\":\"old-plain\",\"GuestCharacters\":{\"twitch:1\":\"mira\"},\"MaxGuests\":5,\"Future\":1}");
+        Check(old.Character == "sera" && old.Guests.LiveMode && old.Guests.DiscordClientSecret == "old-plain"
+              && old.Guests.Characters["twitch:1"] == "mira" && old.Guests.MaxGuests == 5, "舊格式搬到 Guests");
+        var saved = System.Text.Json.JsonSerializer.Serialize(old);
+        var root = System.Text.Json.Nodes.JsonNode.Parse(saved)!.AsObject();
+        Check(!root.ContainsKey("LiveMode") && !root.ContainsKey("GuestCharacters") && root.ContainsKey("Guests") && root.ContainsKey("Future"),
+              $"存檔：舊欄位搬走、不認得的保留：{saved}");
 
         foreach (var f in failures) GD.Print($"[live] ✗ {f}");
         GD.Print(failures.Count == 0 ? "[live] 全部通過" : $"[live] ✗ {failures.Count} 個失敗");

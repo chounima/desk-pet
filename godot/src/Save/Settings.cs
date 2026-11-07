@@ -49,28 +49,10 @@ public sealed class Settings
     public int Screen { get; set; } = -1;
     /// <summary>介面語言：auto（依 Windows）、zh-TW、en、ja</summary>
     public string Language { get; set; } = "auto";
-    /// <summary>直播／會議模式：連線到下面設定的來源，有人在線上就出現客人角色</summary>
-    public bool LiveMode { get; set; }
-    /// <summary>Twitch 頻道名稱（匿名讀聊天室，不用登入）</summary>
-    public string TwitchChannel { get; set; } = "";
-    /// <summary>Discord 應用程式（開發者後台自己建立的）：用本機 RPC 讀語音頻道裡誰在講話</summary>
-    public string DiscordClientId { get; set; } = "";
-    [JsonIgnore] public string DiscordClientSecret { get; set; } = "";
-    /// <summary>Discord 授權後拿到的 token（之後不用每次再按授權）</summary>
-    [JsonIgnore] public string DiscordAccessToken { get; set; } = "";
-    [JsonIgnore] public string DiscordRefreshToken { get; set; } = "";
-    /// <summary>直播模式：麥克風有聲音時主角色動嘴</summary>
-    public bool MicTalk { get; set; }
-    /// <summary>直播模式：會議軟體（Teams、Zoom…）有聲音時出現「通話」客人</summary>
-    public bool MeetingAudio { get; set; }
-    // 存檔時三個機密用 DPAPI 加密（Secrets），讀到舊的明文也能用
-    [JsonPropertyName("DiscordClientSecret")] public string StoredClientSecret { get => Secrets.Protect(DiscordClientSecret); set => DiscordClientSecret = Secrets.Unprotect(value); }
-    [JsonPropertyName("DiscordAccessToken")] public string StoredAccessToken { get => Secrets.Protect(DiscordAccessToken); set => DiscordAccessToken = Secrets.Unprotect(value); }
-    [JsonPropertyName("DiscordRefreshToken")] public string StoredRefreshToken { get => Secrets.Protect(DiscordRefreshToken); set => DiscordRefreshToken = Secrets.Unprotect(value); }
-    /// <summary>同時最多幾個客人（null = data/guests.json 的預設）</summary>
-    public int? MaxGuests { get; set; }
-    /// <summary>某個人固定用哪個角色 { "twitch:12345" 或名字: 角色 }</summary>
-    public Dictionary<string, string> GuestCharacters { get; set; } = new();
+    /// <summary>多人功能（直播／會議模式、Twitch、Discord、客人上限…）</summary>
+    public GuestSettings Guests { get; set; } = new();
+    /// <summary>還不認得或舊格式的欄位：讀進來保留（存檔時寫回去），舊格式由 Migrate 搬到各功能的段落</summary>
+    [JsonExtensionData] public Dictionary<string, JsonElement>? Other { get; set; }
     /// <summary>每日按鍵次數 { "2026-10-10": 1234 }，保留最近 30 天</summary>
     public SortedDictionary<string, int> DailyKeys { get; set; } = new();
 
@@ -81,13 +63,43 @@ public sealed class Settings
         try
         {
             if (File.Exists(FilePath))
-                return JsonSerializer.Deserialize<Settings>(File.ReadAllText(FilePath), Options) ?? new Settings();
+                return Parse(File.ReadAllText(FilePath));
         }
         catch (Exception e)
         {
             GD.PushWarning($"設定檔讀取失敗，改用預設值：{e.Message}");
         }
         return new Settings();
+    }
+
+    /// <summary>從 JSON 讀設定，舊格式自動搬到新的段落</summary>
+    public static Settings Parse(string json)
+    {
+        var settings = JsonSerializer.Deserialize<Settings>(json, Options) ?? new Settings();
+        settings.Migrate();
+        return settings;
+    }
+
+    // 2026-11-07 前多人功能的設定攤平放在最上層：搬到 Guests
+    static readonly Dictionary<string, string> LegacyGuestKeys = new()
+    {
+        ["LiveMode"] = "LiveMode", ["TwitchChannel"] = "TwitchChannel", ["DiscordClientId"] = "DiscordClientId",
+        ["DiscordClientSecret"] = "DiscordClientSecret", ["DiscordAccessToken"] = "DiscordAccessToken", ["DiscordRefreshToken"] = "DiscordRefreshToken",
+        ["MicTalk"] = "MicTalk", ["MeetingAudio"] = "MeetingAudio", ["MaxGuests"] = "MaxGuests", ["GuestCharacters"] = "Characters",
+    };
+
+    void Migrate()
+    {
+        if (Other == null) return;
+        var moved = new System.Text.Json.Nodes.JsonObject();
+        foreach (var (oldKey, newKey) in LegacyGuestKeys)
+            if (Other.Remove(oldKey, out var value)) moved[newKey] = System.Text.Json.Nodes.JsonNode.Parse(value.GetRawText());
+        if (moved.Count == 0) return;
+        // 舊的值蓋在預設值上（新段落已經有的欄位以新段落為準）
+        var current = System.Text.Json.Nodes.JsonNode.Parse(JsonSerializer.Serialize(Guests, Options))!.AsObject();
+        foreach (var (k, v) in moved) current[k] = v?.DeepClone();
+        Guests = JsonSerializer.Deserialize<GuestSettings>(current.ToJsonString(), Options) ?? new GuestSettings();
+        if (Other.Count == 0) Other = null;
     }
 
     public void Save()
