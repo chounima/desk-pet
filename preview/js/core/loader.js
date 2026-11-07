@@ -43,7 +43,7 @@ async function loadPackages(ids, rigs) {
   }
 }
 
-function applyPackage(id, pkg, folder, rigs) {
+export function applyPackage(id, pkg, folder, rigs) {
   const baseId = pkg.base || id;
   const baseRig = rigs[baseId];
   if (!baseRig) throw new Error(`找不到範本角色 ${baseId}`);

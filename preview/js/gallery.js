@@ -1,6 +1,7 @@
 // 動作總覽：同一個角色的所有動作排成格子同時播放
 import { TUNING } from "./config.js";
-import { formRig, loadAll } from "./core/loader.js";
+import { PATHS } from "./config.js";
+import { applyPackage, formRig, loadAll } from "./core/loader.js";
 import { Pet } from "./game/pet.js";
 
 const CELL = { w: 230, h: 300, ground: 250, scale: 0.7, fitHeight: 270 };
@@ -10,6 +11,14 @@ const $ = id => document.getElementById(id);
 const [{ ids, rigs }, { names, sets }, props, accessories] = await loadAll();
 const q = new URLSearchParams(location.search);
 let charId = q.get("char") ?? ids[0];
+// ?pkg=<id>：組裝預覽 art_src/<id>/ 的部件包（不用先匯入），所有動作＋所有表情
+const pkgId = q.get("pkg");
+if (pkgId) {
+  const folder = `${PATHS.art}/../art_src/${pkgId}/`;
+  rigs[`pkg:${pkgId}`] = applyPackage(`pkg:${pkgId}`, await (await fetch(`${folder}character.json`)).json(), folder, rigs);
+  charId = `pkg:${pkgId}`;
+  document.title = `組裝預覽 ${pkgId}`;
+}
 const rig = formRig(rigs[charId], q.get("form"));
 const clips = sets[rig.body ?? "humanoid"] ?? sets.humanoid;
 const freezeAt = q.has("t") ? Number(q.get("t")) : null;
@@ -31,13 +40,17 @@ for (const [name, f] of Object.entries(rigs[charId].forms ?? {})) {
   $("chars").append(a);
 }
 
+// 部件包預覽：每個表情也一格（待機姿勢＋那個表情）
+const EXPRESSIONS = ["idle", "blink", "happy", "sleep", "surprised", "focus", "shy", "angry"];
+const cells = [...names.map(name => ({ name })), ...(pkgId ? EXPRESSIONS.map(face => ({ name: "idle", face })) : [])];
+
 // 依視窗寬度排格子
 const cols = Math.max(1, Math.floor((innerWidth - 32) / CELL.w));
 const svg = $("grid");
 svg.setAttribute("width", cols * CELL.w);
-svg.setAttribute("height", Math.ceil(names.length / cols) * CELL.h);
+svg.setAttribute("height", Math.ceil(cells.length / cols) * CELL.h);
 
-const pets = names.map((name, i) => {
+const pets = cells.map(({ name, face }, i) => {
   const cx = (i % cols) * CELL.w, cy = Math.floor(i / cols) * CELL.h;
   const layer = document.createElementNS(NS, "g");
   const bg = document.createElementNS(NS, "rect");
@@ -51,7 +64,7 @@ const pets = names.map((name, i) => {
   const label = document.createElementNS(NS, "text");
   label.setAttribute("x", cx + CELL.w / 2);
   label.setAttribute("y", cy + CELL.h - 22);
-  label.textContent = `${clips[name].label}  ${name}`;
+  label.textContent = face ? `表情 ${face}` : `${clips[name].label}  ${name}`;
   layer.append(bg, floor, label);
   svg.append(layer);
 
@@ -64,6 +77,7 @@ const pets = names.map((name, i) => {
   // ?acc=strawhat,roundglasses：所有格子都戴上這些配件（檢查錨點位置用）
   if (q.has("acc")) pet.setAccessories(q.get("acc").split(",").map(a => accessories[a]).filter(Boolean));
   pet.animator.seek(freezeAt ?? 0);
+  if (face) pet.faceOverride = face;
   return pet;
 });
 

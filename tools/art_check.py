@@ -190,7 +190,9 @@ td{{border-bottom:1px solid #3a3f55;padding:8px;vertical-align:top}}img{{border-
 來源 {html.escape(src.get("method", "未填"))} {html.escape(", ".join(src.get("tools", [])))}</p>
 <h2 class="{"err" if total_err else "warn" if total_warn else "ok"}">{total_err} 個錯誤、{total_warn} 個提醒</h2><ul>{top}</ul>
 <table>{"".join(rows)}</table>
-<p class="muted">規格見 docs/ART_GUIDE.md；AI 輔助流程見 docs/ART_GUIDE_AI.md。組裝起來看全部動作：preview/gallery.html?char={html.escape(folder.name)}（要先用 tools/import_layers.py 匯入）</p>
+<p class="muted">規格見 docs/ART_GUIDE.md；AI 輔助流程見 docs/ART_GUIDE_AI.md。
+組裝起來看全部動作與表情：python tools/serve.py → <a href="http://localhost:8787/preview/gallery.html?pkg={html.escape(folder.name)}">preview/gallery.html?pkg={html.escape(folder.name)}</a>（不用先匯入）；
+調整位置：preview/editor.html 的「📦 部件包」</p>
 </body></html>"""
 
 

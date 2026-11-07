@@ -355,6 +355,7 @@ async function loadPackage(id) {
     const a = pkg.anchors?.[name] ?? r.anchors?.[name] ?? (name === "nameTag" ? { bone: "head", x: r.headTop[0], y: r.headTop[1], scale: 1 } : null);
     if (a) p.anchors[name] = { bone: a.bone, x: a.x, y: a.y, w: 6, h: 6, scale: 1, anchorScale: a.scale ?? 1, original: { x: a.x, y: a.y, scale: 1 } };
   }
+  $("[data-pkg-preview]").href = `gallery.html?pkg=${encodeURIComponent(id)}`;
   $("[data-pkg-status]").textContent = `${pkg.name || id}：範本 ${rigs[state.charId].name}${state.form ? `（${state.form}）` : ""}，${Object.keys(p.parts).length} 個部件、${Object.keys(p.faces.images).length} 個表情。拖曳或滾輪調整後存檔。`;
   renderCharacter();
 }
