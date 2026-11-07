@@ -121,7 +121,12 @@ public sealed class Pet
         if (motion.Active && !MotionDisabled) world = skeleton.Compute(pose, motion.Update(dt, world, X, Y, Scale, Facing));
         var (face, blink) = CurrentFace(dt);
         if (View.Layered)
-            View.SetFaceLayers(FaceDriver.Layers(Rig.Face!, new FaceInput(face, blink, MouthShape, EyesOverride, Gaze.Look.X, Gaze.Look.Y)));
+        {
+            // 動作的眼睛、嘴巴軌道只在表情沒被暫時蓋掉時用
+            var own = FaceOverride == null;
+            View.SetFaceLayers(FaceDriver.Layers(Rig.Face!, new FaceInput(face, blink, MouthShape, EyesOverride ?? (own ? Animator.Eyes : null),
+                Gaze.Look.X, Gaze.Look.Y, own ? Animator.Mouth : null)));
+        }
         else
             View.SetFace(blink && face is "idle" or "focus" ? "blink" : face);
         View.SetFaceOffset(Gaze.FaceOffset);

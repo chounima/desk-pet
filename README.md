@@ -72,12 +72,12 @@ godot/src/
 | 工具 | 做什麼 |
 |---|---|
 | `python tools/validate.py` | 檢查 `art/`、`data/` 的格式（`schemas/`）與引用（骨骼、插槽、圖檔、動作名稱、翻譯缺漏）；有錯結束碼 1。需要 `pip install -r tools/requirements.txt` |
-| `--selftest=golden`（`--update` 重寫答案）／`tools/web_test.ps1` | 共用測試 `tests/golden/pose.json`：桌寵與網頁算出的姿勢要一樣 |
+| `--selftest=golden`（`--update` 重寫答案）／`tools/web_test.ps1` | 共用測試 `tests/golden/`（姿勢、物理、曲線、疊加層、分層臉）：桌寵與網頁算出來要一樣。`-Page preview/tests/faces.html`：分層臉疊起來和整張臉逐像素一致 |
 | `--selftest=progress`／`live`／`control`／`apps` | 收集系統、多人（Twitch 解析、規則、機密存檔、設定搬移）、動作與表情的優先順序、程式分類 |
 | `tools/test_discord.ps1` | 假的 Discord RPC 伺服器（`tools/mock_discord.ps1`）跑完整劇本 |
-| `tools/record_clip.ps1 -Char sera -Clip walk` | 桌寵與網頁各錄一張比較圖到 `build/record/`（`--record`、`preview/record.html`） |
+| `tools/record_clip.ps1 -Char sera -Clip walk` | 桌寵與網頁各錄一張比較圖到 `build/record/`（`--record`、`preview/record.html`；`-Vx` 平移急停看物理、`-Extra "--look=x,y"` 看視線） |
 | `tools/perf.ps1` | 1、8、20 隻客人時每幀處理時間，結果附加到 `build/perf.txt` |
-| `preview/animator.html` | **動作編輯器**（用 `python tools/serve.py` 開）：拖關節調姿勢、時間軸調關鍵影格與曲線、洋蔥皮、多角色比較、存成共用／體型／角色專屬（可以只存差異）、調次級物理參數存到 `data/physics.json`。`?selftest=1` 自我測試 |
+| `preview/animator.html` | **動作編輯器**（用 `python tools/serve.py` 開）：拖關節調姿勢、時間軸調關鍵影格與曲線、洋蔥皮、多角色比較、存成共用／體型／角色專屬（可以只存差異）、表情／眼睛／嘴巴時間軸、調次級物理參數存到 `data/physics.json`。`?selftest=1` 自我測試 |
 | `--sandbox`、`--no-single` | 測試用：不動真正的進度與設定、不連設定裡的外部服務；使用者的桌寵開著也能跑 |
 
 程式分層、功能模組、兩邊同步的規則見 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)。
@@ -165,6 +165,9 @@ godot/src/
 - `prop` 骨頭：獨立移動的道具（例如排球），動作用 `prop.x` / `prop.y` 軌道控制
 - **部件替換**：角色用 `VARIANTS = {"hand": {"peace": fn}}` 提供替換圖，動作用 `"alt": {"handNear": "peace"}` 指定；角色沒有該替換圖時自動用原圖
 - **專屬表情**：角色可以自己畫 `FACES`（參考 `characters/chouma/faces.py`），不一定要用通用的 `make_faces`
+- **分層臉**：`make_faces` 另外產生 `face_parts/`（眼眶、瞳孔、眼線、腮紅、嘴、母音嘴型）並寫進 `rig.json` 的 `face`：眨眼、講話動嘴、瞳孔跟游標都換圖層（`Game/Face/FaceDriver.cs`、`game/faceDriver.js`）。沒有 `face` 的角色照舊換整張臉
+- **頭髮骨鏈**：角色寫 `HAIR_CHAINS`（參考 `characters/tk01.py`），長髮切成幾節、自動有次級物理
+- **轉頭視差**：插槽與錨點的 `depth`（`rig.DEPTH`），看游標時前髮、臉、後髮移動量不同
 
 座標與角度慣例（角色面朝右）：
 
@@ -187,7 +190,8 @@ desk-pet/
 │   │   └── <id>/
 │   │       ├── rig.json         骨架、插槽、表情對應
 │   │       ├── parts/*.svg      身體部件
-│   │       └── faces/*.svg      表情
+│   │       ├── faces/*.svg      表情（整張臉）
+│   │       └── face_parts/*.svg 分層臉（選配）
 │   └── props/                   道具（筆電…）＋ props.json
 ├── data/
 │   └── animations/              動作（一個動作一個檔）＋ index.json

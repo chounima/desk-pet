@@ -10,7 +10,7 @@
 <body>
   <aside id="side">
     <h1>🎬 動作編輯器</h1>
-    <p class="hint">在角色身上拖關節點轉動骨頭（Shift＋拖 = 移動），會在目前的時間加上或更新關鍵影格。<br>時間軸：點一下跳到那個時間、拖關鍵影格移動、雙擊加關鍵影格、Delete 刪除。空白鍵播放／暫停，← → 一格。</p>
+    <p class="hint">在角色身上拖關節點轉動骨頭（Shift＋拖 = 移動），會在目前的時間加上或更新關鍵影格。<br>時間軸最上面三列是表情、眼睛、嘴巴（眼睛、嘴巴只有分層臉的角色有），雙擊加一個、點了在左邊選圖。<br>時間軸：點一下跳到那個時間、拖關鍵影格移動、雙擊加關鍵影格、Delete 刪除。空白鍵播放／暫停，← → 一格。</p>
 
     <h2>角色與動作</h2>
     <div class="row"><select data-char></select><select data-form></select></div>
@@ -38,6 +38,7 @@
     <h2>選到的關鍵影格</h2>
     <p class="hint" data-key-info>點時間軸上的關鍵影格</p>
     <label class="field">數值 <input type="number" step="0.5" data-key-value disabled></label>
+    <label class="field" data-choice-field hidden>圖 <select data-key-choice></select></label>
     <label class="field">曲線（到下一個關鍵影格）
       <select data-curve disabled>
         <option value="smooth">smooth 平滑</option><option value="linear">linear 等速</option>

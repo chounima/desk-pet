@@ -208,8 +208,8 @@ data/animations/<動作>.json                                  共用（現在�
 | 3h ✅ | `rig.json` ＋ schema | — | **臉部錨點**（`mouth`、`nameTag` 第 0 階段已完成；長髮骨鏈往下垂，不影響頭頂高度；schema 補上 `face`、`depth`）：`mouth`（嘴巴中心）、`eyes`（兩眼中心與瞳孔可移動範圍）。`SpeechWaves` 改讀 `mouth` 錨點，不再寫死座標；名牌與泡泡的位置改讀 `headTop` 加上頭髮骨鏈的高度 |
 | 3i / 3j ✅ | `Game/Face/FaceDriver.cs`（新） | `game/faceDriver.js`（新） | **表情驅動**（完成：`tests/golden/face.json` 兩邊比對；嘴巴管道值改成 `closed`／`half`／`open`／母音，整張臉的角色由 `ControlArbiter.AsWholeFace` 換成驚訝／開心；分層臉睜著眼就會眨；網頁預覽瞳孔跟游標）：統一決定「眼、眉、嘴」每一層顯示什麼。輸入：動作指定的表情、暫時表情、眨眼（多格）、講話（嘴巴張開程度 0～1＋母音）、視線。`Mouth` 改成輸出張開程度給它；有分層的角色換嘴巴圖層，沒有的退回換整張臉 |
 | 3k ✅ | `View/Bubble.cs`、`Main.Voice.cs`、`Guest.cs` | — | 角色冒台詞泡泡時，依字數動嘴一段時間（`Bubble.Talking`；只動嘴、不出聲波）。網頁版沒有講話功能，不需要 |
-| 3l | `preview/js/editor/main.js` | — | 自訂角色編輯器認得新插槽與錨點 |
-| 3m | `js/animator/` | — | 動作編輯器可以編表情時間軸（眼、眉、嘴分開） |
+| 3l ✅ | `preview/js/editor/main.js` | — | 自訂角色編輯器認得新插槽與錨點（部件清單、錨點都從 `rig.json` 讀，頭髮骨鏈 `hairB_*` 自動出現；自訂了整張臉就退回整張臉） |
+| 3m ✅ | `js/animator/` | — | 動作編輯器可以編表情時間軸：時間軸最上面「表情、眼睛、嘴巴」三列，存在動作的 `face`、`eyes`、`mouth`（字串或 `[[時間, 圖名]…]`）。`eyes`／`mouth` 只用在分層臉、表情沒被暫時蓋掉時；講話會蓋過 `mouth`。兩邊 `Animator.Eyes／Mouth` 與 `FaceInput.MouthArt` |
 
 完成標準：TK-01 走路時長髮往後飄、停下會晃；轉頭有立體感；冒台詞或講話時嘴型會動、瞳孔會跟游標；聲波從嘴巴錨點出現；舊角色、自訂角色照常運作。
 

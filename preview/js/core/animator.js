@@ -97,6 +97,9 @@ export class Animator {
   }
 
   get face() { return sampleDiscrete(this.clip.face ?? "idle", this.localTime); }
+  // 分層臉的眼睛、嘴巴圖（選配，格式同 face）
+  get eyes() { return this.clip.eyes?.length ? sampleDiscrete(this.clip.eyes, this.localTime) : null; }
+  get mouth() { return this.clip.mouth?.length ? sampleDiscrete(this.clip.mouth, this.localTime) : null; }
   get props() { return this.clip.props ?? []; }
   get alt() { return this.clip.alt ?? {}; }       // { 插槽名: 替換圖名 }
   get fx() { return this.clip.fx ?? null; }

@@ -117,6 +117,9 @@ public sealed class Animator
     }
 
     public string Face => Clip.FaceAt(LocalTime);
+    /// <summary>動作指定的眼睛、嘴巴圖（分層臉；沒有 = null）</summary>
+    public string? Eyes => Clip.EyesAt(LocalTime);
+    public string? Mouth => Clip.MouthAt(LocalTime);
     public IReadOnlyList<string> Props => Clip.Props ?? (IReadOnlyList<string>)Array.Empty<string>();
     public IReadOnlyDictionary<string, string> Alt => Clip.Alt ?? (IReadOnlyDictionary<string, string>)new Dictionary<string, string>();
     public string? Fx => Clip.Fx;

@@ -86,7 +86,7 @@ export class PetView {
   }
 
   // 有分層臉、而且沒有被自訂表情（整張臉）蓋掉
-  get layered() { return !!this.faceLayers && !this.customFaces?.images; }
+  get layered() { return !!this.faceLayers && !Object.keys(this.customFaces?.images ?? {}).length; }
 
   // 分層臉：[{ name, file, alpha, dx, dy }]（game/faceDriver.js 算的，順序和 rig.face.layers 一樣）
   setFaceLayers(states) {

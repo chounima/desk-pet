@@ -212,30 +212,71 @@ canvas.addEventListener("pointerup", () => { poseDrag = null; });
 const boneOrder = Object.fromEntries(rig().bones.map((b, i) => [b.name, i]));
 const order = track => (boneOrder[track.split(".")[0]] ?? 99) + (track.includes(".") ? 0.5 : 0);
 
+// 表情類的列（@face、@eyes、@mouth）：關鍵影格存在動作的 face、eyes、mouth 欄位（字串，或 [[時間, 名稱], …]）
+const DISCRETE = [["face", "表情"], ["eyes", "眼睛"], ["mouth", "嘴巴"]];
+const isDiscrete = track => track.startsWith("@");
+// 可以選的圖：表情 = 表情插槽的整張臉；眼睛、嘴巴 = 分層臉的圖層（沒有分層臉的角色不顯示這兩列）
+function choicesOf(ch) {
+  const r = rig();
+  if (ch === "face") return Object.keys(r.slots.find(s => s.variants)?.variants ?? { idle: 1 });
+  return Object.keys(r.face?.layers.find(l => l.name === ch)?.variants ?? {});
+}
+function discreteKeys(ch) {
+  const v = state.clip[ch];
+  return v == null ? [] : typeof v === "string" ? [[0, v]] : v.map(k => [...k]);
+}
+// 存回去：只有一個、在 0 秒 = 字串；沒有了 = 表情回到 idle、眼睛／嘴巴拿掉
+function storeDiscrete(ch, keys) {
+  keys.sort((a, b) => a[0] - b[0]);
+  if (!keys.length) { if (ch === "face") state.clip.face = "idle"; else delete state.clip[ch]; }
+  else state.clip[ch] = keys.length === 1 && keys[0][0] === 0 ? keys[0][1] : keys;
+}
+const discreteRows = () => DISCRETE.filter(([ch]) => ch === "face" || rig().face)
+  .map(([ch, label]) => ({ track: `@${ch}`, label, keys: discreteKeys(ch) }));
+const sampleAt = (keys, t) => keys.reduce((v, k) => (t >= k[0] ? k[1] : v), keys[0]?.[1]);
+
 const timeline = new Timeline($("#timeline"), {
   onSeek: t => { state.time = t; state.playing = false; syncPlay(); timeline.setTime(t); },
   onSelect: (track, index) => {
     state.sel = index == null ? null : { track, index };
+    if (isDiscrete(track)) {
+      if (index != null) state.time = discreteKeys(track.slice(1))[index][0];
+      renderTimeline();
+      return;
+    }
     state.bone = track.split(".")[0];
     if (index != null) state.time = state.clip.tracks[track][index][0];
     renderTimeline();
   },
   onMove: (track, index, t) => {
-    const keys = state.clip.tracks[track];
+    const discrete = isDiscrete(track);
+    const keys = discrete ? discreteKeys(track.slice(1)) : state.clip.tracks[track];
     const key = keys[index];
     key[0] = Math.min(state.clip.duration, Math.max(0, t));
     keys.sort((a, b) => a[0] - b[0]);
     const i = keys.indexOf(key);
+    if (discrete) storeDiscrete(track.slice(1), keys);
     state.sel = { track, index: i };
     state.time = key[0];
     changed();
     return i;
   },
-  onAdd: (track, t) => { state.time = t; setKey(track, t, currentValue(track)); },
+  onAdd: (track, t) => {
+    state.time = t;
+    if (!isDiscrete(track)) { setKey(track, t, currentValue(track)); return; }
+    const ch = track.slice(1), keys = discreteKeys(ch);
+    if (keys.some(k => Math.abs(k[0] - t) < 0.004)) return;
+    // 預設：這一刻原本的圖（眼睛、嘴巴 = 目前表情用的那張）
+    const own = rig().face?.expressions[sampleAt(discreteKeys("face"), t) ?? "idle"]?.[ch];
+    keys.push([round(t), sampleAt(keys, t) ?? own ?? choicesOf(ch)[0]]);
+    storeDiscrete(ch, keys);
+    state.sel = { track, index: discreteKeys(ch).findIndex(k => Math.abs(k[0] - t) < 0.004) };
+    changed();
+  },
 });
 
 function renderTimeline() {
-  timeline.render(state.clip, order, state.time, state.sel);
+  timeline.render(state.clip, order, state.time, state.sel, discreteRows());
   renderKeyPanel();
 }
 
@@ -250,6 +291,12 @@ addEventListener("keydown", e => {
   else if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
     state.time = Math.min(state.clip.duration, Math.max(0, state.time + (e.key === "ArrowRight" ? 1 : -1) / 30));
     timeline.setTime(state.time);
+  } else if ((e.key === "Delete" || e.key === "Backspace") && state.sel && isDiscrete(state.sel.track)) {
+    const ch = state.sel.track.slice(1), keys = discreteKeys(ch);
+    keys.splice(state.sel.index, 1);
+    storeDiscrete(ch, keys);
+    state.sel = null;
+    changed();
   } else if ((e.key === "Delete" || e.key === "Backspace") && state.sel) {
     const keys = state.clip.tracks[state.sel.track];
     keys.splice(state.sel.index, 1);
@@ -260,12 +307,20 @@ addEventListener("keydown", e => {
 });
 
 // ---------- 關鍵影格面板與曲線 ----------
-const selKey = () => (state.sel ? state.clip.tracks[state.sel.track]?.[state.sel.index] : null);
+const selKey = () => (state.sel && !isDiscrete(state.sel.track) ? state.clip.tracks[state.sel.track]?.[state.sel.index] : null);
 
 function renderKeyPanel() {
+  // 表情類：選圖，不用數值與曲線
+  const d = state.sel && isDiscrete(state.sel.track) ? discreteKeys(state.sel.track.slice(1))[state.sel.index] : null;
+  $("[data-choice-field]").hidden = !d;
+  if (d) {
+    const ch = state.sel.track.slice(1);
+    fillSelect($("[data-key-choice]"), [...new Set([...choicesOf(ch), d[1]])].map(v => [v, v]), d[1]);
+    $("[data-key-info]").textContent = `${DISCRETE.find(x => x[0] === ch)[1]} 在 ${d[0].toFixed(2)} 秒`;
+  }
   const k = selKey();
   $("[data-key-value]").disabled = $("[data-curve]").disabled = !k;
-  $("[data-key-info]").textContent = k ? `${state.sel.track} 在 ${k[0].toFixed(2)} 秒` : "點時間軸上的關鍵影格";
+  if (!d) $("[data-key-info]").textContent = k ? `${state.sel.track} 在 ${k[0].toFixed(2)} 秒` : "點時間軸上的關鍵影格";
   if (k) {
     $("[data-key-value]").value = k[1];
     $("[data-curve]").value = k[2] ?? "smooth";
@@ -273,6 +328,13 @@ function renderKeyPanel() {
   drawCurve(k?.[2] ?? "smooth");
 }
 
+$("[data-key-choice]").onchange = e => {
+  if (!state.sel || !isDiscrete(state.sel.track)) return;
+  const ch = state.sel.track.slice(1), keys = discreteKeys(ch);
+  keys[state.sel.index][1] = e.target.value;
+  storeDiscrete(ch, keys);
+  changed();
+};
 $("[data-key-value]").oninput = e => { const k = selKey(); if (k) { k[1] = Number(e.target.value); changed(); } };
 $("[data-curve]").onchange = e => {
   const k = selKey();
@@ -318,6 +380,7 @@ $("[data-duration]").onchange = e => {
   // 長度改了：關鍵影格依比例跟著伸縮
   const ratio = d / state.clip.duration;
   for (const keys of Object.values(state.clip.tracks)) for (const k of keys) k[0] = round(k[0] * ratio);
+  for (const [ch] of DISCRETE) if (Array.isArray(state.clip[ch])) for (const k of state.clip[ch]) k[0] = round(k[0] * ratio);
   state.clip.duration = d;
   state.time = Math.min(state.time, d);
   changed();
@@ -372,6 +435,7 @@ function diffAgainst(base, clip) {
     if (k === "tracks") continue;
     if (JSON.stringify(base[k]) !== JSON.stringify(v)) out[k] = v;
   }
+  for (const k of Object.keys(base)) if (!(k in clip) && k !== "tracks" && k !== "extends") out[k] = null;     // 拿掉的欄位（例如眼睛軌道）
   const tracks = {};
   for (const [ch, keys] of Object.entries(clip.tracks)) if (JSON.stringify(base.tracks?.[ch]) !== JSON.stringify(keys)) tracks[ch] = keys;
   for (const ch of Object.keys(base.tracks ?? {})) if (!clip.tracks[ch]) tracks[ch] = null;
@@ -511,6 +575,20 @@ if (new URLSearchParams(location.search).has("selftest")) {
   check(diff.extends === "walk" && Object.keys(diff.tracks).join() === "armNear_u", `差異只留 armNear_u：${Object.keys(diff.tracks)}`);
   const merged = extendClip(sharedClips.walk, diff);
   check(JSON.stringify(merged.tracks.armNear_u) === JSON.stringify(state.clip.tracks.armNear_u) && merged.tracks.legNear_u === sharedClips.walk.tracks.legNear_u, "差異合併回來要一樣");
+  // 6. 表情類的列：嘴巴加兩個關鍵影格、換圖，動作的 mouth 欄位要跟著變，角色要換嘴巴圖
+  if (rig().face) {
+    timeline.h.onAdd("@mouth", 0);
+    timeline.h.onAdd("@mouth", 0.3);
+    $("[data-key-choice]").value = "va";
+    $("[data-key-choice]").dispatchEvent(new Event("change"));
+    const own = rig().face.expressions.idle.mouth;
+    check(JSON.stringify(state.clip.mouth) === JSON.stringify([[0, own], [0.3, "va"]]), `mouth 欄位：${JSON.stringify(state.clip.mouth)}`);
+    showAt(pet, 0.35);
+    check(pet.view.faceLayers.find((it, i) => rig().face.layers[i].name === "mouth").file?.endsWith("mouth_va.svg"), "0.35 秒要換成 va 嘴型");
+    dispatchEvent(new KeyboardEvent("keydown", { key: "Delete" }));
+    dispatchEvent(new KeyboardEvent("keydown", { key: "Delete" }));
+    check(typeof state.clip.mouth === "string" || state.clip.mouth === undefined, `刪到剩一個要變回字串：${JSON.stringify(state.clip.mouth)}`);
+  } else fails.push(`${rig().id} 沒有分層臉，表情列沒測到`);
   $("[data-status]").textContent = fails.length ? fails.join("；") : "自我測試通過";
   document.title = fails.length ? `FAIL ${fails.length}: ${fails.join("；")}` : "PASS";
 } else document.title = "DONE";

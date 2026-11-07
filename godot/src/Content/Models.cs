@@ -212,13 +212,16 @@ public sealed class ClipData
     public string? Next { get; set; }
     /// <summary>字串，或 [[時間, 表情], ...]</summary>
     public JsonElement Face { get; set; }
+    /// <summary>分層臉的眼睛、嘴巴圖（選配，格式同 Face）：表情沒被暫時蓋掉時才用</summary>
+    public JsonElement? Eyes { get; set; }
+    public JsonElement? Mouth { get; set; }
     public List<string>? Props { get; set; }
     public Dictionary<string, string>? Alt { get; set; }
     public string? Fx { get; set; }
     public float Move { get; set; }
     public Dictionary<string, List<Keyframe>> Tracks { get; set; } = new();
 
-    List<(float t, string name)>? faceKeys;
+    List<(float t, string name)>? faceKeys, eyesKeys, mouthKeys;
 
     /// <summary>借用這個動作的姿勢，但名稱、標籤、next 用原本動作的</summary>
     public ClipData AliasAs(string name, ClipData? own)
@@ -231,13 +234,18 @@ public sealed class ClipData
         return c;
     }
 
-    public string FaceAt(float t)
+    public string FaceAt(float t) => Discrete(Face, t, ref faceKeys) ?? "idle";
+    public string? EyesAt(float t) => Eyes is { } e ? Discrete(e, t, ref eyesKeys) : null;
+    public string? MouthAt(float t) => Mouth is { } m ? Discrete(m, t, ref mouthKeys) : null;
+
+    // 不連續的軌道：字串，或 [[時間, 值], ...]（取 t 之前最後一個）
+    static string? Discrete(JsonElement track, float t, ref List<(float t, string name)>? cache)
     {
-        if (Face.ValueKind == JsonValueKind.String) return Face.GetString()!;
-        if (Face.ValueKind != JsonValueKind.Array) return "idle";
-        faceKeys ??= Face.EnumerateArray().Select(k => (k[0].GetSingle(), k[1].GetString()!)).ToList();
-        var value = faceKeys[0].name;
-        foreach (var (k, name) in faceKeys)
+        if (track.ValueKind == JsonValueKind.String) return track.GetString()!;
+        if (track.ValueKind != JsonValueKind.Array || track.GetArrayLength() == 0) return null;
+        cache ??= track.EnumerateArray().Select(k => (k[0].GetSingle(), k[1].GetString()!)).ToList();
+        var value = cache[0].name;
+        foreach (var (k, name) in cache)
             if (t >= k) value = name;
         return value;
     }

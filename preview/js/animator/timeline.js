@@ -1,5 +1,6 @@
 // 時間軸：每條軌道一列，關鍵影格是菱形；點一下跳到那個時間、拖關鍵影格移動、雙擊加關鍵影格
 // 事件交給 main.js：onSeek(t)、onSelect(track, index)、onMove(track, index, t)、onAdd(track, t)
+// 表情類（不連續）的列：track 名稱以 @ 開頭（@face、@eyes、@mouth），關鍵影格顯示成小標籤
 
 const SNAP = 0.01;
 const snap = t => Math.round(t / SNAP) * SNAP;
@@ -14,11 +15,13 @@ export class Timeline {
   }
 
   // clip：正在編輯的動作；order：軌道順序（骨骼順序）；sel：{ track, index }
-  render(clip, order, time, sel) {
+  // discrete：表情類的列 [{ track: "@face", label: "表情", keys: [[t, 名稱], …] }]，畫在骨骼軌道上面
+  render(clip, order, time, sel, discrete = []) {
     this.clip = clip;
     const duration = clip.duration;
     const tracks = Object.keys(clip.tracks).sort((a, b) => order(a) - order(b));
     const rows = [this.ruler(duration)];
+    for (const d of discrete) rows.push(this.discreteRow(d, duration, sel));
     for (const track of tracks) {
       const row = document.createElement("div");
       row.className = "track" + (sel?.track === track ? " sel" : "");
@@ -47,6 +50,33 @@ export class Timeline {
     }
     this.root.replaceChildren(...rows);
     this.setTime(time);
+  }
+
+  discreteRow({ track, label, keys }, duration, sel) {
+    const row = document.createElement("div");
+    row.className = "track discrete" + (sel?.track === track ? " sel" : "");
+    const name = document.createElement("div");
+    name.className = "name";
+    name.textContent = label;
+    name.title = track.slice(1);
+    const lane = this.lane(duration);
+    lane.onpointerdown = e => { if (e.target === lane) this.h.onSeek(this.timeAt(e, lane)); };
+    lane.ondblclick = e => { if (e.target === lane) this.h.onAdd(track, snap(this.timeAt(e, lane))); };
+    keys.forEach((k, i) => {
+      const key = document.createElement("div");
+      key.className = "tag" + (sel?.track === track && sel.index === i ? " sel" : "");
+      key.style.left = `${(k[0] / duration) * 100}%`;
+      key.textContent = k[1];
+      key.title = `${k[0].toFixed(2)}s = ${k[1]}`;
+      key.onpointerdown = e => {
+        e.stopPropagation();
+        this.h.onSelect(track, i);
+        this.drag = { track, index: i, lane };
+      };
+      lane.append(key);
+    });
+    row.append(name, lane);
+    return row;
   }
 
   ruler(duration) {

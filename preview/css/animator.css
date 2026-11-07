@@ -21,3 +21,6 @@ canvas[data-curve-preview] { width: 100%; background: rgba(0, 0, 0, 0.25); borde
 #timeline .key.curve { background: #6fb7ff; }
 #timeline .key.sel { background: #ff7d8a; }
 #timeline .playhead { position: absolute; top: 0; bottom: 0; width: 2px; background: #d81e2c; pointer-events: none; z-index: 3; }
+#timeline .track.discrete { background: rgba(111, 183, 255, 0.06); }
+#timeline .tag { position: absolute; top: 3px; height: 15px; padding: 0 5px; border-radius: 4px; background: #6fb7ff; color: #14161f; font-size: 10px; line-height: 15px; white-space: nowrap; cursor: ew-resize; border: 1px solid #24161b; }
+#timeline .tag.sel { background: #ff7d8a; }

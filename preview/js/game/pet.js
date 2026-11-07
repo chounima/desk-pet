@@ -81,7 +81,12 @@ export class Pet {
     // 次級物理：用「只有動畫」的姿勢算偏移，再重算一次骨架（物理骨不參與 probe）
     if (this.motion.active) this.world = this.skeleton.compute(pose, this.motion.update(dt, this.world, this.x, this.y, this.scale, this.facing));
     const { face, blink } = this.currentFace(dt);
-    if (this.view.layered) this.view.setFaceLayers(faceLayers(this.rig.face, { expression: face, blink, mouth: this.mouthShape, look: this.look }));
+    if (this.view.layered) {
+      // 動作的眼睛、嘴巴軌道只在表情沒被暫時蓋掉時用
+      const own = this.faceOverride == null;
+      this.view.setFaceLayers(faceLayers(this.rig.face, { expression: face, blink, mouth: this.mouthShape, look: this.look,
+        eyes: own ? this.animator.eyes : null, mouthArt: own ? this.animator.mouth : null }));
+    }
     else this.view.setFace(blink && (face === "idle" || face === "focus") ? "blink" : face);
     this.view.setProps(this.animator.props);
     this.view.setAlt(this.animator.alt);

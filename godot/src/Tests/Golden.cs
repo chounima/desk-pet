@@ -36,7 +36,7 @@ public static class Golden
             var look = c!["look"]?.AsArray();
             var input = new Game.Face.FaceInput(c["expression"]!.GetValue<string>(), c["blink"]?.GetValue<bool>() ?? false,
                 c["mouth"]?.GetValue<string>(), c["eyes"]?.GetValue<string>(),
-                look?[0]!.GetValue<float>() ?? 0, look?[1]!.GetValue<float>() ?? 0);
+                look?[0]!.GetValue<float>() ?? 0, look?[1]!.GetValue<float>() ?? 0, c["mouthArt"]?.GetValue<string>());
             var layers = Game.Face.FaceDriver.Layers(rigs[c["char"]!.GetValue<string>()].Face!, input);
             return new JsonArray(layers.Select(l => (JsonNode)new JsonArray(l.Name, l.File, MathF.Round(l.Alpha, 4), MathF.Round(l.Dx, 4), MathF.Round(l.Dy, 4))).ToArray());
         }).ToList();

@@ -100,6 +100,54 @@
     },
     "_說明": {
       "type": "string"
+    },
+    "eyes": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "minItems": 2,
+            "maxItems": 2
+          }
+        }
+      ],
+      "description": "分層臉的眼睛圖（open、half、line、arc…），格式同 face；表情沒被暫時蓋掉時才用，只有整張臉的角色忽略"
+    },
+    "mouth": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "minItems": 2,
+            "maxItems": 2
+          }
+        }
+      ],
+      "description": "分層臉的嘴巴圖（smile、open、va…），格式同 face；講話時被嘴型蓋過，只有整張臉的角色忽略"
     }
   },
   "anyOf": [
