@@ -12,12 +12,14 @@
 |---|---|---|---|---|
 | 資料 | `Content/` | `core/loader.js` | 資料格式（`Models.cs`）、讀取、翻譯、台詞 | 引用其他層 |
 | 計算 | `Core/` | `core/` | 純計算：骨架、動畫器、之後的物理、網格、聲音分析 | 建立 Godot 節點、讀檔、碰視窗；可以用 Godot 的數學型別（`Vector2`、`Transform2D`） |
+| 訊號 | `Signals/` | （沒有） | 外部來源傳來的事件格式（`PresenceEvent`、`PresenceSource`）、使用者自己的聲音（`IVoiceSource`、`VoiceMixer`） | 引用 `Game` 以上 |
 | 規則 | `Game/` | `game/` | 角色狀態與行為、互動規則、小遊戲規則、收集系統、客人角色 | 直接操作視窗或系統 API（透過 `Platform`） |
 | 畫面 | `View/` | `view/` | 把狀態畫出來：角色部件、特效、泡泡、球、聲波 | 改變規則狀態 |
 | 介面 | `UI/` | `ui/` | 系統匣、右鍵選單、Desk Pet 視窗各分頁 | 自己保存遊戲狀態（交給 `Game`／`Save`） |
-| 系統整合 | `Platform/` | （沒有） | Windows API：透明視窗、點擊穿透、全域鍵盤、視窗走訪、音量表、開機啟動；`Platform/Live/` 外部服務（Twitch、Discord） | 引用 `Game`、`View`、`UI`（例外見下） |
+| 系統整合 | `Platform/` | （沒有） | Windows API：透明視窗、點擊穿透、全域鍵盤、視窗走訪、音量表、開機啟動；`Platform/Live/` 外部服務（Twitch、Discord），實作 `Signals` 的介面 | 引用 `Game`、`View`、`UI`（例外見下） |
 | 存檔 | `Save/` | localStorage | 設定與進度的讀寫 | 引用其他層 |
 | 音訊 | `Audio/` | （沒有） | 合成音效、撥弦、音樂播放 | 引用 `Game` 以上 |
+| 功能模組 | `Features/<功能>/` | （沒有） | 一個功能一個資料夾，實作 `IFeature`（例如 `Features/Guests/` 多人） | 直接讀 `Main` 的欄位（用 `FeatureHost`） |
 | 串接 | `Main*.cs` | `main.js`、`gallery.js` | 建立各層物件、接事件、主迴圈 | 放規則或計算（要往下搬） |
 
 ### 目前的例外（逐步修正）
@@ -26,7 +28,6 @@
 |---|---|---|
 | `Game/Pet.cs` 建立並持有 `View/PetView` | 移植網頁版時角色與畫面寫在一起 | 0r（角色本體和驅動方式分開）、0u（掛件跟著錨點） |
 | `Game/Guests/Guest.cs`、`Game/Volley/VolleySession.cs` 建立節點（泡泡、特效、名牌、球） | 同上 | 0u |
-| `Platform/Live/*` 引用 `Game.Guests.PresenceEvent` | 事件格式放在 `Game` | 把 `PresenceEvent`、`PresenceSource` 搬到中立的位置（`Content` 或新的 `Signals`），做 0t 時一起處理 |
 | `Platform/Live/DiscordRpc.cs` 引用 `Save.Settings` | 建構時直接讀設定 | 0v（設定依功能分段）時改成傳入需要的值 |
 | `View/SpeechWaves.cs` 寫死嘴巴座標 | 還沒有臉部錨點 | 0p、3h |
 
@@ -34,7 +35,7 @@
 
 ## 功能模組
 
-功能（專注、音樂、日常、收集、自訂內容、多人，之後的半身模式）現在是 `Main` 的 `partial` 檔，共用 `Main` 的欄位。目標是每個功能一個資料夾 `godot/src/Features/<功能>/`，實作 `IFeature`（0k）：
+功能（專注、音樂、日常、收集、自訂內容，之後的半身模式）原本是 `Main` 的 `partial` 檔，共用 `Main` 的欄位。目標是每個功能一個資料夾 `godot/src/Features/<功能>/`，實作 `IFeature`（0k）。已經搬好的：**多人**（`Features/Guests/`）。
 
 | 介面要提供的 | 用途 |
 |---|---|

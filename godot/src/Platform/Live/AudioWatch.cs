@@ -1,4 +1,4 @@
-// 用 Windows 音量表偵測「有人在講話」：任何會議軟體都能用（Teams、Zoom、LINE…），不需要它們的 API
+﻿// 用 Windows 音量表偵測「有人在講話」：任何會議軟體都能用（Teams、Zoom、LINE…），不需要它們的 API
 //
 // - 麥克風音量 → 使用者自己在講話（主角色動嘴）
 // - 會議軟體播出的聲音 → 對方在講話（每個軟體一個客人，例如「Zoom 通話」）
@@ -12,12 +12,21 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using DeskPet.Content;
-using DeskPet.Game.Guests;
+using DeskPet.Signals;
 
 namespace DeskPet.Platform.Live;
 
-public sealed unsafe class AudioWatch : PresenceSource
+public sealed unsafe class AudioWatch : PresenceSource, IVoiceSource
 {
+    const string Mic = "@mic";
+    volatile bool selfSpeaking;
+    volatile float selfLevel = -1;
+
+    /// <summary>麥克風有聲音（使用者自己在講話）</summary>
+    public bool SelfSpeaking => selfSpeaking;
+    /// <summary>麥克風音量峰值 0～1；沒開麥克風偵測是 -1</summary>
+    public float SelfLevel => selfLevel;
+
     const float Hold = 0.4f;             // 音量降下來後再等多久才算講完（秒）
 
     readonly bool mic, apps;
@@ -95,7 +104,12 @@ public sealed unsafe class AudioWatch : PresenceSource
                         }
                     }
                 }
-                if (micMeter != IntPtr.Zero) Update(talks, PresenceEvent.SelfId, Peak(micMeter), micThreshold, null);
+                if (micMeter != IntPtr.Zero)
+                {
+                    var level = Peak(micMeter);
+                    selfLevel = level;
+                    Update(talks, Mic, level, micThreshold, null);
+                }
                 foreach (var group in sessions.GroupBy(s => s.App))
                 {
                     var peak = group.Max(s => Peak(s.Meter));
@@ -114,7 +128,8 @@ public sealed unsafe class AudioWatch : PresenceSource
             Release(ref micMeter);
             Release(ref enumerator);
             foreach (var app in present) Emit(new PresenceEvent(Id, PresenceKind.Leave, app));
-            Emit(new PresenceEvent(Id, PresenceKind.Silent, PresenceEvent.SelfId));
+            selfSpeaking = false;
+            selfLevel = -1;
             CoUninitialize();
         }
     }
@@ -128,6 +143,11 @@ public sealed unsafe class AudioWatch : PresenceSource
             t.Quiet = 0;
             if (t.On) return;
             t.On = true;
+            if (who == Mic)
+            {
+                selfSpeaking = true;
+                return;
+            }
             if (present != null && present.Add(who))
                 Emit(new PresenceEvent(Id, PresenceKind.Join, who, I18n.T("live.meetingGuest", meetingApps.GetValueOrDefault(who, who))));
             Emit(new PresenceEvent(Id, PresenceKind.Speaking, who));
@@ -135,7 +155,8 @@ public sealed unsafe class AudioWatch : PresenceSource
         else if (t.On && (t.Quiet += 0.05f) >= Hold)
         {
             t.On = false;
-            Emit(new PresenceEvent(Id, PresenceKind.Silent, who));
+            if (who == Mic) selfSpeaking = false;
+            else Emit(new PresenceEvent(Id, PresenceKind.Silent, who));
         }
     }
 

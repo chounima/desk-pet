@@ -47,6 +47,10 @@ public sealed class FeatureHost
     public required Action<Game.Drivers.IPetDriver?> SetDriver { get; init; }
     /// <summary>主角色目前的顯示大小</summary>
     public required Func<float> PetScale { get; init; }
+    /// <summary>使用者自己的聲音（Discord、麥克風…合起來）；功能可以加自己的來源</summary>
+    public required Signals.VoiceMixer Voice { get; init; }
     /// <summary>--dump：除錯輸出開著</summary>
     public bool Dump { get; init; }
+    /// <summary>--sandbox：測試中，不要連設定裡的外部服務、不要改使用者的設定</summary>
+    public bool Sandbox { get; init; }
 }

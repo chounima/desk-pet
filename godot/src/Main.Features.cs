@@ -11,6 +11,7 @@ public partial class Main
 {
     readonly List<IFeature> features = new();
     FeatureHost host = null!;
+    Features.Guests.GuestsFeature guestsFeature = null!;
 
     void SetupFeatures(List<string> ids, Dictionary<string, Dictionary<string, ClipData>> clips, Dictionary<string, PropData> props)
     {
@@ -18,9 +19,10 @@ public partial class Main
         {
             Root = this, Pet = pet, Behavior = behavior, Control = control, Settings = settings, Tray = tray, Hub = hub, Presence = presence,
             Progress = progress, Fx = fx, Lines = lines, Rigs = rigs, CharacterIds = ids, Clips = clips, Props = props, Args = args,
-            Area = Area, RigOf = RigOf, SetDriver = SetDriver, PetScale = () => PetScale(settings.Size), Dump = dumpState,
+            Area = Area, RigOf = RigOf, SetDriver = SetDriver, Voice = voice, Sandbox = sandbox, PetScale = () => PetScale(settings.Size), Dump = dumpState,
         };
         // 新功能在這裡加：AddFeature(new Features.Xxx.XxxFeature());
+        AddFeature(guestsFeature = new Features.Guests.GuestsFeature());
     }
 
     /// <summary>換主角色的驅動者；null = 換回桌面漫遊（Behavior）</summary>

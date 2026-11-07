@@ -38,7 +38,6 @@ public partial class Main : Node2D
         public Vector2 Start;
         public string Zone = "body";     // 按下時點到的部位
         public bool Moved;
-        public Game.Guests.Guest? Guest;  // 拖的是客人（null = 主角色）
     }
 
     const float SaveEvery = 30;       // 統計每 30 秒存一次檔
@@ -203,7 +202,7 @@ public partial class Main : Node2D
             settings.Save();
         };
         tray.FormChosen += ChooseForm;
-        tray.SizeChosen += size => { pet.SetScale(PetScale(size)); settings.Size = size; settings.Save(); RescaleGuests(); FeaturesDisplayChanged(); };
+        tray.SizeChosen += size => { pet.SetScale(PetScale(size)); settings.Size = size; settings.Save(); FeaturesDisplayChanged(); };
         tray.AutoToggled += on => { behavior.Auto = on; settings.Auto = on; settings.Save(); };
         tray.AutostartToggled += Autostart.Set;
         tray.VolleyToggled += volley.SetActive;
@@ -219,7 +218,7 @@ public partial class Main : Node2D
         SetupMusic();
         SetupFocus();
         SetupCustom();
-        SetupGuests(ids, clips, props);
+        SetupVoice();
         SetupFeatures(ids, clips, props);
         SetupRecord();
         SetupPerf();
@@ -313,11 +312,10 @@ public partial class Main : Node2D
         pet.Update(dt);
         fx.UpdateFx(dt, pet.Animator.Fx, pet.HeadTop());
         bubble.UpdateBubble(dt, pet.HeadTop());
-        UpdateGuests(dt);
         FeaturesAfterPet(dt);
         UpdateClickThrough();
         RecordFrameTime();
-        if (dumpState && Engine.GetProcessFrames() % 120 == 0) { DumpState(); DumpGuests(); DumpFeatures(); DumpPerf(); }
+        if (dumpState && Engine.GetProcessFrames() % 120 == 0) { DumpState(); DumpFeatures(); DumpPerf(); }
     }
 
     // ---------- 測試用 ----------
@@ -405,43 +403,35 @@ public partial class Main : Node2D
         }
         // 主角色的點擊優先，沒點到主角色才交給功能模組
         if (e is InputEventMouseButton mbe && ZoneAt(mbe.Position) == null && FeaturesHandleInput(e)) return;
-        if (e is InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: true } mb)
+        // 主角色交給別的驅動者（例如原地不動）時不能拖
+        if (e is InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: true } mb && driver == behavior && ZoneAt(mb.Position) is { } zone)
         {
-            // 主角色交給別的驅動者（例如原地不動）時不能拖
-            if (driver == behavior && ZoneAt(mb.Position) is { } zone) drag = new Drag { Start = mb.Position, Zone = zone };
-            else if (GuestAt(mb.Position) is { } g && ZoneOn(g.Pet, mb.Position) is { } gz) drag = new Drag { Start = mb.Position, Zone = gz, Guest = g };
-            if (drag != null) dailyLife.OnActivity();
+            drag = new Drag { Start = mb.Position, Zone = zone };
+            dailyLife.OnActivity();
         }
-        if (e is InputEventMouseButton { ButtonIndex: MouseButton.Right, Pressed: true } rb)
-        {
-            if (ZoneAt(rb.Position) != null) OpenPetMenu();
-            else if (GuestAt(rb.Position) is { } g) OpenGuestMenu(g);
-        }
+        if (e is InputEventMouseButton { ButtonIndex: MouseButton.Right, Pressed: true } rb && ZoneAt(rb.Position) != null)
+            OpenPetMenu();
     }
 
     /// <summary>畫面上某點點到角色的哪個部位；沒點到角色回傳 null</summary>
     string? ZoneAt(Vector2 point) => ZoneOn(pet, point);
 
-    static string? ZoneOn(Pet p, Vector2 point)
-    {
-        if (p.View.HitSlot(point) is not { } slot) return null;
-        return Interactions.ZoneOf(slot, p.ToBoneLocal("head", point).Y, p.Rig.HeadTop[1]);
-    }
+    static string? ZoneOn(Pet p, Vector2 point) => Interactions.ZoneOnPet(p, point);
 
     // 拖曳中游標可能離開可點擊區域，所以改用全域查詢游標位置與按鍵狀態
     void UpdateDrag()
     {
         if (drag == null) return;
         var cursor = DesktopWindow.CursorInWindow();
-        var b = drag.Guest?.Behavior ?? behavior;
+        var b = behavior;
         if (!DesktopWindow.LeftButtonDown())
         {
             if (drag.Moved) b.Release();
             else
             {
                 b.OnPetClick(drag.Zone);
-                if (drag.Guest == null) progress.OnInteraction(pet.Rig.Id);
-                fx.Heart((drag.Guest?.Pet ?? pet).HeadTop());
+                progress.OnInteraction(pet.Rig.Id);
+                fx.Heart(pet.HeadTop());
             }
             drag = null;
             return;
@@ -460,7 +450,7 @@ public partial class Main : Node2D
         if (presence.Hidden) return;       // 隱藏中一律穿透（OnPresenceChanged 已設好）
         var cursor = DesktopWindow.CursorInWindow();
         // 對打中球和角色都要能點（角色用來按右鍵叫選單）
-        var over = drag != null || (volley.Active && volley.HitBall(cursor)) || pet.View.HitTest(cursor) || (!volley.Active && (GuestAt(cursor) != null || FeaturesWantMouse(cursor)));
+        var over = drag != null || (volley.Active && volley.HitBall(cursor)) || pet.View.HitTest(cursor) || (!volley.Active && FeaturesWantMouse(cursor));
         DesktopWindow.SetClickThrough(!over);
     }
 
@@ -469,7 +459,6 @@ public partial class Main : Node2D
         if (settings == null) return;    // 重複啟動、還沒初始化就結束的實例
         GlobalInput.Stop();
         FeaturesShutdown();
-        foreach (var s in sources) s.Stop();
         if (!sandbox) settings.Save();      // --sandbox（測試）不寫回使用者的設定
         if (!sandbox) progressState?.Save();
         SingleInstance.Release();

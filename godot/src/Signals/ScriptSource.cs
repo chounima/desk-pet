@@ -3,7 +3,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace DeskPet.Game.Guests;
+namespace DeskPet.Signals;
 
 public sealed class ScriptSource : PresenceSource
 {

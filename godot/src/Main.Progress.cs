@@ -270,6 +270,6 @@ public partial class Main
         settings.Size = size;
         settings.Save();
         tray.SetSize(size);
-        RescaleGuests(); FeaturesDisplayChanged();
+        FeaturesDisplayChanged();
     }
 }

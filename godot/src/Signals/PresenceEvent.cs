@@ -1,7 +1,7 @@
-// 外部來源（直播聊天室、Discord 語音…）傳來的「有人怎麼了」事件，統一格式後交給 Main 產生／控制客人角色
+﻿// 訊號層（Signals）：外部來源（直播聊天室、Discord 語音、測試腳本…）傳來的「有人怎麼了」事件，統一格式後交給功能模組（多人）產生／控制客人角色
 using System.Collections.Concurrent;
 
-namespace DeskPet.Game.Guests;
+namespace DeskPet.Signals;
 
 public enum PresenceKind
 {
@@ -19,9 +19,6 @@ public enum PresenceKind
 /// <param name="Name">顯示名稱；Leave 之類可以是空的</param>
 public sealed record PresenceEvent(string Source, PresenceKind Kind, string UserId, string Name = "", string Text = "")
 {
-    /// <summary>使用者自己（例如 Discord 裡的自己、麥克風）：不產生客人，改成主角色講話</summary>
-    public const string SelfId = "@me";
-
     public string Key => $"{Source}:{UserId}";
 }
 

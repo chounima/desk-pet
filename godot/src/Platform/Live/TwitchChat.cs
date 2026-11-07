@@ -1,4 +1,4 @@
-// Twitch 聊天室（匿名唯讀，不用登入也不用申請）：有人留言就出現客人，留言顯示在泡泡裡
+﻿// Twitch 聊天室（匿名唯讀，不用登入也不用申請）：有人留言就出現客人，留言顯示在泡泡裡
 //
 // 連 wss://irc-ws.chat.twitch.tv，用 justinfanXXXX 匿名帳號 JOIN 頻道，讀 PRIVMSG。
 // 訂閱、贈訂、揪團（USERNOTICE）當成 🎉 表情反應。
@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using DeskPet.Content;
-using DeskPet.Game.Guests;
+using DeskPet.Signals;
 
 namespace DeskPet.Platform.Live;
 

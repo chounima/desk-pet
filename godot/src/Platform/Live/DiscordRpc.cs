@@ -4,7 +4,7 @@
 // 私訊通話、群組通話也可以。需要自己在 Discord 開發者後台建立應用程式（拿 Client ID / Secret），
 // 第一次連線時 Discord 會跳出授權視窗（rpc、rpc.voice.read），之後用存下來的 token。
 //
-// 自己（登入的帳號）不產生客人，改成主角色講話（PresenceEvent.SelfId）。
+// 自己（登入的帳號）不產生客人：SelfSpeaking（IVoiceSource）讓主角色動嘴。
 using System;
 using System.Buffers.Binary;
 using System.Collections.Concurrent;
@@ -19,12 +19,12 @@ using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using DeskPet.Content;
-using DeskPet.Game.Guests;
+using DeskPet.Signals;
 using DeskPet.Save;
 
 namespace DeskPet.Platform.Live;
 
-public sealed class DiscordRpc : PresenceSource
+public sealed class DiscordRpc : PresenceSource, IVoiceSource
 {
     static readonly HttpClient Http = new();
     static readonly string[] Scopes = { "rpc", "rpc.voice.read" };
@@ -38,6 +38,11 @@ public sealed class DiscordRpc : PresenceSource
     readonly ConcurrentDictionary<string, TaskCompletionSource<JsonNode>> waiting = new();
     Channel<JsonNode> events = new();
     string selfId = "";
+    volatile bool selfSpeaking;
+
+    /// <summary>登入的帳號自己在講話（主角色動嘴）</summary>
+    public bool SelfSpeaking => selfSpeaking;
+    public float SelfLevel => -1;
     string? channelId;
     readonly HashSet<string> present = new();
 
@@ -135,8 +140,9 @@ public sealed class DiscordRpc : PresenceSource
                     if (data?["user"]?["id"]?.GetValue<string>() is { } gone) Leave(gone);
                     break;
                 case "SPEAKING_START" or "SPEAKING_STOP":
-                    if (data?["user_id"]?.GetValue<string>() is { } who)
-                        Emit(new PresenceEvent(Id, evt == "SPEAKING_START" ? PresenceKind.Speaking : PresenceKind.Silent, Who(who)));
+                    if (data?["user_id"]?.GetValue<string>() is not { } who) break;
+                    if (who == selfId) selfSpeaking = evt == "SPEAKING_START";
+                    else Emit(new PresenceEvent(Id, evt == "SPEAKING_START" ? PresenceKind.Speaking : PresenceKind.Silent, who));
                     break;
             }
         }
@@ -246,20 +252,23 @@ public sealed class DiscordRpc : PresenceSource
         var vs = s["voice_state"];
         bool Flag(string k) => vs?[k]?.GetValue<bool>() == true;
         var muted = Flag("self_mute") || Flag("mute") || Flag("self_deaf") || Flag("deaf") || s["mute"]?.GetValue<bool>() == true;
-        var who = Who(id);
-        if (present.Add(id)) Emit(new PresenceEvent(Id, PresenceKind.Join, who, name));
-        Emit(new PresenceEvent(Id, muted ? PresenceKind.Mute : PresenceKind.Unmute, who, name));
+        if (id == selfId)
+        {
+            if (muted) selfSpeaking = false;      // 自己不產生客人
+            return;
+        }
+        if (present.Add(id)) Emit(new PresenceEvent(Id, PresenceKind.Join, id, name));
+        Emit(new PresenceEvent(Id, muted ? PresenceKind.Mute : PresenceKind.Unmute, id, name));
     }
-
-    string Who(string userId) => userId == selfId ? PresenceEvent.SelfId : userId;
 
     void Leave(string id)
     {
-        if (present.Remove(id)) Emit(new PresenceEvent(Id, PresenceKind.Leave, Who(id)));
+        if (present.Remove(id)) Emit(new PresenceEvent(Id, PresenceKind.Leave, id));
     }
 
     void LeaveAll()
     {
+        selfSpeaking = false;
         foreach (var id in present.ToList()) Leave(id);
     }
 

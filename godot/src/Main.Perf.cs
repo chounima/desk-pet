@@ -28,7 +28,7 @@ public partial class Main
     string PerfLine()
     {
         var fps = Performance.GetMonitor(Performance.Monitor.TimeFps);
-        return $"frame avg={frameSum / System.Math.Max(1, frameCount):0.000}ms max={frameMax:0.000}ms fps={fps:0} guests={guests.Count(g => !g.Leaving)}";
+        return $"frame avg={frameSum / System.Math.Max(1, frameCount):0.000}ms max={frameMax:0.000}ms fps={fps:0} guests={guestsFeature.Guests.Count(g => !g.Leaving)}";
     }
 
     void DumpPerf()
@@ -47,8 +47,8 @@ public partial class Main
     {
         if (!args.TryGetValue("perf", out var n)) return;
         perfGuests = int.Parse(n);
-        maxGuestsOverride = System.Math.Max(perfGuests, 1);       // 不改設定（測試不能動到使用者的設定檔）
-        for (var i = 0; i < perfGuests; i++) AddManualGuest(charIds[i % charIds.Count]);
+        guestsFeature.MaxGuestsOverride = System.Math.Max(perfGuests, 1);       // 不改設定（測試不能動到使用者的設定檔）
+        for (var i = 0; i < perfGuests; i++) guestsFeature.AddManualGuest(host.CharacterIds[i % host.CharacterIds.Count]);
         perfStart = Time.GetTicksMsec() / 1000.0;
     }
 

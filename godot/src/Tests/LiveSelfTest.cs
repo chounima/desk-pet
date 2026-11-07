@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using DeskPet.Game.Guests;
+using DeskPet.Signals;
 using DeskPet.Platform.Live;
 using Godot;
 

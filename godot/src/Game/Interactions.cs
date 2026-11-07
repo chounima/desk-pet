@@ -1,4 +1,4 @@
-// 互動判定：點擊部位、連擊計數、按鍵連按 → 對應的規則
+﻿// 互動判定：點擊部位、連擊計數、按鍵連按 → 對應的規則
 using System.Collections.Generic;
 using System.Linq;
 using DeskPet.Content;
@@ -63,5 +63,12 @@ public sealed class Interactions
             times.Clear();          // 觸發後重新累計，避免每按一下都觸發
         }
         return GD.Randf() < rule.Chance ? rule : null;
+    }
+
+    /// <summary>畫面上某點點到角色的哪個部位；沒點到角色回傳 null</summary>
+    public static string? ZoneOnPet(Pet pet, Godot.Vector2 point)
+    {
+        if (pet.View.HitSlot(point) is not { } slot) return null;
+        return ZoneOf(slot, pet.ToBoneLocal("head", point).Y, pet.Rig.HeadTop[1]);
     }
 }

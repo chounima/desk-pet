@@ -1,9 +1,10 @@
-// 多人分頁：直播／會議模式的連線設定（Twitch、Discord）、手動加入角色、目前在場的客人
+﻿// 多人分頁：直播／會議模式的連線設定（Twitch、Discord）、手動加入角色、目前在場的客人
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using DeskPet.Content;
 using DeskPet.Game.Guests;
+using DeskPet.Signals;
 using DeskPet.Save;
 using Godot;
 

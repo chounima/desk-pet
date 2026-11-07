@@ -45,7 +45,7 @@ public partial class Main
 
         tray.SetDaily(settings.AutoHideFullscreen, settings.FitScreen);
         tray.FullscreenToggled += on => { presence.AutoHideFullscreen = on; settings.AutoHideFullscreen = on; settings.Save(); };
-        tray.FitScreenToggled += on => { settings.FitScreen = on; settings.Save(); pet.SetScale(PetScale(settings.Size)); RescaleGuests(); FeaturesDisplayChanged(); };
+        tray.FitScreenToggled += on => { settings.FitScreen = on; settings.Save(); pet.SetScale(PetScale(settings.Size)); FeaturesDisplayChanged(); };
         tray.HideToggled += () =>
         {
             if (presence.ManualHidden) presence.ShowNow();
@@ -74,7 +74,6 @@ public partial class Main
         pet.View.Visible = !hidden;
         fx.Visible = !hidden;
         bubble.Muted = hidden;
-        SetGuestsHidden(hidden);
         FeaturesHiddenChanged(hidden);
         tray.SetHidden(presence.ManualHidden);
         if (hidden)
@@ -90,7 +89,6 @@ public partial class Main
     void OnDisplayChanged()
     {
         pet.SetScale(PetScale(settings.Size));
-        RescaleGuests();
         FeaturesDisplayChanged();
         var area = Area();
         pet.X = Mathf.Clamp(pet.X, area.Position.X + 40, area.End.X - 40);
