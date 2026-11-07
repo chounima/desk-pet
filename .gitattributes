@@ -1,0 +1,4 @@
+# 美術原始檔（PSD／Krita／大型 PNG）用 Git LFS 管理（git lfs install 之後才會生效；沒裝 LFS 時照一般檔案存）
+art_src/**/*.psd filter=lfs diff=lfs merge=lfs -text
+art_src/**/*.kra filter=lfs diff=lfs merge=lfs -text
+art_src/**/*.ora filter=lfs diff=lfs merge=lfs -text
