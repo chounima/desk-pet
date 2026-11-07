@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>聲音分析測試</title>
+<style>
+  body { font: 14px/1.6 system-ui, sans-serif; margin: 24px; background: #1f2230; color: #e8e8ef; }
+  .pass { color: #6fdc8c; } .fail { color: #ff7a85; }
+  pre { white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<h1>聲音分析測試 <span id="status">執行中…</span></h1>
+<p>合成音（靜音、純音、母音）→ <code>core/voice.js</code> 分析，和桌寵算的答案 <code>tests/golden/voice.json</code> 比對；母音也要認對。</p>
+<pre id="log"></pre>
+<script type="module">
+import { VoiceAnalyzer, synth } from "../js/core/voice.js";
+const log = t => { document.getElementById("log").textContent += t + "\n"; };
+let failures = 0;
+const doc = await (await fetch("../../tests/golden/voice.json")).json();
+const t0 = performance.now();
+doc.cases.forEach((c, i) => {
+  const r = new VoiceAnalyzer(c.rate).feed(synth(c, c.rate));
+  const got = [Math.round(r.db * 100) / 100, r.speaking, Math.round(r.pitch * 10) / 10, r.vowel];
+  const want = doc.expected[i];
+  const ok = want && Math.abs(want[0] - got[0]) <= 0.1 && want[1] === got[1] && Math.abs(want[2] - got[2]) <= 1 && want[3] === got[3];
+  const vowelOk = !c._vowel || got[3] === c._vowel;
+  if (!ok || !vowelOk) failures++;
+  log(`${ok && vowelOk ? "✓" : "✗"} ${JSON.stringify(c)} → ${JSON.stringify(got)}${want ? "" : "（沒有答案）"}${vowelOk ? "" : `（母音應該是 ${c._vowel}）`}`);
+});
+log(`每個案例平均 ${((performance.now() - t0) / doc.cases.length).toFixed(1)} ms（0.5 秒聲音、30 次分析）`);
+document.getElementById("status").textContent = failures ? `✗ ${failures} 個不一致` : `✓ 全部通過（${doc.cases.length} 個）`;
+document.getElementById("status").className = failures ? "fail" : "pass";
+document.title = failures ? `FAIL ${failures}` : "PASS";
+</script>
+</body>
+</html>

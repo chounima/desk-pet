@@ -22,7 +22,44 @@ public static class Golden
     static string PhysicsPath => $"{ContentLoader.Root}/tests/golden/physics.json";
     const float PhysicsTolerance = 0.05f;
 
-    public static int Run(bool update) => RunPose(update) + RunPhysics(update) + RunCurves(update) + RunOverlay(update) + RunFace(update) + RunMesh(update) == 0 ? 0 : 1;
+    public static int Run(bool update) => RunPose(update) + RunPhysics(update) + RunCurves(update) + RunOverlay(update) + RunFace(update) + RunMesh(update) + RunVoice(update) == 0 ? 0 : 1;
+
+    // ---------- 聲音分析（tests/golden/voice.json）：合成音 → [dB, 講話中, 音調, 母音] ----------
+
+    static int RunVoice(bool update)
+    {
+        var path = ProjectSettings.GlobalizePath($"{ContentLoader.Root}/tests/golden/voice.json");
+        var doc = JsonNode.Parse(File.ReadAllText(path))!;
+        var results = doc["cases"]!.AsArray().Select(c =>
+        {
+            var rate = c!["rate"]!.GetValue<int>();
+            var samples = Core.Voice.VoiceAnalyzer.Synth(c["kind"]!.GetValue<string>(), c["f0"]?.GetValue<double>() ?? 0, c["amp"]?.GetValue<double>() ?? 0.3,
+                c["formants"]?.AsArray().Select(f => f!.GetValue<double>()).ToArray() ?? Array.Empty<double>(), c["seconds"]?.GetValue<double>() ?? 0.5, rate);
+            var r = new Core.Voice.VoiceAnalyzer(rate).Feed(samples);
+            return new JsonArray(Math.Round(r.Db, 2), r.Speaking, Math.Round(r.Pitch, 1), r.Vowel);
+        }).ToList();
+        if (update)
+        {
+            doc["expected"] = new JsonArray(results.Select(r => (JsonNode)r).ToArray());
+            File.WriteAllText(path, doc.ToJsonString(new JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping }) + NL);
+            GD.Print($"[golden] 聲音：已更新 {results.Count} 個案例");
+            return 0;
+        }
+        var expected = doc["expected"]!.AsArray();
+        var failures = 0;
+        for (var i = 0; i < results.Count; i++)
+        {
+            var e = expected.Count > i ? expected[i]!.AsArray() : new JsonArray(0, false, 0, null);
+            var g = results[i];
+            var ok = Math.Abs(e[0]!.GetValue<double>() - g[0]!.GetValue<double>()) <= 0.1 && e[1]!.GetValue<bool>() == g[1]!.GetValue<bool>()
+                     && Math.Abs(e[2]!.GetValue<double>() - g[2]!.GetValue<double>()) <= 1 && e[3]?.GetValue<string>() == g[3]?.GetValue<string>();
+            if (!ok && failures++ < 10) GD.Print($"[golden] ✗ 聲音 {doc["cases"]![i]!.ToJsonString()}：{e.ToJsonString()} ≠ {g.ToJsonString()}");
+        }
+        GD.Print(failures == 0 ? $"[golden] 聲音全部通過（{results.Count} 個案例）" : $"[golden] ✗ 聲音 {failures} 個不一致");
+        return failures == 0 ? 0 : 1;
+    }
+
+    const string NL = "\n";
 
     // ---------- 網格（tests/golden/mesh.json）：角色＋動作＋時間（＋額外角度）＋插槽 → 頂點位置 ----------
 
