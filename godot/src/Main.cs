@@ -75,6 +75,13 @@ public partial class Main : Node2D
             GetTree().Quit();
             return;
         }
+        // --selftest=control：動作與表情的優先順序規則
+        if (OS.GetCmdlineUserArgs().Contains("--selftest=control"))
+        {
+            duplicate = true;
+            GetTree().Quit(Tests.ControlSelfTest.Run());
+            return;
+        }
         // --selftest=live：多人功能的規則測試（Twitch 解析、聊天關鍵字）
         if (OS.GetCmdlineUserArgs().Contains("--selftest=live"))
         {
@@ -142,6 +149,7 @@ public partial class Main : Node2D
         RefreshWindows();
         behavior = new Behavior(pet, Area, new Interactions(InteractionData.Load()),
                                 new Surfaces(Area, () => WindowTracker.Platforms)) { Auto = settings.Auto };
+        control = new Game.Control.ControlArbiter(a => { behavior.Force(a); return pet.Action == a; }, () => Time.GetTicksMsec() / 1000.0);
         fx = new Fx();
         AddChild(fx);
         lines = Lines.Load(ids);
@@ -296,6 +304,8 @@ public partial class Main : Node2D
         behavior.Update(dt);
         UpdateMainMouth(dt);
         FeaturesAfterBehavior(dt);
+        if (control.WholeFace() is { } face) pet.FaceOverride = face;     // 講話、功能模組的表情請求
+        control.EndFrame();
         volley.Tick(dt, DesktopWindow.CursorInWindow());
         pet.Update(dt);
         fx.UpdateFx(dt, pet.Animator.Fx, pet.HeadTop());

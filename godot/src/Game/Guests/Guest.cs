@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using DeskPet.Content;
+using DeskPet.Game.Control;
 using DeskPet.Platform;
 using DeskPet.View;
 using Godot;
@@ -21,6 +22,8 @@ public sealed class Guest
     public string Name { get; private set; }
     public Pet Pet { get; }
     public Behavior Behavior { get; }
+    /// <summary>這個客人的動作與表情由誰控制（聊天觸發、講話、離開…）</summary>
+    public ControlArbiter Control { get; }
     public bool Speaking { get; private set; }
     public bool Muted { get; private set; }
     /// <summary>最後一次有動靜（講話、聊天）的時間，聊天室客人太久沒動靜就離開</summary>
@@ -51,6 +54,7 @@ public sealed class Guest
         this.lines = lines;
         Pet = new Pet(parent, rig, clips, props, scale);
         Behavior = new Behavior(Pet, area, interactions, new Surfaces(area, () => WindowTracker.Platforms));
+        Control = new ControlArbiter(a => { Behavior.Force(a); return Pet.Action == a || a is "climb" or "hopDown"; }, Now);
         fx = new Fx();
         parent.AddChild(fx);
         parent.AddChild(waves);
@@ -67,11 +71,11 @@ public sealed class Guest
             ContentMarginLeft = 6 * u, ContentMarginRight = 6 * u, ContentMarginTop = 1 * u, ContentMarginBottom = 1 * u,
             BorderColor = TagSpeaking,
         };
-        tagPanel = new PanelContainer { MouseFilter = Control.MouseFilterEnum.Ignore };
+        tagPanel = new PanelContainer { MouseFilter = Godot.Control.MouseFilterEnum.Ignore };
         tagPanel.AddThemeStyleboxOverride("panel", tagStyle);
         tag = new Label
         {
-            MouseFilter = Control.MouseFilterEnum.Ignore,
+            MouseFilter = Godot.Control.MouseFilterEnum.Ignore,
             LabelSettings = new LabelSettings { Font = Fonts.Ui, FontSize = (int)(12 * u), FontColor = TagColor },
         };
         tagPanel.AddChild(tag);
@@ -139,7 +143,7 @@ public sealed class Guest
     public void Do(string action)
     {
         if (Leaving) return;
-        Behavior.Force(Pet.Clips.ContainsKey(action) || action is "climb" or "hopDown" ? action : "jump");
+        Control.TryAct("chat", Pet.Clips.ContainsKey(action) || action is "climb" or "hopDown" ? action : "jump", Priority.Reaction, 2.5f);
     }
 
     public void Say(string text, float seconds = 2.8f) => bubble.Say(text, seconds);
@@ -152,7 +156,7 @@ public sealed class Guest
         if (Leaving) return;
         SetSpeaking(false);
         leaveLeft = LeaveTime;
-        if (Behavior.Current == Behavior.State.Ground) Behavior.Force(Pet.Clips.ContainsKey("wave") ? "wave" : "jump");
+        if (Behavior.Current == Behavior.State.Ground) Control.TryAct("leave", Pet.Clips.ContainsKey("wave") ? "wave" : "jump", Priority.Minigame, LeaveTime);
         SayLine("guestBye");
     }
 
@@ -196,7 +200,9 @@ public sealed class Guest
     // 講話中：動嘴，名牌加綠框（像 Discord 的講話提示）
     void UpdateMouth(float dt)
     {
-        var talking = mouth.Update(dt, Pet, Behavior, Speaking && !Muted && !hidden);
+        var talking = mouth.Update(dt, Pet, Behavior, Control, Speaking && !Muted && !hidden);
+        if (Control.WholeFace() is { } face) Pet.FaceOverride = face;
+        Control.EndFrame();
         waves.UpdateWaves(dt, talking, Pet, mouth.Open);
         var w = talking ? (int)Mathf.Max(1, 2 * DesktopWindow.UiScale) : 0;
         if (tagStyle.BorderWidthBottom != w) SetBorder(w);

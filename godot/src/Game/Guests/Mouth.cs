@@ -11,8 +11,8 @@ public sealed class Mouth
     /// <summary>這一刻嘴巴是張開的（聲波跟著變粗）</summary>
     public bool Open => open;
 
-    /// <summary>在 Behavior.Update 之後、Pet.Update 之前呼叫；回傳這一幀有沒有在動嘴</summary>
-    public bool Update(float dt, Pet pet, Behavior behavior, bool talking)
+    /// <summary>在 Behavior.Update 之後、Pet.Update 之前呼叫；嘴型透過 arbiter 請求（Mouth 管道、講話優先順序）。回傳這一幀有沒有在動嘴</summary>
+    public bool Update(float dt, Pet pet, Behavior behavior, Control.ControlArbiter control, bool talking)
     {
         if (!talking || behavior.Current != Behavior.State.Ground || behavior.Suspended || pet.Action == "sleep") return false;
         behavior.Touch();       // 講話中不會睡著
@@ -22,7 +22,7 @@ public sealed class Mouth
             open = !open;
             timer = open ? 0.1f + GD.Randf() * 0.12f : 0.08f + GD.Randf() * 0.1f;
         }
-        pet.FaceOverride = open ? "surprised" : "happy";
+        control.Request("talk", Control.Channel.Mouth, open ? "surprised" : "happy", Control.Priority.Talking);
         return true;
     }
 }

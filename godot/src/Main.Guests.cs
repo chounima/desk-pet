@@ -29,6 +29,8 @@ public partial class Main
     int manualCount;
     readonly HashSet<string> selfSpeaking = new();    // 哪些來源說「使用者自己正在講話」（Discord、麥克風）
     readonly Mouth mainMouth = new();
+    /// <summary>主角色的動作與表情由誰控制（講話、之後的聲音規則與快捷鍵…）</summary>
+    Game.Control.ControlArbiter control = null!;
     readonly View.SpeechWaves mainWaves = new();
 
     public IReadOnlyList<Guest> Guests => guests;
@@ -273,7 +275,7 @@ public partial class Main
     /// <summary>主角色講話（Discord 裡的自己、麥克風）：在 behavior.Update 之後、pet.Update 之前呼叫</summary>
     void UpdateMainMouth(float dt)
     {
-        var talking = mainMouth.Update(dt, pet, behavior, selfSpeaking.Count > 0 && !performing && !presence.Hidden);
+        var talking = mainMouth.Update(dt, pet, behavior, control, selfSpeaking.Count > 0 && !performing && !presence.Hidden);
         mainWaves.UpdateWaves(dt, talking, pet, mainMouth.Open);
     }
 

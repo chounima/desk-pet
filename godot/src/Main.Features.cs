@@ -1,4 +1,4 @@
-// 功能模組：建立 FeatureHost、在主迴圈的固定位置呼叫每個 IFeature（見 Features/IFeature.cs、docs/ARCHITECTURE.md）
+﻿// 功能模組：建立 FeatureHost、在主迴圈的固定位置呼叫每個 IFeature（見 Features/IFeature.cs、docs/ARCHITECTURE.md）
 using System.Collections.Generic;
 using System.Linq;
 using DeskPet.Content;
@@ -16,7 +16,7 @@ public partial class Main
     {
         host = new FeatureHost
         {
-            Root = this, Pet = pet, Behavior = behavior, Settings = settings, Tray = tray, Hub = hub, Presence = presence,
+            Root = this, Pet = pet, Behavior = behavior, Control = control, Settings = settings, Tray = tray, Hub = hub, Presence = presence,
             Progress = progress, Fx = fx, Lines = lines, Rigs = rigs, CharacterIds = ids, Clips = clips, Props = props, Args = args,
             Area = Area, RigOf = RigOf, PetScale = () => PetScale(settings.Size), Dump = dumpState,
         };

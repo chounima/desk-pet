@@ -1,4 +1,4 @@
-// 功能模組拿到的共用服務：由 Main 建立後交給每個 IFeature.Init
+﻿// 功能模組拿到的共用服務：由 Main 建立後交給每個 IFeature.Init
 // 功能需要新的共用服務時加在這裡，不要讓功能直接讀 Main 的欄位
 using System;
 using System.Collections.Generic;
@@ -19,6 +19,8 @@ public sealed class FeatureHost
     public required Node Root { get; init; }
     public required Pet Pet { get; init; }
     public required Behavior Behavior { get; init; }
+    /// <summary>主角色的動作與表情請求（依優先順序，見 Game/Control/ControlArbiter.cs）</summary>
+    public required Game.Control.ControlArbiter Control { get; init; }
     public required Settings Settings { get; init; }
     public required Tray Tray { get; init; }
     public required HubWindow Hub { get; init; }
