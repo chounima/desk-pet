@@ -8,7 +8,7 @@
 export const STEP = 1 / 120;
 const MAX_STEPS = 8;
 const TELEPORT_DISTANCE = 400;
-const DEFAULTS = { stiffness: 120, damping: 8, gravity: 0, inertia: 1, drag: 0, limit: 35, length: 60 };
+const DEFAULTS = { stiffness: 120, damping: 8, gravity: 0, inertia: 1, drag: 0, limit: 35, length: 60, axis: 90 };
 
 export class Spring {
   // bones: [{ name, parent }]（父骨骼在前）；physics: rig.physics { 骨骼: 參數 }
@@ -87,7 +87,7 @@ export class Spring {
 
   animatedAngle(world, b) {
     const m = world[b.name];
-    let angle = Math.atan2(m[1], m[0]);
+    let angle = Math.atan2(m[1], m[0]) + b.p.axis * Math.PI / 180;    // axis：部件往哪個方向延伸（90 = 往下）
     for (let parent = b.parent; parent;) {
       const pb = this.bones.find(x => x.name === parent);
       angle += pb.theta;

@@ -3,7 +3,7 @@
 // 每根物理骨頭有偏移角 θ 與角速度 ω（弧度），每個子步驟（固定 1/120 秒）：
 //   α = −stiffness·θ − damping·ω + gravity·cos(a) + (inertia·加速度 + drag·速度) 在骨頭垂直方向的分量 / length
 //     （垂直分量 = vₓ·sin(a) − v_y·cos(a)）
-// a = 動畫角度＋祖先物理骨頭的偏移＋θ（骨頭朝向，y 向下）；速度、加速度是骨頭起點的（Q 版單位／秒，含身體在畫面上的移動）。
+// a = 骨頭朝向（動畫角度＋axis＋祖先物理骨頭的偏移＋θ，y 向下）；axis = 部件在骨頭座標裡往哪個方向延伸（90 = 往下）；速度、加速度是骨頭起點的（Q 版單位／秒，含身體在畫面上的移動）。
 // drag（空氣阻力）：移動時往後拖、拖的角度和速度成正比，停下時彈回並甩過頭；inertia：加速、急停時的甩動。|θ| 不超過 limit。
 // 翻面時 θ、ω 鏡像（取負）；瞬間移動（一幀移動太遠、換角色）時重設。
 // 純計算：不碰 Godot 節點；用 double 算，和網頁版（JS 的 number）結果一致（共用測試 tests/golden/physics.json）。
@@ -155,7 +155,7 @@ public sealed class Spring
     // 骨頭的朝向（弧度）：動畫的世界角度＋祖先物理骨頭的偏移
     double AnimatedAngle(IReadOnlyDictionary<string, Transform2D> world, Bone b)
     {
-        var angle = (double)world[b.Name].Rotation;
+        var angle = (double)world[b.Name].Rotation + b.P.Axis * Math.PI / 180;
         for (var i = b.Parent; i >= 0; i = bones[i].Parent) angle += bones[i].Theta;
         return angle;
     }

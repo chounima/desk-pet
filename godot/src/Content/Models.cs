@@ -77,6 +77,8 @@ public sealed class PhysicsParams
     public double Limit { get; set; } = 35;
     /// <summary>骨頭長度（Q 版單位）：越長慣性造成的轉動越小</summary>
     public double Length { get; set; } = 60;
+    /// <summary>部件在骨頭座標裡往哪個方向延伸（度，0 = 往右、90 = 往下）：決定重力、慣性從哪個方向推</summary>
+    public double Axis { get; set; } = 90;
 }
 
 public sealed class AnchorData

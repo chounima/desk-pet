@@ -423,9 +423,10 @@
       "damping": 6,
       "gravity": 0,
       "inertia": 1.3,
-      "drag": 30,
+      "drag": 18,
       "limit": 40,
-      "length": 22
+      "length": 22,
+      "axis": 146
     }
   },
   "forms": {

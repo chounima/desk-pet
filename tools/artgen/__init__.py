@@ -8,6 +8,7 @@
   art/props/*.svg + props.json      道具
 """
 import json
+import math
 import shutil
 from pathlib import Path
 
@@ -24,8 +25,8 @@ def _write(path: Path, text: str) -> None:
 
 # 次級物理的預設參數（見 godot/src/Core/Spring.cs）：有尾巴、披布的角色自動開；角色可以用 PHYSICS 覆寫或加別的骨頭
 PHYSICS_DEFAULTS = {
-    "tail": {"stiffness": 90, "damping": 6, "gravity": 0, "inertia": 1.3, "drag": 30, "limit": 40},
-    "cape": {"stiffness": 140, "damping": 9, "gravity": 0, "inertia": 1, "drag": 25, "limit": 25},
+    "tail": {"stiffness": 90, "damping": 6, "gravity": 0, "inertia": 1.3, "drag": 18, "limit": 40},
+    "cape": {"stiffness": 140, "damping": 9, "gravity": 0, "inertia": 1, "drag": 15, "limit": 25},
 }
 
 
@@ -37,7 +38,10 @@ def default_physics(slots: list[dict], overrides: dict) -> dict:
         if not boxes:
             continue
         reach = max(max(abs(x), abs(y)) for b in boxes for x, y in ((b[0], b[1]), (b[2], b[3])))
-        result[bone] = {**params, "length": round(reach, 1)}
+        # axis：部件往哪個方向延伸（部件範圍中心的方向，0 = 往右、90 = 往下）
+        cx = sum((b[0] + b[2]) / 2 for b in boxes) / len(boxes)
+        cy = sum((b[1] + b[3]) / 2 for b in boxes) / len(boxes)
+        result[bone] = {**params, "length": round(reach, 1), "axis": round(math.degrees(math.atan2(cy, cx)))}
     for bone, params in overrides.items():
         result[bone] = {**result.get(bone, {}), **params}
     return result

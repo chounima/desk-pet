@@ -442,9 +442,10 @@
       "damping": 9,
       "gravity": 0,
       "inertia": 1,
-      "drag": 25,
+      "drag": 15,
       "limit": 25,
-      "length": 154
+      "length": 154,
+      "axis": 96
     }
   }
 }

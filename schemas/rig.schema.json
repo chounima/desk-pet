@@ -302,6 +302,9 @@
         },
         "length": {
           "type": "number"
+        },
+        "axis": {
+          "type": "number"
         }
       }
     }
