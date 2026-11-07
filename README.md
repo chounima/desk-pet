@@ -1,7 +1,7 @@
 ﻿# Desk Pet
 
 全身角色的桌面寵物：在工作列上走動、坐下、睡覺，你打字時會拿出筆電一起打。
-角色和動作都可以切換。規劃見 [PLAN.md](PLAN.md)。
+角色和動作都可以切換。規劃見 [plan_doc/PLAN.md](plan_doc/PLAN.md)，動畫、美術與半身模式升級見 [plan_doc/UPGRADE_PLAN.md](plan_doc/UPGRADE_PLAN.md)。
 
 ## 快速開始
 
@@ -152,7 +152,7 @@ godot/src/
 
 ```
 desk-pet/
-├── PLAN.md
+├── plan_doc/                    PLAN.md（路線圖）、UPGRADE_PLAN.md（升級規劃）
 ├── art/                         由 gen_art.py 產生，勿手動修改
 │   ├── characters/
 │   │   ├── index.json           角色清單
