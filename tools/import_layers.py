@@ -29,6 +29,9 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent
 FACE_PREFIXES = ("face:", "face_", "faces/")
+# 之後的階段才用到、但美術可以先一次產齊的部件：原樣保留在部件包裡（見 docs/ART_GUIDE.md「預先產出」）
+#   face_parts/ 分層表情（第 3 階段）　hair_parts/ 頭髮分節（第 3 階段）　bust/ 正面半身（第 6 階段）
+RESERVED = {"face_parts": "face", "hair_parts": "hair", "bust": "views.bust"}
 EXPRESSIONS = ("idle", "blink", "happy", "sleep", "surprised", "focus", "shy", "angry")
 
 
@@ -42,6 +45,10 @@ def read_folder(folder: Path) -> dict[str, Image.Image]:
     for f in sorted((folder / "faces").glob("*")) if (folder / "faces").exists() else []:
         if f.suffix.lower() in (".png", ".webp", ".jpg", ".jpeg"):
             layers[f"face:{f.stem}"] = Image.open(f)
+    for sub in RESERVED:
+        for f in sorted((folder / sub).glob("*")) if (folder / sub).exists() else []:
+            if f.suffix.lower() in (".png", ".webp", ".jpg", ".jpeg"):
+                layers[f"{sub}/{f.stem}"] = Image.open(f)
     return layers
 
 
@@ -72,7 +79,9 @@ def read_psd(path: Path) -> dict[str, Image.Image]:
 
 
 def normalize(name: str) -> str:
-    name = name.strip()
+    name = name.strip().replace("\\", "/")
+    if name.split("/")[0] in RESERVED:
+        return name
     for p in FACE_PREFIXES:
         if name.lower().startswith(p):
             return "face:" + name[len(p):]
@@ -129,8 +138,14 @@ def build(layers: dict[str, Image.Image], draft: dict | None, base: str, form: s
         pkg["name"] = name
     old_parts = pkg.get("parts", {})
     parts, files = {}, {}
+    reserved: dict[str, dict[str, str]] = {}
     for key, img in layers.items():
         if key.startswith("face:"):
+            continue
+        if key.split("/")[0] in RESERVED:
+            sub, stem = key.split("/", 1)
+            files[f"{sub}/{stem}.png"] = img
+            reserved.setdefault(sub, {})[stem] = f"{sub}/{stem}.png"
             continue
         part, _, alt = key.partition("@")
         if part not in boxes:
@@ -163,6 +178,15 @@ def build(layers: dict[str, Image.Image], draft: dict | None, base: str, form: s
         first = faces.get("idle") or next(iter(faces.values()))
         old_box = (pkg.get("faces") or {}).get("box")
         pkg["faces"] = {"box": old_box or fit(face_box, first), "images": {e: f"faces/{e}.png" for e in faces}}
+    # 預先產出的部件：記在預留欄位（face、hair、views.bust），之後的階段接上
+    for sub, images in reserved.items():
+        target = RESERVED[sub]
+        if target == "views.bust":
+            pkg.setdefault("views", {}).setdefault("bust", {})["images"] = images
+        else:
+            pkg.setdefault(target, {})["images"] = images
+    if reserved:
+        warnings.append("預先產出的部件（之後的階段才會用到）已保留：" + "、".join(f"{k} {len(v)} 張" for k, v in reserved.items()))
     missing = sorted(k for k in boxes if "@" not in k and k not in parts)
     if missing:
         warnings.append(f"沒有畫的部件會用範本角色的：{', '.join(missing)}")
@@ -172,9 +196,8 @@ def build(layers: dict[str, Image.Image], draft: dict | None, base: str, form: s
 def write(out: Path, pkg: dict, files: dict[str, Image.Image], src: Path | None) -> None:
     if out.exists():
         shutil.rmtree(out)
-    (out / "parts").mkdir(parents=True)
-    (out / "faces").mkdir()
     for file, img in files.items():
+        (out / file).parent.mkdir(parents=True, exist_ok=True)
         img.convert("RGBA").save(out / file)
     (out / "character.json").write_text(json.dumps(pkg, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     if src and (src / "CREDITS.md").exists():
