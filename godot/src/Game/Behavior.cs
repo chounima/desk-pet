@@ -268,7 +268,7 @@ public sealed class Behavior : Drivers.IPetDriver
         var wasLeap = pet.Action == "leap";
         Current = State.Ground;
         vx = vy = 0;
-        Start("idle");
+        Start(pet.Clips.ContainsKey("land") ? "land" : "idle");      // 落地壓扁再彈回來
         if (!wasLeap) Say("land");
     }
 

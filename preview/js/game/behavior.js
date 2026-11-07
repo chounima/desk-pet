@@ -104,7 +104,7 @@ export class Behavior {
       if (pet.y >= ground) {
         pet.y = ground;
         this.state = "ground";
-        this.start("idle");
+        this.start(pet.animator.clips.land ? "land" : "idle");      // 落地壓扁再彈回來
       }
       return;
     }

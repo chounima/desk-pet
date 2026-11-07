@@ -287,5 +287,6 @@
  "guests.meetingAudio": "Show a \"call\" character when a meeting app plays sound (Teams, Zoom, LINE…)",
  "guests.audioHint": "🔒 Only reads volume levels; nothing is recorded or listened to. It can't tell who is speaking; use Discord above for that. Press \"Apply & reconnect\" after changing.",
  "live.audioOn": "Watching volume",
- "live.meetingGuest": "{0} call"
+ "live.meetingGuest": "{0} call",
+ "anim.land": "Land"
 }

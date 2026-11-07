@@ -287,5 +287,6 @@
  "guests.meetingAudio": "会議アプリの音が出ると「通話」キャラを表示（Teams、Zoom、LINE…）",
  "guests.audioHint": "🔒 音量だけを読み取り、録音や内容の取得はしません。誰が話しているかは分かりません（分けたい場合は上の Discord を使ってください）。変更後は「適用して再接続」を押してください。",
  "live.audioOn": "音量を検出中",
- "live.meetingGuest": "{0} 通話"
+ "live.meetingGuest": "{0} 通話",
+ "anim.land": "着地"
 }

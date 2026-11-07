@@ -1,0 +1,16 @@
+{ "label": "落地", "hidden": true, "duration": 0.45, "loop": false, "next": "idle", "face": "surprised",
+  "tracks": {
+    "root.sy": [[0, 0.8, "back"], [0.32, 1]],
+    "root.sx": [[0, 1.14, "back"], [0.32, 1]],
+    "root.y": [[0, 8, "easeOut"], [0.3, 0]],
+    "torso": [[0, 16, "easeOut"], [0.35, 0]],
+    "head": [[0, -10, "easeOut"], [0.35, 0]],
+    "legNear_u": [[0, -38, "easeOut"], [0.35, 0]],
+    "legNear_l": [[0, 64, "easeOut"], [0.35, 0]],
+    "legFar_u": [[0, -32, "easeOut"], [0.35, 0]],
+    "legFar_l": [[0, 56, "easeOut"], [0.35, 0]],
+    "armNear_u": [[0, -45, "easeOut"], [0.4, 0]],
+    "armFar_u": [[0, -35, "easeOut"], [0.4, 0]],
+    "cape": [[0, 22], [0.45, 0]],
+    "tail": [[0, 28], [0.45, 10]]
+  } }
