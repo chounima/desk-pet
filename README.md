@@ -81,6 +81,19 @@ godot/src/
 
 程式分層、功能模組、兩邊同步的規則見 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)。
 
+### 美術部件包（人工、AI 輔助都一樣）
+
+規格見 [docs/ART_GUIDE.md](docs/ART_GUIDE.md)，AI 輔助流程見 [docs/ART_GUIDE_AI.md](docs/ART_GUIDE_AI.md)。
+
+| 步驟 | 指令 |
+|---|---|
+| 原始檔 | `art_src/<角色>/`：`parts/*.png`、`faces/*.png`（或 `.ora`／`.psd`），5 個角色都有測試部件包當起點 |
+| 匯入 | `python tools/import_layers.py art_src/<角色>` → `art/packages/<角色>/`（換掉同名佔位角色的美術；新名字 = 新角色） |
+| 檢查 | `python tools/art_check.py art_src/<角色>` → `build/art_check/<角色>.html` |
+| 調位置 | `python tools/serve.py` → `preview/editor.html`「📦 部件包」（拖曳、滾輪、換圖、存檔並匯入） |
+| 看全部動作 | `preview/gallery.html?pkg=<角色>`（不用先匯入） |
+| 佔位圖輸出成部件包 | 桌寵 `--export-package=<角色> --out=art_src/<角色>` |
+
 ### 打包成 .exe
 
 `powershell -File tools/build_release.ps1` → `build/DeskPet/`（`DeskPet.exe` + `data_DeskPet_windows_x86_64/`，兩個要放在一起）與 `build/DeskPet-<日期>.zip`。
