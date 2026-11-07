@@ -51,6 +51,15 @@ public static class LiveSelfTest
         Check(cfg.ActionForReaction("❤️") == "cheer", "表情 ❤️（含 FE0F）");
         Check(cfg.ActionForReaction("🦄") == cfg.Reactions["*"], "其他表情用 *");
 
+        // Discord 機密：存檔加密、讀回來一樣；舊的明文設定也讀得到
+        var settings = new Save.Settings { DiscordClientSecret = "abc密碼123", DiscordAccessToken = "tok" };
+        var json = System.Text.Json.JsonSerializer.Serialize(settings);
+        Check(!json.Contains("abc密碼123") && !json.Contains("\"tok\"") && json.Contains("dpapi:"), "設定檔裡不能有明文機密");
+        var back = System.Text.Json.JsonSerializer.Deserialize<Save.Settings>(json)!;
+        Check(back.DiscordClientSecret == "abc密碼123" && back.DiscordAccessToken == "tok", "加密後讀回來要一樣");
+        var legacy = System.Text.Json.JsonSerializer.Deserialize<Save.Settings>("{\"DiscordClientSecret\":\"old-plain\"}")!;
+        Check(legacy.DiscordClientSecret == "old-plain", "舊的明文設定要讀得到");
+
         foreach (var f in failures) GD.Print($"[live] ✗ {f}");
         GD.Print(failures.Count == 0 ? "[live] 全部通過" : $"[live] ✗ {failures.Count} 個失敗");
         return failures.Count == 0 ? 0 : 1;
