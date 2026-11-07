@@ -15,7 +15,6 @@ namespace DeskPet.Game.Guests;
 public sealed class Guest
 {
     const float LeaveTime = 1.8f;     // 揮手道別後淡出的時間
-    static readonly Color TagColor = new("#2b2d3a"), TagSpeaking = new("#23a55a");
 
     public string Key { get; }
     public string Source { get; }
@@ -33,14 +32,9 @@ public sealed class Guest
     /// <summary>淡出完了，可以移除</summary>
     public bool Gone => leaveLeft is >= 0 and <= 0.001f;
 
-    readonly Bubble bubble;
-    readonly Fx fx;
-    readonly Label tag;
-    readonly PanelContainer tagPanel;
-    readonly StyleBoxFlat tagStyle;
+    readonly PetAttachments attach;     // 特效、聲波、泡泡、名牌，跟著角色的錨點
     readonly Lines lines;
     readonly Mouth mouth = new();
-    readonly SpeechWaves waves = new();
     float leaveLeft = -1;
     bool hidden;
 
@@ -55,32 +49,9 @@ public sealed class Guest
         Pet = new Pet(parent, rig, clips, props, scale);
         Behavior = new Behavior(Pet, area, interactions, new Surfaces(area, () => WindowTracker.Platforms));
         Control = new ControlArbiter(Behavior.TryStart, Now);
-        fx = new Fx();
-        parent.AddChild(fx);
-        parent.AddChild(waves);
-        bubble = new Bubble();
-        parent.AddChild(bubble);
-        Behavior.Said += key2 => { if (!bubble.Visible) bubble.Say(lines.Pick(Pet.Rig.Id, key2)); };
-
+        attach = new PetAttachments(parent, Pet, name);
+        Behavior.Said += key2 => { if (!attach.Bubble.Visible) attach.Bubble.Say(lines.Pick(Pet.Rig.Id, key2)); };
         var u = DesktopWindow.UiScale;
-        tagStyle = new StyleBoxFlat
-        {
-            BgColor = new Color(1, 1, 1, 0.85f),
-            CornerRadiusTopLeft = (int)(8 * u), CornerRadiusTopRight = (int)(8 * u),
-            CornerRadiusBottomLeft = (int)(8 * u), CornerRadiusBottomRight = (int)(8 * u),
-            ContentMarginLeft = 6 * u, ContentMarginRight = 6 * u, ContentMarginTop = 1 * u, ContentMarginBottom = 1 * u,
-            BorderColor = TagSpeaking,
-        };
-        tagPanel = new PanelContainer { MouseFilter = Godot.Control.MouseFilterEnum.Ignore };
-        tagPanel.AddThemeStyleboxOverride("panel", tagStyle);
-        tag = new Label
-        {
-            MouseFilter = Godot.Control.MouseFilterEnum.Ignore,
-            LabelSettings = new LabelSettings { Font = Fonts.Ui, FontSize = (int)(12 * u), FontColor = TagColor },
-        };
-        tagPanel.AddChild(tag);
-        parent.AddChild(tagPanel);
-        RefreshTag();
 
         // 從畫面上方掉下來登場
         Pet.X = x;
@@ -95,7 +66,7 @@ public sealed class Guest
     {
         if (string.IsNullOrEmpty(name) || name == Name) return;
         Name = name;
-        RefreshTag();
+        attach.Tag!.SetName(name);
     }
 
     public void Touch()
@@ -113,14 +84,14 @@ public sealed class Guest
             Touch();
             if (Pet.Action == "sleep") Behavior.Force("stretch");     // 睡著的人一講話就醒來
         }
-        RefreshTag();
+        attach.Tag!.SetMuted(Muted);
     }
 
     public void SetMuted(bool on)
     {
         Muted = on;
         if (on) SetSpeaking(false);
-        RefreshTag();
+        attach.Tag!.SetMuted(Muted);
     }
 
     /// <summary>聊天訊息：顯示在泡泡裡，關鍵字對應的動作會做出來</summary>
@@ -129,14 +100,14 @@ public sealed class Guest
     {
         Touch();
         var shown = text.Length > maxChars ? text[..maxChars] + "…" : text;
-        bubble.Say(shown, Math.Clamp(2.5f + shown.Length * 0.08f, 3, 7));
+        attach.Bubble.Say(shown, Math.Clamp(2.5f + shown.Length * 0.08f, 3, 7));
         if (rule != null) Apply(rule, sayLine: false);       // 泡泡已經在顯示聊天內容，不再說台詞
     }
 
     public void React(string emoji, Rules.Rule? rule)
     {
         Touch();
-        fx.Burst(emoji, Pet.HeadTop(), Colors.White, 30);
+        attach.Fx.Burst(emoji, Pet.HeadTop(), Colors.White, 30);
         if (rule != null) Apply(rule);
     }
 
@@ -148,7 +119,7 @@ public sealed class Guest
         if (d.Action != null) Do(d.Action, rule.Priority);
         if (d.Face != null) Control.Request("rule", Channel.Face, d.Face, rule.Priority, d.Seconds);
         if (d.Line != null && sayLine) SayLine(d.Line);
-        if (d.Fx != null) fx.Burst(d.Fx, Pet.HeadTop(), Colors.White, 30);
+        if (d.Fx != null) attach.Fx.Burst(d.Fx, Pet.HeadTop(), Colors.White, 30);
     }
 
     /// <summary>做某個動作；這個體型沒有就改成跳一下</summary>
@@ -158,9 +129,9 @@ public sealed class Guest
         Control.TryAct("chat", Pet.Clips.ContainsKey(action) || action is "climb" or "hopDown" ? action : "jump", priority, 2.5f);
     }
 
-    public void Say(string text, float seconds = 2.8f) => bubble.Say(text, seconds);
+    public void Say(string text, float seconds = 2.8f) => attach.Bubble.Say(text, seconds);
 
-    public void SayLine(string key) => bubble.Say(lines.Pick(Pet.Rig.Id, key));
+    public void SayLine(string key) => attach.Bubble.Say(lines.Pick(Pet.Rig.Id, key));
 
     /// <summary>揮手說再見，淡出後 Gone = true</summary>
     public void Leave()
@@ -175,8 +146,8 @@ public sealed class Guest
     public void SetHidden(bool on)
     {
         hidden = on;
-        Pet.View.Visible = fx.Visible = tagPanel.Visible = !on;
-        bubble.Muted = on;
+        Pet.View.Visible = !on;
+        attach.SetHidden(on);
     }
 
     // 換大小會重建畫面，要重新套用隱藏狀態
@@ -190,54 +161,33 @@ public sealed class Guest
     {
         Pet.Gaze.Target = cursor;
         Behavior.Update(dt);
-        UpdateMouth(dt);
+        var talking = UpdateMouth(dt);
         Pet.Update(dt);
-        var head = Pet.HeadTop();
-        fx.UpdateFx(dt, Pet.Animator.Fx, head);
-
-        // 名牌在頭上，泡泡再往上
-        var u = DesktopWindow.UiScale;
-        tagPanel.ResetSize();
-        tagPanel.Position = head - new Vector2(tagPanel.Size.X / 2, tagPanel.Size.Y + 6 * u);
-        bubble.UpdateBubble(dt, head - new Vector2(0, tagPanel.Size.Y + 4 * u));
+        attach.Tag!.SetSpeaking(Speaking, talking);
+        attach.Update(dt, talking, mouth.Open);
 
         if (Leaving)
         {
             leaveLeft = Mathf.Max(0.001f, leaveLeft - dt);
             var a = Mathf.Clamp(leaveLeft / (LeaveTime * 0.5f), 0, 1);
-            Pet.View.Modulate = tagPanel.Modulate = new Color(1, 1, 1, a);
+            Pet.View.Modulate = new Color(1, 1, 1, a);
+            attach.SetAlpha(a);
         }
     }
 
-    // 講話中：動嘴，名牌加綠框（像 Discord 的講話提示）
-    void UpdateMouth(float dt)
+    // 講話中：動嘴（嘴型經過仲裁），回傳這一幀有沒有在動嘴
+    bool UpdateMouth(float dt)
     {
         var talking = mouth.Update(dt, Behavior, Control, Speaking && !Muted && !hidden);
         if (Control.WholeFace() is { } face) Pet.FaceOverride = face;
         Control.EndFrame();
-        waves.UpdateWaves(dt, talking, Pet, mouth.Open);
-        var w = talking ? (int)Mathf.Max(1, 2 * DesktopWindow.UiScale) : 0;
-        if (tagStyle.BorderWidthBottom != w) SetBorder(w);
-    }
-
-    void SetBorder(int w)
-    {
-        tagStyle.BorderWidthLeft = tagStyle.BorderWidthRight = tagStyle.BorderWidthTop = tagStyle.BorderWidthBottom = w;
-    }
-
-    void RefreshTag()
-    {
-        tag.Text = (Muted ? "🔇 " : "") + Name;
-        tag.LabelSettings.FontColor = Speaking ? TagSpeaking : TagColor;
+        return talking;
     }
 
     public void Free()
     {
         Pet.View.QueueFree();
-        fx.QueueFree();
-        waves.QueueFree();
-        bubble.QueueFree();
-        tagPanel.QueueFree();
+        attach.Free();
     }
 
     public bool HitTest(Vector2 p) => !hidden && !Leaving && Pet.View.HitTest(p);

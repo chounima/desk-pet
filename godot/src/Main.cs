@@ -51,6 +51,7 @@ public partial class Main : Node2D
     /// <summary>目前驅動主角色的是誰（預設 behavior；SetDriver 換成別的，null = 換回漫遊）</summary>
     Game.Drivers.IPetDriver driver = null!;
     Fx fx = null!;
+    PetAttachments attachments = null!;
     Bubble bubble = null!;
     VolleySession volley = null!;
     Sfx sfx = null!;
@@ -152,12 +153,11 @@ public partial class Main : Node2D
                                 new Surfaces(Area, () => WindowTracker.Platforms)) { Auto = settings.Auto };
         driver = behavior;
         control = new Game.Control.ControlArbiter(a => driver.TryStart(a), () => Time.GetTicksMsec() / 1000.0);
-        fx = new Fx();
-        AddChild(fx);
+        attachments = new PetAttachments(this, pet);       // 特效、聲波、泡泡跟著角色的錨點
+        fx = attachments.Fx;
+        bubble = attachments.Bubble;
         lines = Lines.Load(ids);
         foreach (var r in rigs.Values) if (r.CustomLines != null) lines.Set(r.Id, r.CustomLines);
-        bubble = new Bubble();
-        AddChild(bubble);
         sfx = new Sfx { Enabled = settings.Sound };
         AddChild(sfx);
         behavior.Said += key =>
@@ -218,7 +218,6 @@ public partial class Main : Node2D
         SetupMusic();
         SetupFocus();
         SetupCustom();
-        SetupVoice();
         SetupFeatures(ids, clips, props);
         SetupRecord();
         SetupPerf();
@@ -310,8 +309,7 @@ public partial class Main : Node2D
         control.EndFrame();
         volley.Tick(dt, DesktopWindow.CursorInWindow());
         pet.Update(dt);
-        fx.UpdateFx(dt, pet.Animator.Fx, pet.HeadTop());
-        bubble.UpdateBubble(dt, pet.HeadTop());
+        attachments.Update(dt, mainTalking, mainMouth.Open);
         FeaturesAfterPet(dt);
         UpdateClickThrough();
         RecordFrameTime();
