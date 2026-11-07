@@ -76,7 +76,8 @@ public partial class Main
         RestartLiveSources();
     }
 
-    int MaxGuests => Mathf.Clamp(settings.MaxGuests ?? guestCfg.MaxGuests, 1, 20);
+    int? maxGuestsOverride;     // --perf 用
+    int MaxGuests => maxGuestsOverride ?? Mathf.Clamp(settings.MaxGuests ?? guestCfg.MaxGuests, 1, 20);
 
     float GuestScale() => PetScale(settings.Size) * guestCfg.Scale;
 

@@ -12,6 +12,7 @@
 //   --volley / --volley-bot  直接開始排球對打（bot = 模擬完美玩家自動回球）
 //   --guests=join:a@sera,speak:a,chat:a:嗨,leave:a  假的多人來源（見 ScriptSource）
 //   --record=資料夾    把 --action 的動作錄成 PNG（--record-frames=12），見 tools/record_clip.ps1
+//   --perf=N           效能量測：開 N 個客人，量 10 秒後印出每幀耗時並結束（tools/perf.ps1）
 //   --no-single        自動測試用：不檢查單一實例（使用者的桌寵開著時也能跑）
 //   --twitch=頻道      連線某個 Twitch 聊天室（不存設定）
 //   --discord=ClientID 連線 Discord 本機 RPC（不存設定、不存 token）
@@ -210,6 +211,7 @@ public partial class Main : Node2D
         SetupGuests(ids, clips, props);
         SetupFeatures(ids, clips, props);
         SetupRecord();
+        SetupPerf();
         if (args.TryGetValue("hub", out var hubTab)) hub.Open(hubTab);     // --hub=shop：一開始就打開視窗（截圖用）
 
         GD.Print($"[DeskPet] content={ContentLoader.Root} characters={string.Join(",", ids)} " +
@@ -251,6 +253,7 @@ public partial class Main : Node2D
     {
         if (duplicate) return;
         if (UpdateRecord()) return;          // --record：錄影模式
+        frameClock.Restart();
         var dt = Mathf.Min((float)delta, 0.05f);
 
         var newKeys = 0;
@@ -300,7 +303,8 @@ public partial class Main : Node2D
         UpdateGuests(dt);
         FeaturesAfterPet(dt);
         UpdateClickThrough();
-        if (dumpState && Engine.GetProcessFrames() % 120 == 0) { DumpState(); DumpGuests(); DumpFeatures(); }
+        RecordFrameTime();
+        if (dumpState && Engine.GetProcessFrames() % 120 == 0) { DumpState(); DumpGuests(); DumpFeatures(); DumpPerf(); }
     }
 
     // ---------- 測試用 ----------
@@ -452,7 +456,7 @@ public partial class Main : Node2D
         GlobalInput.Stop();
         FeaturesShutdown();
         foreach (var s in sources) s.Stop();
-        settings.Save();
+        if (!sandbox) settings.Save();      // --sandbox（測試）不寫回使用者的設定
         if (!sandbox) progressState?.Save();
         SingleInstance.Release();
     }
