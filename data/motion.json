@@ -1,0 +1,26 @@
+{
+  "_說明": "疊加層：在動作上再加一點週期性的小動作（呼吸、重心晃動）。value = 幅度 × sin(2π × 時間 / 週期 + 相位)，加在軌道上（縮放軌道 .sx／.sy 也是加）。只在 actions 列出的動作套用，切換時用 fade 秒淡入淡出。兩邊（桌寵、網頁）讀同一份。",
+  "fade": 0.5,
+  "layers": {
+    "breathing": {
+      "actions": ["idle", "sit", "sitEdge", "think", "typing", "read", "coffee", "guitar", "peace", "wave", "salute", "shy", "angry", "vbReady"],
+      "period": 3.4,
+      "tracks": {
+        "torso.sy": { "amp": 0.018 },
+        "torso": { "amp": 0.8, "phase": 0.3 },
+        "head": { "amp": -0.6, "phase": 0.5 },
+        "armNear_u": { "amp": 1.2, "phase": 0.2 },
+        "armFar_u": { "amp": 1.2, "phase": 0.2 }
+      }
+    },
+    "sway": {
+      "actions": ["idle"],
+      "period": 6.5,
+      "tracks": {
+        "root.x": { "amp": 1.2 },
+        "torso": { "amp": 1.0, "phase": 1.2 },
+        "head": { "amp": 1.4, "phase": 2.0 }
+      }
+    }
+  }
+}

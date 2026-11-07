@@ -1,6 +1,8 @@
 // 寵物本體：位置、朝向、骨架、動作、表情，負責把這些組合後畫出來
 import { Animator, sampleTrack } from "../core/animator.js";
 import { Spring } from "../core/spring.js";
+import { Overlay } from "../core/overlay.js";
+import { MOTION } from "../config.js";
 import { apply } from "../core/math.js";
 import { Skeleton } from "../core/skeleton.js";
 import { PetView } from "../view/renderer.js";
@@ -70,6 +72,7 @@ export class Pet {
 
   update(dt) {
     const pose = this.animator.update(dt);
+    (this.overlay ??= new Overlay(MOTION)).apply(pose, this.animator.name, dt);     // 呼吸、重心晃動（data/motion.json）
     this.world = this.skeleton.compute(pose);
     // 次級物理：用「只有動畫」的姿勢算偏移，再重算一次骨架（物理骨不參與 probe）
     if (this.motion.active) this.world = this.skeleton.compute(pose, this.motion.update(dt, this.world, this.x, this.y, this.scale, this.facing));

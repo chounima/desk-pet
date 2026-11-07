@@ -20,6 +20,8 @@ import { loadCharacters, loadAnimations, formRig } from "../js/core/loader.js";
 import { Skeleton } from "../js/core/skeleton.js";
 import { sampleTrack } from "../js/core/animator.js";
 import { Spring } from "../js/core/spring.js";
+import { overlayDeltas } from "../js/core/overlay.js";
+import { MOTION } from "../js/config.js";
 
 const POS_TOLERANCE = 0.01, ANGLE_TOLERANCE = 0.01, PHYSICS_TOLERANCE = 0.05;
 const log = text => { document.getElementById("log").textContent += text + "\n"; };
@@ -112,7 +114,13 @@ try {
     const got = sampleTrack(curves.keys, Math.fround(t));
     if (!(Math.abs(got - curves.expected[i]) <= 0.001) && failures++ < 30) log(`✗ 曲線 t=${t}：${curves.expected[i]} ≠ ${got}`);
   });
-  status.textContent = failures ? `✗ ${failures} 個不一致` : `✓ 全部通過（姿勢 ${doc.cases.length} 個、物理 ${phys.cases.length} 個、曲線 ${curves.samples.length} 個）`;
+  const ov = await (await fetch(`${PATHS.art}/../tests/golden/overlay.json`)).json();
+  ov.cases.forEach((c, i) => {
+    const got = overlayDeltas(MOTION, c.action, c.time), want = ov.expected[i] ?? {};
+    for (const k of new Set([...Object.keys(want), ...Object.keys(got)]))
+      if (!(Math.abs((want[k] ?? NaN) - (got[k] ?? NaN)) <= 0.0005) && failures++ < 30) log(`✗ 疊加層 ${c.action} t=${c.time} ${k}：${want[k]} ≠ ${got[k]}`);
+  });
+  status.textContent = failures ? `✗ ${failures} 個不一致` : `✓ 全部通過（姿勢 ${doc.cases.length} 個、物理 ${phys.cases.length} 個、曲線 ${curves.samples.length} 個、疊加層 ${ov.cases.length} 個）`;
   status.className = failures ? "fail" : "pass";
   document.title = failures ? `FAIL ${failures}` : "PASS";
 } catch (e) {

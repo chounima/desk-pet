@@ -22,7 +22,42 @@ public static class Golden
     static string PhysicsPath => $"{ContentLoader.Root}/tests/golden/physics.json";
     const float PhysicsTolerance = 0.05f;
 
-    public static int Run(bool update) => RunPose(update) + RunPhysics(update) + RunCurves(update) == 0 ? 0 : 1;
+    public static int Run(bool update) => RunPose(update) + RunPhysics(update) + RunCurves(update) + RunOverlay(update) == 0 ? 0 : 1;
+
+    // ---------- 疊加層（tests/golden/overlay.json） ----------
+
+    static int RunOverlay(bool update)
+    {
+        var path = ProjectSettings.GlobalizePath($"{ContentLoader.Root}/tests/golden/overlay.json");
+        var doc = JsonNode.Parse(File.ReadAllText(path))!;
+        var config = MotionConfig.Load();
+        var results = doc["cases"]!.AsArray().Select(c => new JsonObject(
+            Overlay.Deltas(config, c!["action"]!.GetValue<string>(), c["time"]!.GetValue<double>())
+                   .Select(kv => new KeyValuePair<string, JsonNode?>(kv.Key, MathF.Round(kv.Value, 5))))).ToList();
+        if (update)
+        {
+            doc["expected"] = new JsonArray(results.Select(r => (JsonNode)r).ToArray());
+            File.WriteAllText(path, doc.ToJsonString(new JsonSerializerOptions { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping }) + "\n");
+            GD.Print($"[golden] 疊加層：已更新 {results.Count} 個案例");
+            return 0;
+        }
+        var expected = doc["expected"]!.AsArray();
+        var failures = 0;
+        for (var i = 0; i < results.Count; i++)
+        {
+            var e = expected.Count > i ? expected[i]!.AsObject() : new JsonObject();
+            var keys = e.Select(kv => kv.Key).Union(results[i].Select(kv => kv.Key)).ToList();
+            foreach (var k in keys)
+            {
+                var want = e[k]?.GetValue<float>() ?? float.NaN;
+                var got = results[i][k]?.GetValue<float>() ?? float.NaN;
+                if (!(MathF.Abs(want - got) <= 0.0005f) && failures++ < 10)
+                    GD.Print($"[golden] ✗ 疊加層 {doc["cases"]![i]!.ToJsonString()} {k}：{want} ≠ {got}");
+            }
+        }
+        GD.Print(failures == 0 ? $"[golden] 疊加層全部通過（{results.Count} 個案例）" : $"[golden] ✗ 疊加層 {failures} 個不一致");
+        return failures == 0 ? 0 : 1;
+    }
 
     // ---------- 關鍵影格曲線（tests/golden/curves.json） ----------
 

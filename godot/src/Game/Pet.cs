@@ -103,9 +103,12 @@ public sealed class Pet
     /// <summary>次級物理（尾巴、披布…）歸零：瞬間移動、換大小、螢幕變化時呼叫（換角色會自動重建）</summary>
     public void ResetPhysics() => motion.Reset();
 
+    readonly Overlay overlay = new(MotionConfig.Load());
+
     public void Update(float dt)
     {
         var pose = Animator.Update(dt);
+        overlay.Apply(pose, Animator.Name, dt);         // 呼吸、重心晃動（data/motion.json）
         Gaze.Update(this, dt);
         pose["head"] = pose.GetValueOrDefault("head") + Gaze.HeadAngle;
         world = skeleton.Compute(pose);

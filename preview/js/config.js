@@ -19,6 +19,9 @@ export const TUNING = {
 // needsWindows（跳上／跳下桌面視窗）網頁預覽沒有視窗可以跳，略過
 export const AUTO = Object.fromEntries(Object.entries(tuning.auto).filter(([, v]) => !v.needsWindows));
 
+// 疊加層（呼吸、重心晃動）：data/motion.json（桌寵讀同一份）
+export const MOTION = await (await fetch(`${PATHS.data}/motion.json`)).json();
+
 // 排球對打小遊戲（長度單位：螢幕 px；reach / hitHeight 為 Q 版單位，會依角色身材放大）
 export const VOLLEY = omitNotes(tuning.volley);
 
