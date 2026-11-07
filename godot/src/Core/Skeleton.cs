@@ -32,7 +32,12 @@ public sealed class Skeleton
             var ty = b.Y + Get(pose, b.Name + ".y") * moveScale;
             var angle = Get(pose, b.Name) * (angleScale.TryGetValue(b.Name, out var s) ? s : 1)
                         + (offsets != null && offsets.TryGetValue(b.Name, out var off) ? off : 0);
-            var local = new Transform2D(Mathf.DegToRad(angle), new Vector2(tx, ty));
+            // 縮放軌道「骨骼.sx」「骨骼.sy」（squash & stretch，預設 1）：子骨骼跟著縮放
+            var sx = pose.TryGetValue(b.Name + ".sx", out var vsx) ? vsx : 1;
+            var sy = pose.TryGetValue(b.Name + ".sy", out var vsy) ? vsy : 1;
+            var local = sx == 1 && sy == 1
+                ? new Transform2D(Mathf.DegToRad(angle), new Vector2(tx, ty))
+                : new Transform2D(Mathf.DegToRad(angle), new Vector2(sx, sy), 0, new Vector2(tx, ty));
             World[b.Name] = b.Parent is null ? local : World[b.Parent] * local;
         }
         return World;

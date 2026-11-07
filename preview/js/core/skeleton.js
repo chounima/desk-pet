@@ -1,6 +1,8 @@
 // 骨架：依姿勢（各骨骼角度與位移）算出每根骨骼的世界矩陣
 import { mul, rotate, translate } from "./math.js";
 
+const scaleM = (sx, sy) => [sx, 0, 0, sy, 0, 0];
+
 export class Skeleton {
   // bones: [{ name, parent, x, y }]，父骨骼必須在前
   // moveScale: 動作位移是以 Q 版身材寫的，依角色腿長放大
@@ -20,7 +22,10 @@ export class Skeleton {
       const tx = b.x + (pose[`${b.name}.x`] ?? 0) * s;
       const ty = b.y + (pose[`${b.name}.y`] ?? 0) * s;
       const angle = (pose[b.name] ?? 0) * (this.angleScale[b.name] ?? 1) + (offsets?.[b.name] ?? 0);
-      const local = mul(translate(tx, ty), rotate(angle));
+      // 縮放軌道「骨骼.sx」「骨骼.sy」（squash & stretch，預設 1）：子骨骼跟著縮放
+      const sx = pose[`${b.name}.sx`] ?? 1, sy = pose[`${b.name}.sy`] ?? 1;
+      let local = mul(translate(tx, ty), rotate(angle));
+      if (sx !== 1 || sy !== 1) local = mul(local, scaleM(sx, sy));
       this.world[b.name] = b.parent ? mul(this.world[b.parent], local) : local;
     }
     return this.world;

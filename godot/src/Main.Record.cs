@@ -85,7 +85,7 @@ public partial class Main
     {
         var image = GetViewport().GetTexture().GetImage();
         var h = pet.Rig.Height * pet.Scale;
-        var rect = new Rect2I((int)(pet.X - h * 0.9f), (int)(pet.Y - h * 1.2f), (int)(h * 1.8f), (int)(h * 1.25f))
+        var rect = new Rect2I((int)(pet.X - h * 0.9f), (int)(pet.Y - h * 1.75f), (int)(h * 1.8f), (int)(h * 1.8f))      // 上面留空間給跳躍
             .Intersection(new Rect2I(Vector2I.Zero, image.GetSize()));
         image.GetRegion(rect).SavePng(Path.Combine(recordDir!, $"frame_{index:00}.png"));
     }

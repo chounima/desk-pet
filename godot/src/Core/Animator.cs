@@ -42,6 +42,9 @@ public sealed class Animator
 
     static float Smooth(float t) => t * t * (3 - 2 * t);
 
+    /// <summary>軌道的靜止值：縮放（.sx、.sy）是 1，角度與位移是 0</summary>
+    public static float Rest(string channel) => channel.EndsWith(".sx") || channel.EndsWith(".sy") ? 1 : 0;
+
     /// <summary>keys: [[時間, 數值, 曲線], ...]，兩個關鍵影格之間依前一個的曲線插值（預設平滑）</summary>
     public static float SampleTrack(List<Keyframe> keys, float t)
     {
@@ -100,14 +103,15 @@ public sealed class Animator
 
         blend = Math.Min(1, blend + dt / crossfade);
         var w = Smooth(blend);
+        // 淡化：沒有這個軌道的那一邊用靜止值（角度、位移是 0，縮放是 1）
         var pose = new Dictionary<string, float>(target);
         foreach (var (ch, a) in from)
         {
-            target.TryGetValue(ch, out var b);
+            var b = target.TryGetValue(ch, out var v) ? v : Rest(ch);
             pose[ch] = a + (b - a) * w;
         }
         foreach (var (ch, b) in target)
-            if (!from.ContainsKey(ch)) pose[ch] = b * w;
+            if (!from.ContainsKey(ch)) pose[ch] = Rest(ch) + (b - Rest(ch)) * w;
         Pose = pose;
         return pose;
     }

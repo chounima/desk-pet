@@ -2,6 +2,9 @@
 
 const smooth = t => t * t * (3 - 2 * t);
 
+// 軌道的靜止值：縮放（.sx、.sy）是 1，角度與位移是 0
+export const rest = ch => (ch.endsWith(".sx") || ch.endsWith(".sy") ? 1 : 0);
+
 // back：先超過一點再回來（easeOutBack）；hold：停在前一個值，到下一個關鍵影格才跳過去（和桌寵 Animator.Ease 一樣）
 // 用 Math.fround 讓中間值和桌寵的 float（32 位元）一致
 const C1 = Math.fround(1.70158), C3 = Math.fround(C1 + 1);
@@ -84,8 +87,9 @@ export class Animator {
     this.blend = Math.min(1, this.blend + dt / this.crossfade);
     const w = smooth(this.blend);
     const pose = {};
+    // 淡化：沒有這個軌道的那一邊用靜止值（角度、位移是 0，縮放是 1）
     for (const ch of new Set([...Object.keys(this.from), ...Object.keys(target)])) {
-      const a = this.from[ch] ?? 0, b = target[ch] ?? 0;
+      const a = this.from[ch] ?? rest(ch), b = target[ch] ?? rest(ch);
       pose[ch] = a + (b - a) * w;
     }
     this.pose = pose;
