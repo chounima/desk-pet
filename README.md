@@ -67,6 +67,20 @@ godot/src/
 └── UI/                Tray（系統匣）
 ```
 
+### 測試與工具
+
+| 工具 | 做什麼 |
+|---|---|
+| `python tools/validate.py` | 檢查 `art/`、`data/` 的格式（`schemas/`）與引用（骨骼、插槽、圖檔、動作名稱、翻譯缺漏）；有錯結束碼 1。需要 `pip install -r tools/requirements.txt` |
+| `--selftest=golden`（`--update` 重寫答案）／`tools/web_test.ps1` | 共用測試 `tests/golden/pose.json`：桌寵與網頁算出的姿勢要一樣 |
+| `--selftest=progress`／`live`／`control`／`apps` | 收集系統、多人（Twitch 解析、規則、機密存檔、設定搬移）、動作與表情的優先順序、程式分類 |
+| `tools/test_discord.ps1` | 假的 Discord RPC 伺服器（`tools/mock_discord.ps1`）跑完整劇本 |
+| `tools/record_clip.ps1 -Char sera -Clip walk` | 桌寵與網頁各錄一張比較圖到 `build/record/`（`--record`、`preview/record.html`） |
+| `tools/perf.ps1` | 1、8、20 隻客人時每幀處理時間，結果附加到 `build/perf.txt` |
+| `--sandbox`、`--no-single` | 測試用：不動真正的進度與設定、不連設定裡的外部服務；使用者的桌寵開著也能跑 |
+
+程式分層、功能模組、兩邊同步的規則見 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)。
+
 ### 打包成 .exe
 
 `powershell -File tools/build_release.ps1` → `build/DeskPet/`（`DeskPet.exe` + `data_DeskPet_windows_x86_64/`，兩個要放在一起）與 `build/DeskPet-<日期>.zip`。
