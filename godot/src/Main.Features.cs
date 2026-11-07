@@ -19,11 +19,27 @@ public partial class Main
         {
             Root = this, Pet = pet, Behavior = behavior, Control = control, Settings = settings, Tray = tray, Hub = hub, Presence = presence,
             Progress = progress, Fx = fx, Lines = lines, Rigs = rigs, CharacterIds = ids, Clips = clips, Props = props, Args = args,
-            Area = Area, RigOf = RigOf, SetDriver = SetDriver, Voice = voice, Sandbox = sandbox, PetScale = () => PetScale(settings.Size), Dump = dumpState,
+            Area = Area, RigOf = RigOf, SetDriver = SetDriver, HidePet = SetPetHiddenBy, Voice = voice, Sandbox = sandbox, PetScale = () => PetScale(settings.Size), Dump = dumpState,
         };
         // 新功能在這裡加：AddFeature(new Features.Xxx.XxxFeature());
         AddFeature(guestsFeature = new Features.Guests.GuestsFeature());
         AddFeature(new Features.Vtuber.VtuberFeature());
+    }
+
+    // 功能模組要求先把桌面上的主角色藏起來（例如半身模式）：{ 來源 }
+    readonly HashSet<string> petHiders = new();
+
+    void SetPetHiddenBy(string source, bool hide)
+    {
+        if (hide ? petHiders.Add(source) : petHiders.Remove(source)) ApplyPetVisibility();
+    }
+
+    /// <summary>主角色和它的掛件（特效、泡泡、聲波）一起顯示／隱藏：全螢幕、使用者隱藏、功能模組要求</summary>
+    void ApplyPetVisibility()
+    {
+        var hide = presence.Hidden || petHiders.Count > 0;
+        pet.View.Visible = !hide;
+        attachments.SetHidden(hide);
     }
 
     /// <summary>換主角色的驅動者；null = 換回桌面漫遊（Behavior）</summary>

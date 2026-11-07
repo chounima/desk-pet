@@ -45,6 +45,8 @@ public sealed class FeatureHost
     public required Func<string, RigData> RigOf { get; init; }
     /// <summary>換主角色的驅動者（例如半身模式原地不動）；null = 換回桌面漫遊</summary>
     public required Action<Game.Drivers.IPetDriver?> SetDriver { get; init; }
+    /// <summary>要求把桌面上的主角色（連同特效、泡泡、聲波）藏起來：(來源, 要不要藏)；每個來源各自開關</summary>
+    public required Action<string, bool> HidePet { get; init; }
     /// <summary>主角色目前的顯示大小</summary>
     public required Func<float> PetScale { get; init; }
     /// <summary>使用者自己的聲音（Discord、麥克風…合起來）；功能可以加自己的來源</summary>

@@ -71,9 +71,7 @@ public partial class Main
 
     void OnPresenceChanged(bool hidden)
     {
-        pet.View.Visible = !hidden;
-        fx.Visible = !hidden;
-        bubble.Muted = hidden;
+        ApplyPetVisibility();
         FeaturesHiddenChanged(hidden);
         tray.SetHidden(presence.ManualHidden);
         if (hidden)

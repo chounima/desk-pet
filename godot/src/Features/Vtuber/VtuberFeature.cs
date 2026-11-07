@@ -5,7 +5,7 @@
 // - 聲音：MicCapture → VoiceAnalyzer → VoiceCalibration（自動校正）→ VoiceRules（data/vtuber.json）
 // - 快捷鍵：Ctrl+Alt+數字（data/vtuber.json 的 hotkeys），優先於聲音規則
 // - 拖曳換位置、滾輪縮放、右鍵開設定分頁
-// 測試：--vtuber 直接開；--vtuber-voice=quiet:2,talk:3,loud:0.2,high:1 用假的聲音（不開麥克風）；--vtuber-shot=檔名.png 幾秒後截圖並結束
+// 測試：--vtuber 直接開；--vtuber-hide-pet 藏桌面角色；--vtuber-shot-full 截整個畫面；--vtuber-voice=quiet:2,talk:3,loud:0.2,high:1 用假的聲音（不開麥克風）；--vtuber-shot=檔名.png 幾秒後截圖並結束
 using System.Collections.Generic;
 using System.Linq;
 using DeskPet.Content;
@@ -67,7 +67,8 @@ public sealed class VtuberFeature : IFeature
 
         mic = new MicCapture();
         host.Root.AddChild(mic);
-        stage = new Control { ClipContents = true, MouseFilter = Control.MouseFilterEnum.Ignore, Visible = false };
+        // 畫在桌面角色、特效上面（ZIndex）
+        stage = new Control { ClipContents = true, MouseFilter = Control.MouseFilterEnum.Ignore, Visible = false, ZIndex = 20 };
         host.Root.AddChild(stage);
 
         tab = new VtuberTab(host.Settings, host.CharacterIds.Select(id => host.Rigs[id]).ToList(), host.Progress.CharacterUnlocked, this);
@@ -80,6 +81,7 @@ public sealed class VtuberFeature : IFeature
             shotPath = ProjectSettings.GlobalizePath(shot);
             shotLeft = float.Parse(host.Args.GetValueOrDefault("vtuber-shot-at", "3"), System.Globalization.CultureInfo.InvariantCulture);
         }
+        if (host.Args.ContainsKey("vtuber-hide-pet")) Settings.HideDesktopPet = true;      // 測試用（--sandbox 不存設定）
         // --sandbox（測試）不依設定自動開，只認 --vtuber
         if (host.Args.ContainsKey("vtuber") || (Settings.Enabled && !host.Sandbox)) Start();
     }
@@ -121,7 +123,7 @@ public sealed class VtuberFeature : IFeature
         control = null;
         attach = null;
         stage.Visible = false;
-        host.Pet.View.Visible = !hidden;
+        host.HidePet(Id, false);
         Settings.NoiseFloor = cal.Floor;
     }
 
@@ -176,7 +178,7 @@ public sealed class VtuberFeature : IFeature
         // 全螢幕自動隱藏可以對半身模式另外關掉（直播全螢幕遊戲時角色才不會消失）；使用者手動隱藏就一起藏
         var hide = host.Presence.ManualHidden || (hidden && !Settings.ShowOnFullscreen);
         stage.Visible = Active && !hide;
-        host.Pet.View.Visible = !hidden && !(Active && Settings.HideDesktopPet);
+        host.HidePet(Id, Active && Settings.HideDesktopPet);
     }
 
     public void SetHideDesktopPet(bool on)
@@ -229,7 +231,10 @@ public sealed class VtuberFeature : IFeature
     {
         var image = host.Root.GetViewport().GetTexture().GetImage();
         var rect = new Rect2I((Vector2I)stage.Position, (Vector2I)stage.Size).Intersection(new Rect2I(Vector2I.Zero, image.GetSize()));
-        image.GetRegion(rect).SavePng(shotPath!);
+        // --vtuber-shot-full：整個畫面（縮小一半），看桌面角色與特效
+        if (host.Args.ContainsKey("vtuber-shot-full")) image.Resize(image.GetWidth() / 2, image.GetHeight() / 2);
+        else image = image.GetRegion(rect);
+        image.SavePng(shotPath!);
         GD.Print($"[vtuber] 截圖 → {shotPath}（{Frame}，規則 {rules.LastFired ?? "-"}）");
         shotPath = null;
         if (host.Args.ContainsKey("vtuber-shot-quit")) host.Root.GetTree().Quit();

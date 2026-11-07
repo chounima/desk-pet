@@ -1,4 +1,4 @@
-// 角色的掛件：特效、聲波、對話泡泡、名牌（選配），每幀依角色的錨點擺好位置
+﻿// 角色的掛件：特效、聲波、對話泡泡、名牌（選配），每幀依角色的錨點擺好位置
 //
 // 頭上的東西（名牌、泡泡、特效）跟著 nameTag 錨點（沒有就用頭頂 HeadTop），聲波跟著 mouth 錨點（見 SpeechWaves）。
 // 角色畫在哪、放多大（桌面全身、之後的半身模式），掛件就跟到哪，不用各自算位置。
@@ -57,6 +57,7 @@ public sealed class PetAttachments
     public void SetHidden(bool hidden)
     {
         Fx.Visible = !hidden;
+        Waves.Visible = !hidden;
         Bubble.Muted = hidden;
         if (Tag != null) Tag.Visible = !hidden;
     }
