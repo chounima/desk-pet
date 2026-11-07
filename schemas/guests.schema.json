@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "guests.schema.json",
+  "title": "客人角色 data/guests.json",
+  "type": "object",
+  "properties": {
+    "maxGuests": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "chatIdleMinutes": {
+      "type": "number"
+    },
+    "chatMaxChars": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "scale": {
+      "type": "number"
+    },
+    "meetingApps": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "micThreshold": {
+      "type": "number"
+    },
+    "appThreshold": {
+      "type": "number"
+    },
+    "chatTriggers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "match": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "action": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "match",
+          "action"
+        ]
+      }
+    },
+    "reactions": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  }
+}

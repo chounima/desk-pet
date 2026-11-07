@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "animation.schema.json",
+  "title": "動作 data/animations/<名稱>.json",
+  "type": "object",
+  "required": [
+    "tracks"
+  ],
+  "properties": {
+    "label": {
+      "type": "string"
+    },
+    "hidden": {
+      "type": "boolean"
+    },
+    "duration": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "loop": {
+      "type": "boolean"
+    },
+    "next": {
+      "type": "string"
+    },
+    "face": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "minItems": 2,
+            "maxItems": 2
+          }
+        }
+      ]
+    },
+    "props": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "alt": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "fx": {
+      "type": "string"
+    },
+    "move": {
+      "type": "number"
+    },
+    "extends": {
+      "type": "string",
+      "description": "（第 2 階段）只寫差異：沿用這個動作，覆蓋列出的軌道"
+    },
+    "tracks": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "enum": [
+                "smooth",
+                "linear",
+                "easeIn",
+                "easeOut",
+                "back",
+                "hold"
+              ]
+            }
+          ],
+          "minItems": 2,
+          "maxItems": 3,
+          "description": "[時間, 數值] 或 [時間, 數值, 曲線]（曲線在第 1 階段加入）"
+        },
+        "minItems": 1
+      },
+      "description": "{ 軌道（骨骼名、root.x、root.y、骨骼.sx…）: [關鍵影格…] }"
+    }
+  }
+}

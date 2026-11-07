@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "character.schema.json",
+  "title": "自訂角色 文件\\DeskPet\\characters\\<名稱>\\character.json",
+  "type": "object",
+  "required": [
+    "base"
+  ],
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "base": {
+      "type": "string",
+      "description": "範本角色 id（複製它的骨架與動作）"
+    },
+    "parts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "image": {
+            "type": "string"
+          },
+          "box": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 4,
+            "maxItems": 4,
+            "description": "[x0, y0, x1, y1]，Q 版單位"
+          }
+        },
+        "required": [
+          "image",
+          "box"
+        ]
+      },
+      "description": "{ 部件圖名: { image, box } }"
+    },
+    "faces": {
+      "type": "object",
+      "properties": {
+        "box": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 4,
+          "maxItems": 4,
+          "description": "[x0, y0, x1, y1]，Q 版單位"
+        },
+        "images": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "images"
+      ]
+    },
+    "lines": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

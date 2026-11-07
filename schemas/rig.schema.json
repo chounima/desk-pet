@@ -1,0 +1,303 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "rig.schema.json",
+  "title": "角色骨架 art/characters/<id>/rig.json（型態：forms/<名稱>/rig.json）",
+  "type": "object",
+  "required": [
+    "id",
+    "bones",
+    "slots"
+  ],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "格式版本；沒有 = 1"
+    },
+    "id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "body": {
+      "enum": [
+        "humanoid",
+        "quadruped"
+      ],
+      "description": "體型，決定用哪一套動作"
+    },
+    "rootScale": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "headTop": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "height": {
+      "type": "number"
+    },
+    "trackScale": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number"
+      },
+      "description": "動作軌道幅度倍率 { 軌道: 倍率 }"
+    },
+    "propOverrides": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "dx": {
+            "type": "number"
+          },
+          "dy": {
+            "type": "number"
+          },
+          "scale": {
+            "type": "number"
+          }
+        }
+      },
+      "description": "道具位置／大小修正 { 道具: { dx, dy, scale } }"
+    },
+    "anchors": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/anchor"
+      },
+      "description": "錨點：配件（hat、eyes、neck、back）、之後的臉部錨點（mouth、eyeL、eyeR…）、名牌"
+    },
+    "bones": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/bone"
+      },
+      "minItems": 1
+    },
+    "slots": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/slot"
+      }
+    },
+    "forms": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "rig": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "rig"
+        ]
+      },
+      "description": "可切換的型態 { 名稱: { label, rig（資料夾，空字串 = 本身） } }"
+    },
+    "volley": {
+      "type": "object",
+      "properties": {
+        "reach": {
+          "type": "number"
+        },
+        "hitHeight": {
+          "type": "number"
+        },
+        "spike": {
+          "type": "boolean"
+        },
+        "dive": {
+          "type": "boolean"
+        }
+      }
+    },
+    "physics": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/physics"
+      },
+      "description": "（第 1 階段）次級物理 { 骨骼: 參數 }"
+    },
+    "views": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object"
+      },
+      "description": "（第 6 階段）其他視角，例如 bust（正面半身）"
+    },
+    "bust": {
+      "type": "object",
+      "properties": {
+        "top": {
+          "type": "number"
+        },
+        "bottom": {
+          "type": "number"
+        },
+        "focus": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        }
+      },
+      "description": "（第 6 階段）半身取景"
+    },
+    "face": {
+      "type": "object",
+      "description": "（第 3 階段）分層表情：eyes、pupils、brows、mouth"
+    }
+  },
+  "$defs": {
+    "anchor": {
+      "type": "object",
+      "properties": {
+        "bone": {
+          "type": "string"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "scale": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "bone"
+      ]
+    },
+    "bone": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "parent": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "name"
+      ]
+    },
+    "slot": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "bone": {
+          "type": "string"
+        },
+        "z": {
+          "type": "number"
+        },
+        "file": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "box": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 4,
+          "maxItems": 4,
+          "description": "[x0, y0, x1, y1]，Q 版單位"
+        },
+        "far": {
+          "type": "boolean"
+        },
+        "variants": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "表情插槽 { 表情名: 檔案 }"
+        },
+        "alt": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "file": {
+                "type": "string"
+              },
+              "box": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 4,
+                "maxItems": 4,
+                "description": "[x0, y0, x1, y1]，Q 版單位"
+              }
+            },
+            "required": [
+              "file"
+            ]
+          },
+          "description": "部件替換圖"
+        },
+        "mesh": {
+          "type": "object",
+          "description": "（第 4 階段）網格變形"
+        }
+      },
+      "required": [
+        "name",
+        "bone"
+      ]
+    },
+    "physics": {
+      "type": "object",
+      "properties": {
+        "stiffness": {
+          "type": "number"
+        },
+        "damping": {
+          "type": "number"
+        },
+        "gravity": {
+          "type": "number"
+        },
+        "inertia": {
+          "type": "number"
+        },
+        "limit": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

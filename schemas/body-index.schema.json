@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "body-index.schema.json",
+  "title": "體型動作清單 data/animations/<體型>/index.json",
+  "type": "object",
+  "properties": {
+    "clips": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "alias": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "description": "沒有專屬版的動作借用哪一個"
+    }
+  },
+  "required": [
+    "clips"
+  ]
+}

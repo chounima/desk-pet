@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "animation-index.schema.json",
+  "title": "共用動作清單 data/animations/index.json",
+  "type": "array",
+  "items": {
+    "type": "string"
+  },
+  "uniqueItems": true
+}

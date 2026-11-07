@@ -1,0 +1,229 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tuning.schema.json",
+  "title": "調整參數 data/tuning.json",
+  "type": "object",
+  "required": [
+    "pet",
+    "auto",
+    "volley"
+  ],
+  "properties": {
+    "pet": {
+      "type": "object",
+      "properties": {
+        "scale": {
+          "type": "number"
+        },
+        "sizes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string"
+              },
+              "value": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "label",
+              "value"
+            ]
+          }
+        },
+        "gravity": {
+          "type": "number"
+        },
+        "crossfade": {
+          "type": "number"
+        },
+        "sleepAfter": {
+          "type": "number"
+        },
+        "typingHold": {
+          "type": "number"
+        },
+        "focusRate": {
+          "type": "number"
+        },
+        "margin": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "scale",
+        "sizes",
+        "gravity",
+        "crossfade",
+        "sleepAfter",
+        "typingHold",
+        "focusRate",
+        "margin"
+      ]
+    },
+    "auto": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "weight": {
+            "type": "number",
+            "minimum": 0
+          },
+          "time": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "needsWindows": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "weight"
+        ]
+      }
+    },
+    "volley": {
+      "type": "object",
+      "properties": {
+        "gravity": {
+          "type": "number"
+        },
+        "ballRadius": {
+          "type": "number"
+        },
+        "artRadius": {
+          "type": "number"
+        },
+        "reach": {
+          "type": "number"
+        },
+        "hitHeight": {
+          "type": "number"
+        },
+        "hitTolerance": {
+          "type": "number"
+        },
+        "runSpeed": {
+          "type": "number"
+        },
+        "reactDelay": {
+          "type": "number"
+        },
+        "maxVx": {
+          "type": "number"
+        },
+        "cursorRadius": {
+          "type": "number"
+        },
+        "minSwipe": {
+          "type": "number"
+        },
+        "serveToss": {
+          "type": "number"
+        },
+        "digSpeed": {
+          "type": "number"
+        },
+        "restartAfter": {
+          "type": "number"
+        },
+        "approachTime": {
+          "type": "number"
+        },
+        "approachDist": {
+          "type": "number"
+        },
+        "spikeSpeed": {
+          "type": "number"
+        },
+        "diveContact": {
+          "type": "number"
+        },
+        "diveSlide": {
+          "type": "number"
+        },
+        "contactWindow": {
+          "type": "number"
+        },
+        "fireAt": {
+          "type": "number"
+        },
+        "arc": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "lobArc": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "spikeTimes": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "miss": {
+          "type": "object",
+          "properties": {
+            "base": {
+              "type": "number"
+            },
+            "perRally": {
+              "type": "number"
+            },
+            "max": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "base",
+            "perRally",
+            "max"
+          ]
+        }
+      },
+      "required": [
+        "gravity",
+        "ballRadius",
+        "artRadius",
+        "reach",
+        "hitHeight",
+        "hitTolerance",
+        "runSpeed",
+        "reactDelay",
+        "maxVx",
+        "cursorRadius",
+        "minSwipe",
+        "serveToss",
+        "digSpeed",
+        "restartAfter",
+        "approachTime",
+        "approachDist",
+        "spikeSpeed",
+        "diveContact",
+        "diveSlide",
+        "contactWindow",
+        "fireAt",
+        "arc",
+        "lobArc",
+        "spikeTimes",
+        "miss"
+      ]
+    }
+  }
+}
