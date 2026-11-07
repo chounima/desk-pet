@@ -24,6 +24,8 @@ public partial class PetView : Node2D
         public float Z;
         public bool Accessory;
         public string? HitName;           // 配件被點到時算哪個部位（掛在哪根骨骼）
+        public string? FaceFile;          // 分層臉的圖層：目前顯示的檔案
+        public Vector2 FaceShift;         // 分層臉的圖層：這一刻的位移（瞳孔看游標）
     }
 
     readonly RigData rig;
@@ -31,6 +33,7 @@ public partial class PetView : Node2D
     readonly List<Item> items = new();
     readonly Dictionary<string, Item> propItems = new();
     Item? faceItem;
+    readonly List<Item> faceLayers = new();
     string face = "idle";
     string propsKey = "";
 
@@ -52,6 +55,21 @@ public partial class PetView : Node2D
             if (slot.Variants != null) faceItem = item;
             item.Z = slot.Z;
             entries.Add((slot.Z, item));
+            // 分層臉：每個圖層一張圖，疊在表情插槽的位置；整張臉藏起來
+            if (slot.Variants != null && rig.Face is { } layered)
+            {
+                item.Sprite.Visible = false;
+                for (var i = 0; i < layered.Layers.Count; i++)
+                {
+                    var first = layered.Layers[i].Variants.Values.First();
+                    var layer = MakeItem(rig.Resolve(first), layered.Box, slot.Bone, null);
+                    layer.Slot = slot;
+                    layer.FaceFile = first;
+                    layer.Z = slot.Z + (i + 1) * 0.0001f;
+                    faceLayers.Add(layer);
+                    entries.Add((layer.Z, layer));
+                }
+            }
         }
 
         // 道具以 Q 版身材設計，依角色腿長等比放大
@@ -91,6 +109,27 @@ public partial class PetView : Node2D
         item.Sprite.Texture = tex.Texture;
         item.Image = tex.Image;
         item.Box = box;
+    }
+
+    /// <summary>這個角色有分層臉（用 SetFaceLayers，不用 SetFace）</summary>
+    public bool Layered => faceLayers.Count > 0;
+
+    /// <summary>分層臉：每個圖層這一刻的樣子（Game/Face/FaceDriver 算的，順序和 rig.Face.Layers 一樣）</summary>
+    public void SetFaceLayers(List<Game.Face.FaceLayerState> states)
+    {
+        for (var i = 0; i < faceLayers.Count && i < states.Count; i++)
+        {
+            var (item, st) = (faceLayers[i], states[i]);
+            item.Sprite.Visible = st.File != null;
+            if (st.File == null) continue;
+            if (st.File != item.FaceFile)
+            {
+                SetImage(item, rig.Resolve(st.File), item.Box);
+                item.FaceFile = st.File;
+            }
+            item.Sprite.SelfModulate = new Color(1, 1, 1, st.Alpha);
+            item.FaceShift = new Vector2(st.Dx, st.Dy);
+        }
     }
 
     public void SetFace(string name)
@@ -187,6 +226,7 @@ public partial class PetView : Node2D
             var m = world[item.Bone];
             if (item.Offset is { } offset) m *= offset;
             if (item == faceItem) m *= new Transform2D(0, faceOffset);
+            else if (item.FaceFile != null) m *= new Transform2D(0, faceOffset + item.FaceShift);
             // 貼圖像素 → 部件座標：縮小 res 倍，再移到部件範圍的左上角
             item.Sprite.Transform = m * new Transform2D(new Vector2(1 / res, 0), new Vector2(0, 1 / res),
                                                         new Vector2(item.Box[0], item.Box[1]));

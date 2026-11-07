@@ -122,6 +122,11 @@ def build_character(char, out: Path, form=None) -> dict:
         "bones": [{"name": n, "parent": p, "x": x, "y": y} for n, p, x, y in rig.bones(prop) + chain_bones],
         "slots": sorted(slots, key=lambda s: s["z"]),
     }
+    # 分層臉（選配；make_faces 會附上）：部件放 face_parts/，規格寫進 face（整張臉 faces/ 照樣保留給不支援的地方）
+    if layered := getattr(src.FACES, "layers", None):
+        for file, part in layered["parts"].items():
+            _write(out / file, part.to_svg())
+        data["face"] = layered["spec"]
     physics = {**default_physics(slots, getattr(src, "PHYSICS", {})), **chain_physics}
     if physics:
         data["physics"] = physics

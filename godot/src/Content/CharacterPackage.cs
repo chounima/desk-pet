@@ -99,6 +99,7 @@ public static class CharacterPackage
             // 每個表情都要有圖：沒做的用 idle
             faceSlot.Variants = faceSlot.Variants!.Keys.ToDictionary(k => k, k => Join(folder, faces.Images.GetValueOrDefault(k) ?? idle));
             faceSlot.Box = faces.Box;
+            rig.Face = null;        // 部件包畫了整張臉：不用範本的分層臉
         }
         foreach (var (name, a) in c.Anchors ?? new()) rig.Anchors[name] = a;
         foreach (var (name, o) in c.PropOverrides ?? new()) rig.PropOverrides[name] = o;

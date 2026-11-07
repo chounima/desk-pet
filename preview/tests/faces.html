@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>分層臉測試</title>
+<style>
+  body { font: 14px/1.6 system-ui, sans-serif; margin: 24px; background: #1f2230; color: #e8e8ef; }
+  h1 { font-size: 20px; }
+  .pass { color: #6fdc8c; } .fail { color: #ff7a85; }
+  pre { white-space: pre-wrap; }
+  canvas { background: #fff; margin: 2px; }
+</style>
+</head>
+<body>
+<h1>分層臉測試 <span id="status">執行中…</span></h1>
+<p>每個有分層臉（rig.json 的 <code>face</code>）的角色、每種表情：把各圖層疊起來，和整張臉 <code>faces/*.svg</code> 逐像素比較（瞳孔不位移、腮紅照表情的不透明度）。</p>
+<pre id="log"></pre>
+<div id="sheet"></div>
+<script type="module">
+import { loadCharacters } from "../js/core/loader.js";
+import { faceLayers } from "../js/game/faceDriver.js";
+
+const PX = 4;                 // 每單位幾像素
+const MAX_DIFF = 0.004;       // 差異像素比例上限（反鋸齒邊緣）
+const log = text => { document.getElementById("log").textContent += text + "\n"; };
+
+const images = new Map();
+function load(url) {
+  if (!images.has(url)) images.set(url, new Promise((ok, fail) => {
+    const img = new Image();
+    img.onload = () => ok(img);
+    img.onerror = () => fail(new Error(`讀不到 ${url}`));
+    img.src = url;
+  }));
+  return images.get(url);
+}
+
+function canvas(box) {
+  const c = document.createElement("canvas");
+  c.width = (box[2] - box[0]) * PX;
+  c.height = (box[3] - box[1]) * PX;
+  return c;
+}
+
+let fails = 0, count = 0;
+const { rigs } = await loadCharacters();
+for (const rig of Object.values(rigs)) {
+  if (!rig.face) continue;
+  const slot = rig.slots.find(s => s.variants);
+  for (const expr of Object.keys(rig.face.expressions)) {
+    const whole = canvas(slot.box);
+    whole.getContext("2d").drawImage(await load(rig.base + slot.variants[expr]), 0, 0, whole.width, whole.height);
+    const layered = canvas(rig.face.box);
+    const ctx = layered.getContext("2d");
+    for (const l of faceLayers(rig.face, { expression: expr })) {
+      if (!l.file) continue;
+      ctx.globalAlpha = l.alpha;
+      ctx.drawImage(await load(rig.base + l.file), 0, 0, layered.width, layered.height);
+    }
+    const a = whole.getContext("2d").getImageData(0, 0, whole.width, whole.height).data;
+    const b = ctx.getImageData(0, 0, layered.width, layered.height).data;
+    let diff = 0;
+    for (let i = 0; i < a.length; i += 4) {
+      if (Math.abs(a[i] - b[i]) + Math.abs(a[i + 1] - b[i + 1]) + Math.abs(a[i + 2] - b[i + 2]) + Math.abs(a[i + 3] - b[i + 3]) > 24) diff++;
+    }
+    const ratio = diff / (a.length / 4);
+    count++;
+    if (ratio > MAX_DIFF) {
+      fails++;
+      log(`✗ ${rig.id} ${expr}：差異 ${(ratio * 100).toFixed(2)}%`);
+      document.getElementById("sheet").append(whole, layered);
+    }
+  }
+}
+const ok = fails === 0 && count > 0;
+document.getElementById("status").textContent = ok ? `✓ ${count} 個表情全部一致` : `✗ ${fails} / ${count} 個不一致`;
+document.getElementById("status").className = ok ? "pass" : "fail";
+document.title = ok ? "PASS" : `FAIL ${fails}`;
+</script>
+</body>
+</html>

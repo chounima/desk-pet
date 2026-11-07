@@ -203,10 +203,10 @@ data/animations/<動作>.json                                  共用（現在�
 | 3a ✅ | `tools/artgen/__init__.py` | — | **頭髮骨鏈**（選配）：角色模組寫 `HAIR_CHAINS = {"hairB": {anchor, z, segments: [(長度, 部件)…], physics}}`，自動產生 `hairB_1..n` 骨骼、插槽、物理（每節掛在上一節尾端，預設 `HAIR_PHYSICS`）。不用改 Godot／網頁，沿用次級物理 |
 | 3b ✅ | `tools/artgen/characters/tk01.py` | — | TK-01 後面長髮拆成頭上一片＋兩節骨鏈（走路、急停會甩）；Sera 耳朵先不拆（小、短，收益低） |
 | 3c / 3d | `View/PetView.cs` | `view/renderer.js` | **轉頭視差**：頭部圖層設 `depth`，轉頭時依深度位移不同量 |
-| 3e | `tools/artgen/faces.py` | — | **分層表情**：臉拆成 `eyes`（眼白／瞳孔分開）、`brows`、`mouth`。嘴型至少有「閉、半開、全開」，完整版加母音「あいうえお」；眼睛有「睜、半閉、閉」。舊的整張臉照樣可用 |
-| 3f / 3g | `View/PetView.cs` | `view/renderer.js` | 分層表情的繪製與組合；**瞳孔可以在眼白範圍內位移**（眼睛跟游標用） |
+| 3e ✅ | `tools/artgen/faces.py` | — | **分層表情**（完成：`make_faces` 附帶分層臉，寫進 `rig.json` 的 `face`：`eyes`（眼眶）、`pupils`、`lids`（眼線）、`blush`、`mouth`、`extras`；嘴型含母音 `va`～`vo`；`preview/tests/faces.html` 逐像素確認疊起來和整張臉一樣。眉毛：產生的角色沒有眉毛，格式支援、之後 AI 部件包可以加）：臉拆成 `eyes`（眼白／瞳孔分開）、`brows`、`mouth`。嘴型至少有「閉、半開、全開」，完整版加母音「あいうえお」；眼睛有「睜、半閉、閉」。舊的整張臉照樣可用 |
+| 3f / 3g ✅ | `View/PetView.cs` | `view/renderer.js` | 分層表情的繪製與組合（部件包／自訂角色畫了整張臉時自動退回整張臉）；**瞳孔可以在眼白範圍內位移**（眼睛跟游標用） |
 | 3h | `rig.json` ＋ schema | — | **臉部錨點**：`mouth`（嘴巴中心）、`eyes`（兩眼中心與瞳孔可移動範圍）。`SpeechWaves` 改讀 `mouth` 錨點，不再寫死座標；名牌與泡泡的位置改讀 `headTop` 加上頭髮骨鏈的高度 |
-| 3i / 3j | `Game/Face/FaceDriver.cs`（新） | `game/faceDriver.js`（新） | **表情驅動**：統一決定「眼、眉、嘴」每一層顯示什麼。輸入：動作指定的表情、暫時表情、眨眼（多格）、講話（嘴巴張開程度 0～1＋母音）、視線。`Mouth` 改成輸出張開程度給它；有分層的角色換嘴巴圖層，沒有的退回換整張臉 |
+| 3i / 3j ✅ | `Game/Face/FaceDriver.cs`（新） | `game/faceDriver.js`（新） | **表情驅動**（完成：`tests/golden/face.json` 兩邊比對；嘴巴管道值改成 `closed`／`half`／`open`／母音，整張臉的角色由 `ControlArbiter.AsWholeFace` 換成驚訝／開心；分層臉睜著眼就會眨；網頁預覽瞳孔跟游標）：統一決定「眼、眉、嘴」每一層顯示什麼。輸入：動作指定的表情、暫時表情、眨眼（多格）、講話（嘴巴張開程度 0～1＋母音）、視線。`Mouth` 改成輸出張開程度給它；有分層的角色換嘴巴圖層，沒有的退回換整張臉 |
 | 3k | `Game/Pet.cs`、`View/Bubble.cs` | `game/pet.js` | 角色冒台詞泡泡時，依字數動嘴一段時間（不只 Discord／麥克風講話才動） |
 | 3l | `preview/js/editor/main.js` | — | 自訂角色編輯器認得新插槽與錨點 |
 | 3m | `js/animator/` | — | 動作編輯器可以編表情時間軸（眼、眉、嘴分開） |

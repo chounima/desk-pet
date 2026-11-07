@@ -32,8 +32,8 @@ public sealed class RigData
     public Dictionary<string, AnchorData> Anchors { get; set; } = new();
     /// <summary>次級物理 { 骨骼: 參數 }（尾巴、披布、頭髮…，見 Core/Spring.cs）</summary>
     public Dictionary<string, PhysicsParams>? Physics { get; set; }
-    /// <summary>（第 3 階段）分層表情：eyes、pupils、brows、mouth</summary>
-    public JsonElement? Face { get; set; }
+    /// <summary>分層臉（選配）：眼眶、瞳孔、眼線、腮紅、嘴…分開，由 Game/FaceDriver 決定每層顯示什麼；沒有就只用整張臉</summary>
+    public FaceRig? Face { get; set; }
     /// <summary>（第 6 階段）其他視角（bust = 正面半身）與半身取景</summary>
     public Dictionary<string, JsonElement>? Views { get; set; }
     public JsonElement? Bust { get; set; }
@@ -79,6 +79,31 @@ public sealed class PhysicsParams
     public double Length { get; set; } = 60;
     /// <summary>部件在骨頭座標裡往哪個方向延伸（度，0 = 往右、90 = 往下）：決定重力、慣性從哪個方向推</summary>
     public double Axis { get; set; } = 90;
+}
+
+/// <summary>rig.json 的 face（分層臉）：圖層照順序疊；表情決定每層用哪張圖（tools/artgen/faces.py 產生）</summary>
+public sealed class FaceRig
+{
+    /// <summary>所有圖層共用的範圍（頭部座標）</summary>
+    public float[] Box { get; set; } = { 0, 0, 1, 1 };
+    public List<FaceLayer> Layers { get; set; } = new();
+    /// <summary>{ 表情: { 圖層: 圖名 } }；沒列的圖層不顯示</summary>
+    public Dictionary<string, Dictionary<string, string>> Expressions { get; set; } = new();
+    /// <summary>{ 表情: { 圖層: 不透明度 } }（腮紅深淺）</summary>
+    public Dictionary<string, Dictionary<string, float>>? Alpha { get; set; }
+    /// <summary>講話時嘴巴管道的值（half、open、a、i、u、e、o）→ 嘴型圖名</summary>
+    public Dictionary<string, string>? Talk { get; set; }
+}
+
+public sealed class FaceLayer
+{
+    public string Name { get; set; } = "";
+    /// <summary>{ 圖名: 檔案（相對角色資料夾）}</summary>
+    public Dictionary<string, string> Variants { get; set; } = new();
+    /// <summary>跟著哪一層換圖（瞳孔、眼線跟著 eyes）：用同名的圖，沒有就不顯示</summary>
+    public string? Follow { get; set; }
+    /// <summary>視線位移範圍 [左, 上, 右, 下]（瞳孔）</summary>
+    public float[]? Move { get; set; }
 }
 
 public sealed class AnchorData

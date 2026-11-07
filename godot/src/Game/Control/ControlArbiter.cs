@@ -1,4 +1,4 @@
-// 誰在控制角色：動作與表情的請求都經過這裡，依優先順序決定誰生效（每個角色一個）
+﻿// 誰在控制角色：動作與表情的請求都經過這裡，依優先順序決定誰生效（每個角色一個）
 //
 // 管道：動作（Action）、整張臉（Face）、眼睛（Eyes）、眉毛（Brows）、嘴巴（Mouth）。
 // 眼、眉、嘴可以同時生效（之後的分層表情）；只有整張臉的角色，Face 和 Mouth 取優先順序高的那個。
@@ -80,16 +80,23 @@ public sealed class ControlArbiter
 
     /// <summary>
     /// 只有整張臉的角色要顯示哪張臉：Face 與 Mouth 取優先順序高的（一樣高時取 Mouth，講話比較明顯）；
-    /// 都沒有請求就回傳 null（用 Behavior 自己的表情）
+    /// 嘴型換成整張臉（張嘴 = surprised、閉嘴 = happy）。都沒有請求就回傳 null（用 Behavior 自己的表情）
     /// </summary>
     public string? WholeFace()
     {
         var face = Top(Channel.Face);
         var mouth = Top(Channel.Mouth);
-        if (face == null) return mouth?.Value;
-        if (mouth == null) return face.Value;
-        return mouth.Priority >= face.Priority ? mouth.Value : face.Value;
+        if (mouth != null && (face == null || mouth.Priority >= face.Priority)) return AsWholeFace(mouth.Value);
+        return face?.Value;
     }
+
+    /// <summary>嘴巴管道的值（closed、half、open、母音）→ 只有整張臉時用哪張臉</summary>
+    public static string AsWholeFace(string mouth) => mouth switch
+    {
+        "closed" => "happy",
+        "half" or "open" or "a" or "i" or "u" or "e" or "o" => "surprised",
+        _ => mouth,
+    };
 
     /// <summary>每幀最後呼叫：清掉「只在這一幀有效」的請求</summary>
     public void EndFrame()

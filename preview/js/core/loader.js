@@ -82,8 +82,10 @@ export function applyPackage(id, pkg, folder, rigs) {
       for (const slot of rig.slots.filter(s => s.file?.split("/").pop().replace(/\.[a-z]+$/, "") === name))
         (slot.alt ??= {})[alt] = { file: url(a.image), box: a.box };
   }
-  if (pkg.faces?.images && Object.keys(pkg.faces.images).length)
+  if (pkg.faces?.images && Object.keys(pkg.faces.images).length) {
     rig.defaultFaces = { box: pkg.faces.box, images: Object.fromEntries(Object.entries(pkg.faces.images).map(([k, v]) => [k, url(v)])) };
+    delete rig.face;      // 部件包畫了整張臉：不用範本的分層臉
+  }
   Object.assign(rig.anchors ??= {}, pkg.anchors ?? {});
   Object.assign(rig.propOverrides ??= {}, pkg.propOverrides ?? {});
   if (pkg.headTop?.length === 2) rig.headTop = pkg.headTop;

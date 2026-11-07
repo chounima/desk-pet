@@ -315,7 +315,7 @@ public partial class Main : Node2D
         driver.Update(dt);
         UpdateMainMouth(dt);
         FeaturesAfterBehavior(dt);
-        if (control.WholeFace() is { } face) pet.FaceOverride = face;     // 講話、功能模組的表情請求
+        pet.ApplyControl(control);      // 講話、功能模組的表情請求
         control.EndFrame();
         volley.Tick(dt, DesktopWindow.CursorInWindow());
         pet.Update(dt);

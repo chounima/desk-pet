@@ -22,7 +22,42 @@ public static class Golden
     static string PhysicsPath => $"{ContentLoader.Root}/tests/golden/physics.json";
     const float PhysicsTolerance = 0.05f;
 
-    public static int Run(bool update) => RunPose(update) + RunPhysics(update) + RunCurves(update) + RunOverlay(update) == 0 ? 0 : 1;
+    public static int Run(bool update) => RunPose(update) + RunPhysics(update) + RunCurves(update) + RunOverlay(update) + RunFace(update) == 0 ? 0 : 1;
+
+    // ---------- 分層臉（tests/golden/face.json）：角色＋表情＋眨眼／嘴型／視線 → 每層 [名稱, 檔案, 不透明度, dx, dy] ----------
+
+    static int RunFace(bool update)
+    {
+        var path = ProjectSettings.GlobalizePath($"{ContentLoader.Root}/tests/golden/face.json");
+        var doc = JsonNode.Parse(File.ReadAllText(path))!;
+        var (_, rigs) = ContentLoader.LoadCharacters();
+        var results = doc["cases"]!.AsArray().Select(c =>
+        {
+            var look = c!["look"]?.AsArray();
+            var input = new Game.Face.FaceInput(c["expression"]!.GetValue<string>(), c["blink"]?.GetValue<bool>() ?? false,
+                c["mouth"]?.GetValue<string>(), c["eyes"]?.GetValue<string>(),
+                look?[0]!.GetValue<float>() ?? 0, look?[1]!.GetValue<float>() ?? 0);
+            var layers = Game.Face.FaceDriver.Layers(rigs[c["char"]!.GetValue<string>()].Face!, input);
+            return new JsonArray(layers.Select(l => (JsonNode)new JsonArray(l.Name, l.File, MathF.Round(l.Alpha, 4), MathF.Round(l.Dx, 4), MathF.Round(l.Dy, 4))).ToArray());
+        }).ToList();
+        if (update)
+        {
+            doc["expected"] = new JsonArray(results.Select(r => (JsonNode)r).ToArray());
+            File.WriteAllText(path, doc.ToJsonString(new JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping }) + "\n");
+            GD.Print($"[golden] 分層臉：已更新 {results.Count} 個案例");
+            return 0;
+        }
+        var expected = doc["expected"]!.AsArray();
+        var failures = 0;
+        for (var i = 0; i < results.Count; i++)
+        {
+            var want = expected.Count > i ? expected[i]!.ToJsonString() : "";
+            var got = results[i].ToJsonString();
+            if (want != got && failures++ < 10) GD.Print($"[golden] ✗ 分層臉 {doc["cases"]![i]!.ToJsonString()}：{want} ≠ {got}");
+        }
+        GD.Print(failures == 0 ? $"[golden] 分層臉全部通過（{results.Count} 個案例）" : $"[golden] ✗ 分層臉 {failures} 個不一致");
+        return failures == 0 ? 0 : 1;
+    }
 
     // ---------- 疊加層（tests/golden/overlay.json） ----------
 

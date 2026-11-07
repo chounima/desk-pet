@@ -1,4 +1,4 @@
-// 視線：閒著的時候，頭朝游標微微偏轉、臉往游標那邊移一點（眼睛看起來在盯著游標）
+﻿// 視線：閒著的時候，頭朝游標微微偏轉、臉往游標那邊移一點（眼睛看起來在盯著游標）
 using System.Collections.Generic;
 using DeskPet.Platform;
 using Godot;
@@ -14,7 +14,7 @@ public sealed class Gaze
     const float Follow = 6;           // 轉頭的平滑速度
 
     float head;
-    Vector2 face;
+    Vector2 face, look;
 
     /// <summary>要看的位置（視窗座標）；null = 不看</summary>
     public Vector2? Target { get; set; }
@@ -25,11 +25,14 @@ public sealed class Gaze
     /// <summary>臉部在頭部骨骼座標中的位移</summary>
     public Vector2 FaceOffset => face;
 
+    /// <summary>視線方向 -1～1（右 = 前方、下為正），分層臉的瞳孔用</summary>
+    public Vector2 Look => look;
+
     public void Update(Pet pet, float dt)
     {
         var u = DesktopWindow.UiScale;
         float targetHead = 0;
-        var targetFace = Vector2.Zero;
+        Vector2 targetFace = Vector2.Zero, targetLook = Vector2.Zero;
 
         if (Target is { } t && Lookable.Contains(pet.Action))
         {
@@ -40,13 +43,14 @@ public sealed class Gaze
             {
                 targetHead = Mathf.Clamp(Mathf.RadToDeg(Mathf.Atan2(dy, Mathf.Max(Mathf.Abs(dx), 80 * u))) * 0.4f, -12, 15);
                 var k = -pet.Rig.HeadTop[1] / 110f;     // 頭畫得越小（正常頭身），臉移動越少
-                targetFace = new Vector2(Mathf.Clamp(dx / (300 * u), -1, 1) * 3 * k,
-                                         Mathf.Clamp(dy / (300 * u), -1, 1) * 2.5f * k);
+                targetLook = new Vector2(Mathf.Clamp(dx / (300 * u), -1, 1), Mathf.Clamp(dy / (300 * u), -1, 1));
+                targetFace = new Vector2(targetLook.X * 3 * k, targetLook.Y * 2.5f * k);
             }
         }
 
         var s = Mathf.Min(1, dt * Follow);
         head += (targetHead - head) * s;
         face += (targetFace - face) * s;
+        look += (targetLook - look) * Mathf.Min(1, dt * Follow * 2);      // 眼睛比頭快
     }
 }

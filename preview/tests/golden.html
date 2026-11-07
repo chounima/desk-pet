@@ -21,6 +21,7 @@ import { Skeleton } from "../js/core/skeleton.js";
 import { sampleTrack } from "../js/core/animator.js";
 import { Spring } from "../js/core/spring.js";
 import { overlayDeltas } from "../js/core/overlay.js";
+import { faceLayers } from "../js/game/faceDriver.js";
 import { MOTION } from "../js/config.js";
 
 const POS_TOLERANCE = 0.01, ANGLE_TOLERANCE = 0.01, PHYSICS_TOLERANCE = 0.05;
@@ -119,7 +120,17 @@ try {
     for (const k of new Set([...Object.keys(want), ...Object.keys(got)]))
       if (!(Math.abs((want[k] ?? NaN) - (got[k] ?? NaN)) <= 0.0005) && failures++ < 30) log(`✗ 疊加層 ${c.action} t=${c.time} ${k}：${want[k]} ≠ ${got[k]}`);
   });
-  status.textContent = failures ? `✗ ${failures} 個不一致` : `✓ 全部通過（姿勢 ${doc.cases.length} 個、物理 ${phys.cases.length} 個、曲線 ${curves.samples.length} 個、疊加層 ${ov.cases.length} 個）`;
+  // 分層臉：每層 [名稱, 檔案, 不透明度, dx, dy]
+  const fc = await (await fetch(`${PATHS.art}/../tests/golden/face.json`)).json();
+  fc.cases.forEach((c, i) => {
+    const got = faceLayers(rigs[c.char].face, c), want = fc.expected[i] ?? [];
+    const same = want.length === got.length && got.every((l, j) => {
+      const w = want[j];
+      return w[0] === l.name && w[1] === l.file && [l.alpha, l.dx, l.dy].every((v, k) => Math.abs(v - w[k + 2]) <= 0.0005);
+    });
+    if (!same && failures++ < 30) log(`✗ 分層臉 ${JSON.stringify(c)}：${JSON.stringify(want)} ≠ ${JSON.stringify(got)}`);
+  });
+  status.textContent = failures ? `✗ ${failures} 個不一致` : `✓ 全部通過（姿勢 ${doc.cases.length} 個、物理 ${phys.cases.length} 個、曲線 ${curves.samples.length} 個、疊加層 ${ov.cases.length} 個、分層臉 ${fc.cases.length} 個）`;
   status.className = failures ? "fail" : "pass";
   document.title = failures ? `FAIL ${failures}` : "PASS";
 } catch (e) {

@@ -40,8 +40,21 @@ export class PetView {
       if (slot.far) el.classList.add("far");
       if (slot.variants) {
         this.faceImg = img;
+        this.faceEl = el;
         this.faceVariants = slot.variants;
         preload(Object.values(slot.variants).map(f => rig.base + f));
+        // 分層臉：每個圖層一張圖，疊在表情插槽的位置（顯示哪張由 game/faceDriver.js 決定）
+        if (rig.face) {
+          this.faceLayers = rig.face.layers.map((l, i) => {
+            const layerEl = document.createElementNS(NS, "g");
+            const layerImg = makeImage(rig.base + Object.values(l.variants)[0], rig.face.box);
+            layerEl.append(layerImg);
+            const it = { z: slot.z + (i + 1) * 0.0001, bone: slot.bone, el: layerEl, img: layerImg, file: null, shift: null };
+            items.push(it);
+            return it;
+          });
+          preload(rig.face.layers.flatMap(l => Object.values(l.variants)).map(f => rig.base + f));
+        }
       }
       if (slot.alt) {
         this.altSlots.push({ slot, img, current: null });
@@ -68,6 +81,25 @@ export class PetView {
     this.items = items;
     this.face = "idle";
     this.propsKey = "";
+    if (this.faceLayers) this.showFace();
+  }
+
+  // 有分層臉、而且沒有被自訂表情（整張臉）蓋掉
+  get layered() { return !!this.faceLayers && !this.customFaces?.images; }
+
+  // 分層臉：[{ name, file, alpha, dx, dy }]（game/faceDriver.js 算的，順序和 rig.face.layers 一樣）
+  setFaceLayers(states) {
+    this.faceLayers.forEach((it, i) => {
+      const st = states[i];
+      it.el.style.display = st?.file ? "" : "none";
+      if (!st?.file) return;
+      if (st.file !== it.file) {
+        setImage(it.img, this.rig.base + st.file, this.rig.face.box);
+        it.file = st.file;
+      }
+      it.el.style.opacity = st.alpha;
+      it.shift = st.dx || st.dy ? [1, 0, 0, 1, st.dx, st.dy] : null;
+    });
   }
 
   setFace(name) {
@@ -83,6 +115,9 @@ export class PetView {
   }
 
   showFace() {
+    // 分層臉時整張臉藏起來；自訂表情會換回整張臉
+    this.faceEl.style.display = this.layered ? "none" : "";
+    for (const it of this.faceLayers ?? []) if (!this.layered) it.el.style.display = "none";
     const c = this.customFaces ?? this.rig.defaultFaces;      // 編輯器的自訂表情 > 部件包的表情 > 角色原本的
     if (c?.images && Object.keys(c.images).length) {
       setImage(this.faceImg, c.images[this.face] ?? c.images.idle ?? Object.values(c.images)[0], c.box);
@@ -149,7 +184,8 @@ export class PetView {
   draw(world, x, y, facing, scale) {
     this.g.setAttribute("transform", `translate(${x} ${y}) scale(${facing * scale} ${scale})`);
     for (const it of this.items) {
-      const m = it.offset ? mul(world[it.bone], it.offset) : world[it.bone];
+      let m = it.offset ? mul(world[it.bone], it.offset) : world[it.bone];
+      if (it.shift) m = mul(m, it.shift);
       it.el.setAttribute("transform", `matrix(${m.join(" ")})`);
     }
   }

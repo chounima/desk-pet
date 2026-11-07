@@ -1,5 +1,5 @@
 ﻿# 錄下某角色某動作（桌寵與網頁兩邊），排成比較圖：升級前後對照用
-# 用法：powershell -File tools/record_clip.ps1 -Char sera -Clip walk [-Form quadruped] [-Frames 12] [-Vx 300] [-Out build/record/<名稱>]
+# 用法：powershell -File tools/record_clip.ps1 -Char sera -Clip walk [-Form quadruped] [-Frames 12] [-Vx 300] [-Out build/record/<名稱>] [-Extra "--look=0,0"]
 #   -Vx：前半段以這個速度平移、之後突然停下（看尾巴、披布的物理甩動）
 # 產出：<Out>/godot.png、<Out>/web.png（每張是 N 格的比較圖），<Out>/godot/frame_XX.png
 param(
@@ -8,7 +8,8 @@ param(
     [string]$Form = "",
     [int]$Frames = 12,
     [float]$Vx = 0,
-    [string]$Out = ""
+    [string]$Out = "",
+    [string]$Extra = ""         # 額外傳給桌寵的參數，例如 "--look=0,0"
 )
 $root = Split-Path $PSScriptRoot -Parent
 if (-not $Out) { $Out = Join-Path $root "build\record\$Char$(if ($Form) { "-$Form" })-$Clip" }
@@ -22,6 +23,7 @@ if (-not $godot) { throw "找不到 Godot .NET 版" }
 $frameDir = Join-Path $Out "godot"
 Remove-Item -Recurse -Force $frameDir -ErrorAction SilentlyContinue
 $argList = @("--path", "`"$root\godot`"", "--", "--sandbox", "--mute", "--no-single", "--char=$Char", "--action=$Clip", "--record=`"$frameDir`"", "--record-frames=$Frames")
+if ($Extra) { $argList += $Extra -split " " }
 if ($Form) { $argList += "--form=$Form" }
 if ($Vx) { $argList += "--record-vx=$Vx" }
 $p = Start-Process -FilePath $godot.FullName -ArgumentList $argList -PassThru -WindowStyle Hidden -RedirectStandardOutput (Join-Path $Out "godot.log")

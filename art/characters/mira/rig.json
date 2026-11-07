@@ -436,6 +436,153 @@
       "far": false
     }
   ],
+  "face": {
+    "box": [
+      -27.6,
+      -46.800000000000004,
+      36.800000000000004,
+      -10.0
+    ],
+    "layers": [
+      {
+        "name": "eyes",
+        "variants": {
+          "open": "face_parts/eyes_open.svg",
+          "half": "face_parts/eyes_half.svg",
+          "sharp": "face_parts/eyes_sharp.svg",
+          "wide": "face_parts/eyes_wide.svg",
+          "line": "face_parts/eyes_line.svg",
+          "arc": "face_parts/eyes_arc.svg"
+        }
+      },
+      {
+        "name": "pupils",
+        "variants": {
+          "open": "face_parts/pupils_open.svg",
+          "half": "face_parts/pupils_half.svg",
+          "sharp": "face_parts/pupils_sharp.svg",
+          "wide": "face_parts/pupils_wide.svg"
+        },
+        "follow": "eyes",
+        "move": [
+          -1.01,
+          -1.1,
+          1.01,
+          0.18
+        ]
+      },
+      {
+        "name": "lids",
+        "variants": {
+          "open": "face_parts/lids_open.svg",
+          "half": "face_parts/lids_half.svg",
+          "sharp": "face_parts/lids_sharp.svg",
+          "wide": "face_parts/lids_wide.svg"
+        },
+        "follow": "eyes"
+      },
+      {
+        "name": "blush",
+        "variants": {
+          "on": "face_parts/blush_on.svg"
+        }
+      },
+      {
+        "name": "mouth",
+        "variants": {
+          "flat": "face_parts/mouth_flat.svg",
+          "smile": "face_parts/mouth_smile.svg",
+          "cat": "face_parts/mouth_cat.svg",
+          "open": "face_parts/mouth_open.svg",
+          "o": "face_parts/mouth_o.svg",
+          "pout": "face_parts/mouth_pout.svg",
+          "gasp": "face_parts/mouth_gasp.svg",
+          "va": "face_parts/mouth_va.svg",
+          "vi": "face_parts/mouth_vi.svg",
+          "vu": "face_parts/mouth_vu.svg",
+          "ve": "face_parts/mouth_ve.svg",
+          "vo": "face_parts/mouth_vo.svg"
+        }
+      }
+    ],
+    "expressions": {
+      "idle": {
+        "eyes": "open",
+        "blush": "on",
+        "mouth": "smile"
+      },
+      "blink": {
+        "eyes": "line",
+        "blush": "on",
+        "mouth": "smile"
+      },
+      "happy": {
+        "eyes": "arc",
+        "blush": "on",
+        "mouth": "open"
+      },
+      "sleep": {
+        "eyes": "line",
+        "blush": "on",
+        "mouth": "o"
+      },
+      "surprised": {
+        "eyes": "wide",
+        "blush": "on",
+        "mouth": "gasp"
+      },
+      "focus": {
+        "eyes": "sharp",
+        "blush": "on",
+        "mouth": "flat"
+      },
+      "shy": {
+        "eyes": "arc",
+        "blush": "on",
+        "mouth": "smile"
+      },
+      "angry": {
+        "eyes": "sharp",
+        "blush": "on",
+        "mouth": "pout"
+      }
+    },
+    "alpha": {
+      "idle": {
+        "blush": 0.25
+      },
+      "blink": {
+        "blush": 0.25
+      },
+      "happy": {
+        "blush": 0.7
+      },
+      "sleep": {
+        "blush": 0.4
+      },
+      "surprised": {
+        "blush": 0.3
+      },
+      "focus": {
+        "blush": 0.2
+      },
+      "shy": {
+        "blush": 1.0
+      },
+      "angry": {
+        "blush": 0.6
+      }
+    },
+    "talk": {
+      "half": "o",
+      "open": "gasp",
+      "a": "va",
+      "i": "vi",
+      "u": "vu",
+      "e": "ve",
+      "o": "vo"
+    }
+  },
   "physics": {
     "cape": {
       "stiffness": 140,

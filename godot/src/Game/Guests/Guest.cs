@@ -179,7 +179,7 @@ public sealed class Guest
     bool UpdateMouth(float dt)
     {
         var talking = mouth.Update(dt, Behavior, Control, Speaking && !Muted && !hidden);
-        if (Control.WholeFace() is { } face) Pet.FaceOverride = face;
+        Pet.ApplyControl(Control);
         Control.EndFrame();
         return talking;
     }

@@ -202,7 +202,10 @@ $("world").addEventListener("pointerdown", e => {
   drag = { x: e.clientX, y: e.clientY, moved: false };
   e.target.setPointerCapture(e.pointerId);
 });
+let cursor = null;        // 游標位置（分層臉的瞳孔跟著看）
+addEventListener("pointerleave", () => { cursor = null; });
 addEventListener("pointermove", e => {
+  cursor = { x: e.clientX, y: e.clientY };
   volley.onPointerMove(e.clientX, e.clientY);
   if (!drag) return;
   if (!drag.moved && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 5) {
@@ -258,6 +261,7 @@ function frame(ts) {
   if (frozen) pet.y = world.groundY;
   else behavior.update(dt);
   volley.update(dt);
+  pet.lookAt(cursor, dt);
   pet.update(dt);
   fx.update(dt, pet.animator.fx, pet.headTop());
   panel.setAction(pet.action);

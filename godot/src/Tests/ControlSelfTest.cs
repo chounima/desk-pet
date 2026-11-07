@@ -1,4 +1,4 @@
-// --selftest=control：「誰在控制角色」的優先順序規則（假時鐘，不用開畫面）
+﻿// --selftest=control：「誰在控制角色」的優先順序規則（假時鐘，不用開畫面）
 using System.Collections.Generic;
 using DeskPet.Game.Control;
 using Godot;
@@ -29,14 +29,14 @@ public static class ControlSelfTest
         Check(c.Winner(Channel.Face) == null, "全部過期後沒有表情請求");
 
         // 只在這一幀有效的請求：EndFrame 後清掉；有時間的保留
-        c.Request("talk", Channel.Mouth, "surprised", Priority.Talking);
+        c.Request("talk", Channel.Mouth, "open", Priority.Talking);
         c.Request("rule", Channel.Face, "happy", Priority.Reaction, 5);
         Check(c.WholeFace() == "surprised", "講話（20）蓋過反應（10）的整張臉");
         c.EndFrame();
         Check(c.Winner(Channel.Mouth) == null, "這一幀的嘴型要在 EndFrame 清掉");
         Check(c.WholeFace() == "happy", "嘴型清掉後回到反應的臉");
         c.Request("hotkey", Channel.Face, "angry", Priority.Hotkey, 1);
-        c.Request("talk", Channel.Mouth, "surprised", Priority.Talking);
+        c.Request("talk", Channel.Mouth, "open", Priority.Talking);
         Check(c.WholeFace() == "angry", "快捷鍵表情（40）蓋過講話（20）");
         c.Release("hotkey", Channel.Face);
         Check(c.WholeFace() == "surprised", "放開快捷鍵後換回講話");

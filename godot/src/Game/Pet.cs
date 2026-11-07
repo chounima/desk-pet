@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using DeskPet.Content;
 using DeskPet.Core;
+using DeskPet.Game.Face;
 using DeskPet.View;
 using Godot;
 
@@ -118,15 +119,19 @@ public sealed class Pet
         world = skeleton.Compute(pose);
         // 次級物理：用「只有動畫」的姿勢算出偏移，再重算一次骨架（物理骨不參與 Probe）
         if (motion.Active && !MotionDisabled) world = skeleton.Compute(pose, motion.Update(dt, world, X, Y, Scale, Facing));
-        View.SetFace(CurrentFace(dt));
+        var (face, blink) = CurrentFace(dt);
+        if (View.Layered)
+            View.SetFaceLayers(FaceDriver.Layers(Rig.Face!, new FaceInput(face, blink, MouthShape, EyesOverride, Gaze.Look.X, Gaze.Look.Y)));
+        else
+            View.SetFace(blink && face is "idle" or "focus" ? "blink" : face);
         View.SetFaceOffset(Gaze.FaceOffset);
         View.SetProps(Animator.Props);
         View.SetAlt(Animator.Alt);
         View.Render(world, new Vector2(X, Y), Facing, Scale);
     }
 
-    // 優先使用 override，其次是動作指定的表情；睜眼表情會自動眨眼
-    string CurrentFace(float dt)
+    // 優先使用 override，其次是動作指定的表情；另外回傳這一刻是不是在眨眼（整張臉只有 idle、focus 會眨，分層臉睜著眼就會眨）
+    (string face, bool blink) CurrentFace(float dt)
     {
         var face = FaceOverride ?? Animator.Face;
         blinkTimer -= dt;
@@ -135,12 +140,26 @@ public sealed class Pet
             blinkLeft = 0.12f;
             blinkTimer = 2.5f + GD.Randf() * 3;
         }
-        if (blinkLeft > 0)
+        var blink = blinkLeft > 0;
+        if (blink) blinkLeft -= dt;
+        return (face, blink);
+    }
+
+    /// <summary>嘴巴管道（講話：closed、half、open、母音），分層臉換嘴型用</summary>
+    public string? MouthShape;
+    /// <summary>眼睛管道（直接指定眼睛圖）</summary>
+    public string? EyesOverride;
+
+    /// <summary>套用 arbiter 的表情請求（每幀，在 Behavior 之後）：分層臉的眼、嘴分開；只有整張臉的取 Face／Mouth 優先的</summary>
+    public void ApplyControl(Game.Control.ControlArbiter c)
+    {
+        if (View.Layered)
         {
-            blinkLeft -= dt;
-            if (face is "idle" or "focus") return "blink";
+            if (c.Winner(Game.Control.Channel.Face) is { } f) FaceOverride = f;
+            MouthShape = c.Winner(Game.Control.Channel.Mouth);
+            EyesOverride = c.Winner(Game.Control.Channel.Eyes);
         }
-        return face;
+        else if (c.WholeFace() is { } face) FaceOverride = face;
     }
 
     /// <summary>頭頂在畫面上的位置（特效錨點）</summary>

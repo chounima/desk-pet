@@ -6,6 +6,7 @@ import { MOTION } from "../config.js";
 import { apply } from "../core/math.js";
 import { Skeleton } from "../core/skeleton.js";
 import { PetView } from "../view/renderer.js";
+import { faceLayers } from "./faceDriver.js";
 
 export class Pet {
   // clipSets：{ 體型: { 動作名: clip } }，見 loader.loadAnimations
@@ -17,6 +18,8 @@ export class Pet {
     this.y = 0;
     this.facing = 1;              // 1 = 朝右，-1 = 朝左
     this.faceOverride = null;     // 由行為邏輯暫時指定的表情
+    this.mouthShape = null;       // 嘴巴（講話：closed、half、open、母音），分層臉換嘴型
+    this.look = null;             // 視線 [x, y] -1～1，分層臉的瞳孔跟著看
     this.blinkTimer = 2;
     this.blinkLeft = 0;
     this.clipSets = clipSets;
@@ -77,13 +80,15 @@ export class Pet {
     this.world = this.skeleton.compute(pose);
     // 次級物理：用「只有動畫」的姿勢算偏移，再重算一次骨架（物理骨不參與 probe）
     if (this.motion.active) this.world = this.skeleton.compute(pose, this.motion.update(dt, this.world, this.x, this.y, this.scale, this.facing));
-    this.view.setFace(this.currentFace(dt));
+    const { face, blink } = this.currentFace(dt);
+    if (this.view.layered) this.view.setFaceLayers(faceLayers(this.rig.face, { expression: face, blink, mouth: this.mouthShape, look: this.look }));
+    else this.view.setFace(blink && (face === "idle" || face === "focus") ? "blink" : face);
     this.view.setProps(this.animator.props);
     this.view.setAlt(this.animator.alt);
     this.view.draw(this.world, this.x, this.y, this.facing, this.scale);
   }
 
-  // 優先使用 override，其次是動作指定的表情；睜眼表情會自動眨眼
+  // 優先使用 override，其次是動作指定的表情；另外回傳這一刻是不是在眨眼（整張臉只有 idle、focus 會眨，分層臉睜著眼就會眨）
   currentFace(dt) {
     const face = this.faceOverride ?? this.animator.face;
     this.blinkTimer -= dt;
@@ -91,11 +96,9 @@ export class Pet {
       this.blinkLeft = 0.12;
       this.blinkTimer = 2.5 + Math.random() * 3;
     }
-    if (this.blinkLeft > 0) {
-      this.blinkLeft -= dt;
-      if (face === "idle" || face === "focus") return "blink";
-    }
-    return face;
+    const blink = this.blinkLeft > 0;
+    if (blink) this.blinkLeft -= dt;
+    return { face, blink };
   }
 
   // 探測：動作 name 播到 t 秒時，某根骨骼上的點相對腳底的螢幕位移（dx 以面向前方為正）
@@ -112,6 +115,19 @@ export class Pet {
       this.probeCache.set(key, { dx: px * this.scale, dy: py * this.scale });
     }
     return this.probeCache.get(key);
+  }
+
+  // 視線：看著畫面上的點（null = 不看），分層臉的瞳孔慢慢轉過去（和桌寵 Gaze 一樣，離臉 300 px 算看到底）
+  lookAt(point, dt) {
+    let target = [0, 0];
+    if (point) {
+      const [hx, hy] = this.rig.headTop ?? [6, -110];
+      const [px, py] = apply(this.world.head, hx * 0.5, hy * 0.5);
+      const clamp = v => Math.max(-1, Math.min(1, v));
+      target = [clamp((point.x - this.x - px * this.facing * this.scale) * this.facing / 300), clamp((point.y - this.y - py * this.scale) / 300)];
+    }
+    const [lx, ly] = this.look ?? [0, 0], k = Math.min(1, dt * 12);
+    this.look = [lx + (target[0] - lx) * k, ly + (target[1] - ly) * k];
   }
 
   // 頭頂在螢幕上的位置（特效錨點）
