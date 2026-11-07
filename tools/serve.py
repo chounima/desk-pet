@@ -7,6 +7,11 @@
          "faces": { "box": [...], "uploads": { 表情: dataURL } }, "anchors": { 名稱: { bone, x, y, scale } } }
        更新 art_src/<id>/character.json 的範圍、錨點（其他欄位不動），新圖存進 parts/、faces/；
        存檔前用 schemas/character.schema.json 檢查；?import=1 存完接著跑 tools/import_layers.py
+  POST /api/animation  { "name", "target": shared|body|character|form, "body", "char", "form", "clip": {...} }
+       動作編輯器存檔：寫到 data/animations/（共用）、<體型>/、characters/<角色>/、characters/<角色>/forms/<型態>/，
+       並更新對應的清單（index.json、體型的 clips、characters/index.json）；clip 可以是完整動作或 { extends, tracks } 差異
+  POST /api/physics    { "char": "sera" 或 "choupaca@quadruped", "physics": { 骨骼: 參數 } }
+       次級物理參數存到 data/physics.json（蓋過 gen_art 產生的預設值）
 
 用法: python tools/serve.py [port] [--no-open]
 然後開啟 http://localhost:8787/preview/（編輯器：preview/editor.html）
@@ -103,6 +108,98 @@ def save_package(pid: str, body: dict) -> dict:
     return pkg
 
 
+ANIM = ROOT / "data" / "animations"
+
+
+def validate_with(schema_name: str, data) -> list[str]:
+    from jsonschema import Draft202012Validator
+    schema = json.loads((ROOT / "schemas" / f"{schema_name}.schema.json").read_text(encoding="utf-8"))
+    return [f"{'/'.join(map(str, e.path))}：{e.message}" for e in Draft202012Validator(schema).iter_errors(data)]
+
+
+NL = chr(10)
+NL_COMMA = "," + NL
+
+
+def write_json(path: Path, data, compact_tracks: bool = False) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if compact_tracks:
+        # 動作檔：最上層一個欄位一行、每條軌道一行（和手寫的動作檔一樣好讀）
+        one = lambda v: json.dumps(v, ensure_ascii=False, separators=(", ", ": "))
+        rows = []
+        for k, v in data.items():
+            if k == "tracks":
+                tracks = NL_COMMA.join(f"    {one(ch)}: {one(keys)}" for ch, keys in v.items())
+                rows.append('  "tracks": {' + NL + tracks + NL + "  }")
+            else:
+                rows.append(f"  {one(k)}: {one(v)}")
+        text = "{" + NL + NL_COMMA.join(rows) + NL + "}"
+    else:
+        text = json.dumps(data, ensure_ascii=False, indent=2)
+    path.write_text(text + NL, encoding="utf-8")
+
+
+
+def save_animation(body: dict) -> str:
+    name, target, clip = body.get("name", ""), body.get("target"), body.get("clip")
+    if not ID_PATTERN.match(name) or not isinstance(clip, dict):
+        raise ApiError(400, "動作名稱只能用英數字")
+    errors = validate_with("animation", clip)
+    if errors:
+        raise ApiError(400, "格式錯誤：" + "；".join(errors[:5]))
+    if target == "shared":
+        folder = ANIM
+        index_path = ANIM / "index.json"
+        index = json.loads(index_path.read_text(encoding="utf-8"))
+        if name not in index:
+            index.append(name)
+            index_path.write_text(json.dumps(index, ensure_ascii=False) + NL, encoding="utf-8")
+    elif target == "body":
+        b = body.get("body", "")
+        if not ID_PATTERN.match(b) or b == "humanoid":
+            raise ApiError(400, "人形的動作就是共用動作；體型要是 quadruped 這類")
+        folder = ANIM / b
+        index_path = folder / "index.json"
+        index = json.loads(index_path.read_text(encoding="utf-8")) if index_path.exists() else {"clips": [], "alias": {}}
+        if name not in index["clips"]:
+            index["clips"].append(name)
+        index.get("alias", {}).pop(name, None)            # 有自己的版本就不再借用
+        write_json(index_path, index)
+    elif target in ("character", "form"):
+        cid, form = body.get("char", ""), body.get("form") or ""
+        if not ID_PATTERN.match(cid) or (target == "form" and not ID_PATTERN.match(form)):
+            raise ApiError(400, "角色或型態名稱不合法")
+        folder = ANIM / "characters" / cid / ("forms/" + form if target == "form" else "")
+        index_path = ANIM / "characters" / "index.json"
+        index = json.loads(index_path.read_text(encoding="utf-8")) if index_path.exists() else {}
+        entry = index.setdefault(cid, {"clips": []})
+        names = entry.setdefault("forms", {}).setdefault(form, []) if target == "form" else entry.setdefault("clips", [])
+        if name not in names:
+            names.append(name)
+        write_json(index_path, index)
+    else:
+        raise ApiError(400, f"不認識的存檔位置 {target}")
+    path = (folder / f"{name}.json").resolve()
+    if ANIM.resolve() not in path.parents:
+        raise ApiError(400, "路徑不能寫出 data/animations")
+    write_json(path, clip, compact_tracks=True)
+    return path.relative_to(ROOT).as_posix()
+
+
+def save_physics(body: dict) -> str:
+    key, physics = body.get("char", ""), body.get("physics")
+    if not re.match(r"^[A-Za-z0-9_\-]+(@[A-Za-z0-9_\-]+)?$", key) or not isinstance(physics, dict):
+        raise ApiError(400, "角色名稱不合法")
+    errors = validate_with("rig", {"id": "x", "bones": [{"name": "root"}], "slots": [], "physics": physics})
+    if errors:
+        raise ApiError(400, "格式錯誤：" + "；".join(errors[:5]))
+    path = ROOT / "data" / "physics.json"
+    data = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {"_說明": "次級物理參數覆寫：{ 角色 或 角色@型態: { 骨骼: 參數 } }，蓋過 gen_art 產生的預設值（動作編輯器存的）"}
+    data[key] = physics
+    write_json(path, data)
+    return "data/physics.json"
+
+
 def run_import(pid: str) -> tuple[int, str]:
     p = subprocess.run([sys.executable, str(ROOT / "tools" / "import_layers.py"), str(ART_SRC / pid)],
                        capture_output=True, text=True, encoding="utf-8", env={"PYTHONIOENCODING": "utf-8", **__import__("os").environ})
@@ -140,6 +237,16 @@ class NoCacheHandler(SimpleHTTPRequestHandler):
 
     def do_POST(self):
         if not self.local_only():
+            return
+        if self.path in ("/api/animation", "/api/physics"):
+            try:
+                body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
+                saved = save_animation(body) if self.path == "/api/animation" else save_physics(body)
+                self.send_json(200, {"ok": True, "path": saved})
+            except ApiError as e:
+                self.send_json(e.status, {"error": str(e)})
+            except (ValueError, KeyError, TypeError) as e:
+                self.send_json(400, {"error": f"資料格式不對：{e}"})
             return
         m = re.match(r"^/api/package/([^/?]+)(\?.*)?$", self.path)
         if not m:

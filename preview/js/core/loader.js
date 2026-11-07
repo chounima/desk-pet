@@ -25,8 +25,22 @@ export async function loadCharacters() {
       f.data.formName = formName;
     }));
   }));
+  await applyPhysicsOverrides(rigs);
   await loadPackages(ids, rigs);
   return { ids, rigs };
+}
+
+// data/physics.json：{ 角色 或 角色@型態: { 骨骼: 參數 } }，蓋過 gen_art 產生的物理參數（動作編輯器調的；規則同桌寵）
+async function applyPhysicsOverrides(rigs) {
+  const res = await fetch(`${PATHS.data}/physics.json`);
+  if (!res.ok) return;
+  for (const [key, bones] of Object.entries(await res.json())) {
+    if (key.startsWith("_")) continue;
+    const [id, form] = key.split("@");
+    if (!rigs[id]) continue;
+    const target = formRig(rigs[id], form);
+    target.physics = { ...(target.physics ?? {}), ...bones };
+  }
 }
 
 // 美術部件包 art/packages/<id>/character.json（tools/import_layers.py 產生，清單在 index.json）：

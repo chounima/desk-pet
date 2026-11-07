@@ -60,6 +60,7 @@ public static class ContentLoader
                 form.Data.FormName = formName;
             }
         }
+        ApplyPhysicsOverrides(rigs);
         LoadPackages(ids, rigs);
         return (ids, rigs);
     }
@@ -93,6 +94,23 @@ public static class ContentLoader
                 rigs[name] = rig;
             }
             catch (Exception e) { GD.PushWarning($"部件包 {name} 讀取失敗：{e.Message}"); }
+        }
+    }
+
+    /// <summary>data/physics.json：{ 角色 或 角色@型態: { 骨骼: 參數 } }，蓋過 gen_art 產生的物理參數（動作編輯器調的）</summary>
+    static void ApplyPhysicsOverrides(Dictionary<string, RigData> rigs)
+    {
+        var path = $"{Root}/data/physics.json";
+        if (!Godot.FileAccess.FileExists(path)) return;
+        foreach (var (key, value) in System.Text.Json.Nodes.JsonNode.Parse(ReadText(path))!.AsObject())
+        {
+            if (key.StartsWith('_') || value == null) continue;
+            var parts = key.Split('@');
+            if (!rigs.TryGetValue(parts[0], out var rig)) continue;
+            var target = FormRig(rig, parts.Length > 1 ? parts[1] : null);
+            var overrides = value.Deserialize<Dictionary<string, PhysicsParams>>(Options) ?? new();
+            target.Physics ??= new();
+            foreach (var (bone, p) in overrides) target.Physics[bone] = p;
         }
     }
 
