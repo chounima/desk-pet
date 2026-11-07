@@ -75,7 +75,7 @@
       "additionalProperties": {
         "$ref": "#/$defs/anchor"
       },
-      "description": "錨點：配件（hat、eyes、neck、back）、之後的臉部錨點（mouth、eyeL、eyeR…）、名牌"
+      "description": "錨點：配件（hat、eyes、neck、back）、嘴巴（mouth，聲波）、名牌（nameTag）…"
     },
     "bones": {
       "type": "array",
@@ -161,7 +161,86 @@
     },
     "face": {
       "type": "object",
-      "description": "（第 3 階段）分層表情：eyes、pupils、brows、mouth"
+      "description": "分層臉（選配）：圖層照順序疊，表情決定每層用哪張圖；由 Game/Face/FaceDriver.cs、game/faceDriver.js 驅動。沒有就只用表情插槽的整張臉",
+      "required": [
+        "box",
+        "layers",
+        "expressions"
+      ],
+      "properties": {
+        "box": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 4,
+          "maxItems": 4,
+          "description": "所有圖層共用的範圍（頭部座標）"
+        },
+        "layers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "variants"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "eyes、pupils、lids、brows、blush、mouth、extras…"
+              },
+              "variants": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "{ 圖名: 檔案 }"
+              },
+              "follow": {
+                "type": "string",
+                "description": "跟著哪一層換圖（用同名的圖，沒有就不顯示），例如瞳孔跟著 eyes"
+              },
+              "move": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 4,
+                "maxItems": 4,
+                "description": "視線位移範圍 [左, 上, 右, 下]"
+              }
+            }
+          }
+        },
+        "expressions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "description": "{ 表情: { 圖層: 圖名 } }，沒列的圖層不顯示"
+        },
+        "alpha": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          },
+          "description": "{ 表情: { 圖層: 不透明度 } }"
+        },
+        "talk": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "講話時嘴巴管道的值（half、open、a、i、u、e、o）→ 嘴型圖名"
+        }
+      }
     }
   },
   "$defs": {
@@ -179,6 +258,10 @@
         },
         "scale": {
           "type": "number"
+        },
+        "depth": {
+          "type": "number",
+          "description": "轉頭視差的深度：看游標時位移 = 臉的位移 × depth（臉 = 1、前髮 > 1、後髮 < 0；沒有 = 不動）"
         }
       },
       "required": [
@@ -272,6 +355,10 @@
         "mesh": {
           "type": "object",
           "description": "（第 4 階段）網格變形"
+        },
+        "depth": {
+          "type": "number",
+          "description": "轉頭視差的深度：看游標時位移 = 臉的位移 × depth（臉 = 1、前髮 > 1、後髮 < 0；沒有 = 不動）"
         }
       },
       "required": [

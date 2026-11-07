@@ -17,13 +17,15 @@
       "bone": "head",
       "x": 6,
       "y": -108,
-      "scale": 0.72
+      "scale": 0.72,
+      "depth": 1.15
     },
     "eyes": {
       "bone": "head",
       "x": 7.5,
       "y": -80.5,
-      "scale": 0.7
+      "scale": 0.7,
+      "depth": 1
     },
     "mouth": {
       "bone": "head",
@@ -185,7 +187,8 @@
         70,
         24
       ],
-      "far": false
+      "far": false,
+      "depth": -0.4
     },
     {
       "name": "armFar_u",
@@ -347,6 +350,7 @@
       "name": "face",
       "bone": "head",
       "z": 14,
+      "depth": 1,
       "box": [
         -40,
         -110,
@@ -375,7 +379,8 @@
         70,
         24
       ],
-      "far": false
+      "far": false,
+      "depth": 1.15
     },
     {
       "name": "armNear_u",

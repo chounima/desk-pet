@@ -1,4 +1,4 @@
-// 對話泡泡：顯示在頭上，跟著角色移動，幾秒後淡出
+﻿// 對話泡泡：顯示在頭上，跟著角色移動，幾秒後淡出
 using DeskPet.Platform;
 using Godot;
 
@@ -11,8 +11,11 @@ public partial class Bubble : Node2D
     readonly PanelContainer panel;
     readonly Label label;
     readonly Polygon2D tail;
-    float timeLeft;
+    float timeLeft, talkLeft;
     bool muted;
+
+    /// <summary>台詞剛冒出來、角色還在「講」（依字數動嘴一段時間）</summary>
+    public bool Talking => Visible && talkLeft > 0;
 
     /// <summary>角色隱藏中：不顯示任何台詞</summary>
     public bool Muted
@@ -60,6 +63,7 @@ public partial class Bubble : Node2D
         label.Text = text;
         panel.ResetSize();
         timeLeft = seconds;
+        talkLeft = Mathf.Min(seconds - FadeTime, 0.4f + text.Length * 0.09f);
         Modulate = Colors.White;
         Visible = true;
     }
@@ -69,6 +73,7 @@ public partial class Bubble : Node2D
     {
         if (!Visible) return;
         timeLeft -= dt;
+        talkLeft -= dt;
         if (timeLeft <= 0)
         {
             Visible = false;

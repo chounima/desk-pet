@@ -112,6 +112,8 @@ public sealed class AnchorData
     public float X { get; set; }
     public float Y { get; set; }
     public float Scale { get; set; } = 1;
+    /// <summary>轉頭視差的深度（掛在這裡的配件跟著移動，見 SlotData.Depth）</summary>
+    public float Depth { get; set; }
 }
 
 /// <summary>art/accessories/accessories.json</summary>
@@ -172,6 +174,8 @@ public sealed class SlotData
     public string? File { get; set; }
     public float[] Box { get; set; } = { 0, 0, 1, 1 };
     public bool Far { get; set; }
+    /// <summary>轉頭視差的深度：看游標時位移 = 臉的位移 × Depth（臉 = 1、前髮 &gt; 1、後髮 &lt; 0）；沒寫時表情插槽算 1，其他不動</summary>
+    public float? Depth { get; set; }
     /// <summary>表情插槽：{ 表情名: 檔案 }</summary>
     public Dictionary<string, string>? Variants { get; set; }
     /// <summary>部件替換圖：{ 替換名: { file, box } }</summary>

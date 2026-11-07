@@ -15,6 +15,8 @@ public partial class Main
     /// <summary>在 driver.Update 之後、pet.Update 之前呼叫</summary>
     void UpdateMainMouth(float dt)
     {
-        mainTalking = mainMouth.Update(dt, driver, control, voice.Speaking && !performing && !presence.Hidden);
+        // 講話（麥克風、Discord）動嘴並出聲波；冒台詞泡泡時只動嘴
+        var speaking = voice.Speaking && !performing && !presence.Hidden;
+        mainTalking = mainMouth.Update(dt, driver, control, speaking || bubble.Talking) && speaking;
     }
 }

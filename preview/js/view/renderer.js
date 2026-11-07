@@ -49,7 +49,7 @@ export class PetView {
             const layerEl = document.createElementNS(NS, "g");
             const layerImg = makeImage(rig.base + Object.values(l.variants)[0], rig.face.box);
             layerEl.append(layerImg);
-            const it = { z: slot.z + (i + 1) * 0.0001, bone: slot.bone, el: layerEl, img: layerImg, file: null, shift: null };
+            const it = { z: slot.z + (i + 1) * 0.0001, bone: slot.bone, el: layerEl, img: layerImg, file: null, shift: null, depth: slot.depth ?? 1 };
             items.push(it);
             return it;
           });
@@ -60,7 +60,8 @@ export class PetView {
         this.altSlots.push({ slot, img, current: null });
         preload(Object.values(slot.alt).map(a => rig.base + a.file));
       }
-      items.push({ z: slot.z, bone: slot.bone, el, slot, img });
+      // depth：轉頭視差，位移 = 臉的位移 × depth（沒寫時表情插槽算 1）
+      items.push({ z: slot.z, bone: slot.bone, el, slot, img, depth: slot.depth ?? (slot.variants ? 1 : 0) });
     }
 
     // 道具以 Q 版身材設計，依角色腿長等比放大
@@ -98,7 +99,7 @@ export class PetView {
         it.file = st.file;
       }
       it.el.style.opacity = st.alpha;
-      it.shift = st.dx || st.dy ? [1, 0, 0, 1, st.dx, st.dy] : null;
+      it.shift = st.dx || st.dy ? [st.dx, st.dy] : null;
     });
   }
 
@@ -148,7 +149,7 @@ export class PetView {
       if (!a) continue;                      // 這個角色沒有這個錨點
       const el = document.createElementNS(NS, "g");
       el.append(makeImage(acc.url, acc.box));
-      const it = { z: acc.z, bone: a.bone, el, accessory: true, offset: [a.scale, 0, 0, a.scale, a.x, a.y] };
+      const it = { z: acc.z, bone: a.bone, el, accessory: true, offset: [a.scale, 0, 0, a.scale, a.x, a.y], depth: a.depth ?? 0 };
       this.accItems.push(it);
       this.items.push(it);
     }
@@ -181,11 +182,18 @@ export class PetView {
     this.propsKey = key;
   }
 
+  // 臉部在頭部骨骼座標中的位移（看游標）；其他頭部圖層依 depth 跟著移
+  setFaceOffset(offset) { this.faceOffset = offset; }
+
   draw(world, x, y, facing, scale) {
+    const [fx, fy] = this.faceOffset ?? [0, 0];
     this.g.setAttribute("transform", `translate(${x} ${y}) scale(${facing * scale} ${scale})`);
     for (const it of this.items) {
       let m = it.offset ? mul(world[it.bone], it.offset) : world[it.bone];
-      if (it.shift) m = mul(m, it.shift);
+      if ((it.depth && (fx || fy)) || it.shift) {
+        const [sx, sy] = it.shift ?? [0, 0];
+        m = mul(m, [1, 0, 0, 1, fx * (it.depth ?? 0) + sx, fy * (it.depth ?? 0) + sy]);
+      }
       it.el.setAttribute("transform", `matrix(${m.join(" ")})`);
     }
   }

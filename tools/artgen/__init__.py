@@ -45,7 +45,7 @@ def hair_chains(src, out: Path) -> tuple[list, list, dict]:
             _write(out / "parts" / f"{bone}.svg", part.to_svg())
             bones.append((bone, parent, x, y))
             slots.append({"name": bone, "bone": bone, "z": round(spec.get("z", 1.05) + i * 0.001, 3),
-                          "file": f"parts/{bone}.svg", "box": part.box, "far": False})
+                          "file": f"parts/{bone}.svg", "box": part.box, "far": False, "depth": spec.get("depth", rig.DEPTH["hair_back"])})
             physics[bone] = {**HAIR_PHYSICS, "length": length, **spec.get("physics", {})}
             parent, (x, y) = bone, (0, length)
     return bones, slots, physics
@@ -93,6 +93,8 @@ def build_character(char, out: Path, form=None) -> dict:
             continue
         entry = {"name": slot, "bone": bone, "z": z, "file": f"parts/{art}.svg",
                  "box": parts[art].box, "far": far}
+        if slot in rig.DEPTH:
+            entry["depth"] = rig.DEPTH[slot]
         if art in alts:
             entry["alt"] = alts[art]
         slots.append(entry)
@@ -100,7 +102,7 @@ def build_character(char, out: Path, form=None) -> dict:
     slots += chain_slots
     face_name, face_bone, face_z = rig.FACE_SLOT
     slots.append({
-        "name": face_name, "bone": face_bone, "z": face_z,
+        "name": face_name, "bone": face_bone, "z": face_z, "depth": rig.DEPTH["face"],
         "box": src.FACES["idle"].box,
         "variants": {e: f"faces/{e}.svg" for e in rig.EXPRESSIONS if e in src.FACES},
     })
@@ -116,7 +118,8 @@ def build_character(char, out: Path, form=None) -> dict:
         # 個別道具的位置／大小修正（Q 版單位）：{ 道具: { dx, dy, scale } }，例如高個子抱吉他要低一點
         "propOverrides": getattr(src, "PROP_OVERRIDES", {}),
         # 配件錨點：預設依頭部大小計算，角色可用 ANCHORS 覆寫（例如四足、頭型特殊）
-        "anchors": {name: {"bone": b, "x": round(x, 1), "y": round(y, 1), "scale": round(sc, 3)}
+        "anchors": {name: {"bone": b, "x": round(x, 1), "y": round(y, 1), "scale": round(sc, 3),
+                           **({"depth": rig.ANCHOR_DEPTH[name]} if name in rig.ANCHOR_DEPTH else {})}
                     for name, (b, x, y, sc) in {**rig.default_anchors(prop, getattr(src, "HEAD_TRANSFORM", (1, 0))),
                                                 **getattr(src, "ANCHORS", {})}.items()},
         "bones": [{"name": n, "parent": p, "x": x, "y": y} for n, p, x, y in rig.bones(prop) + chain_bones],

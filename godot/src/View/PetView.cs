@@ -26,6 +26,7 @@ public partial class PetView : Node2D
         public string? HitName;           // 配件被點到時算哪個部位（掛在哪根骨骼）
         public string? FaceFile;          // 分層臉的圖層：目前顯示的檔案
         public Vector2 FaceShift;         // 分層臉的圖層：這一刻的位移（瞳孔看游標）
+        public float Depth;               // 轉頭視差：位移 = 臉的位移 × Depth
     }
 
     readonly RigData rig;
@@ -51,6 +52,7 @@ public partial class PetView : Node2D
             var file = slot.Variants != null ? slot.Variants["idle"] : slot.File!;
             var item = MakeItem(rig.Resolve(file), slot.Box, slot.Bone, null);
             item.Slot = slot;
+            item.Depth = slot.Depth ?? (slot.Variants != null ? 1 : 0);
             if (slot.Far) item.Sprite.Modulate = FarTint;
             if (slot.Variants != null) faceItem = item;
             item.Z = slot.Z;
@@ -64,6 +66,7 @@ public partial class PetView : Node2D
                     var first = layered.Layers[i].Variants.Values.First();
                     var layer = MakeItem(rig.Resolve(first), layered.Box, slot.Bone, null);
                     layer.Slot = slot;
+                    layer.Depth = item.Depth;
                     layer.FaceFile = first;
                     layer.Z = slot.Z + (i + 1) * 0.0001f;
                     faceLayers.Add(layer);
@@ -142,7 +145,7 @@ public partial class PetView : Node2D
 
     Vector2 faceOffset;
 
-    /// <summary>臉部在頭部骨骼座標中的位移（視線用）</summary>
+    /// <summary>臉部在頭部骨骼座標中的位移（視線用）；其他頭部圖層依 Depth 跟著移（轉頭視差）</summary>
     public void SetFaceOffset(Vector2 offset) => faceOffset = offset;
 
     /// <summary>配件：掛在角色的錨點上，依錨點的 scale 縮放；換一組就重建</summary>
@@ -159,6 +162,7 @@ public partial class PetView : Node2D
             var offset = new Transform2D(new Vector2(a.Scale, 0), new Vector2(0, a.Scale), new Vector2(a.X, a.Y));
             var item = MakeItem(acc.Path, acc.Box, a.Bone, offset);
             item.Z = acc.Z;
+            item.Depth = a.Depth;
             item.Accessory = true;
             item.HitName = a.Bone;
             AddChild(item.Sprite);
@@ -225,8 +229,7 @@ public partial class PetView : Node2D
             if (!item.Sprite.Visible) continue;
             var m = world[item.Bone];
             if (item.Offset is { } offset) m *= offset;
-            if (item == faceItem) m *= new Transform2D(0, faceOffset);
-            else if (item.FaceFile != null) m *= new Transform2D(0, faceOffset + item.FaceShift);
+            if (item.Depth != 0 || item.FaceFile != null) m *= new Transform2D(0, faceOffset * item.Depth + item.FaceShift);
             // 貼圖像素 → 部件座標：縮小 res 倍，再移到部件範圍的左上角
             item.Sprite.Transform = m * new Transform2D(new Vector2(1 / res, 0), new Vector2(0, 1 / res),
                                                         new Vector2(item.Box[0], item.Box[1]));

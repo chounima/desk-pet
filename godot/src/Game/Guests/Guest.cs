@@ -178,7 +178,9 @@ public sealed class Guest
     // 講話中：動嘴（嘴型經過仲裁），回傳這一幀有沒有在動嘴
     bool UpdateMouth(float dt)
     {
-        var talking = mouth.Update(dt, Behavior, Control, Speaking && !Muted && !hidden);
+        // 講話動嘴並出聲波；冒台詞泡泡時只動嘴
+        var speaking = Speaking && !Muted && !hidden;
+        var talking = mouth.Update(dt, Behavior, Control, speaking || attach.Bubble.Talking) && speaking;
         Pet.ApplyControl(Control);
         Control.EndFrame();
         return talking;

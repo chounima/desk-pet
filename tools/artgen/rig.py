@@ -147,6 +147,11 @@ SLOTS = [
 
 FACE_SLOT = ("face", "head", 14)
 
+# 轉頭視差：看游標時臉往那邊移一點，各圖層依深度移不同量（臉 = 1；前髮在臉前面多移一點、後髮往反方向）
+DEPTH = {"hair_back": -0.4, "face": 1, "hair_front": 1.15}
+# 配件錨點的深度（眼鏡跟著臉、帽子跟著前髮）
+ANCHOR_DEPTH = {"eyes": 1, "hat": 1.15}
+
 
 def default_anchors(p, head=(1, 0)) -> dict:
     """配件錨點 {名稱: (骨骼, x, y, 縮放)}。

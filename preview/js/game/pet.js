@@ -128,6 +128,9 @@ export class Pet {
     }
     const [lx, ly] = this.look ?? [0, 0], k = Math.min(1, dt * 12);
     this.look = [lx + (target[0] - lx) * k, ly + (target[1] - ly) * k];
+    // 臉往視線方向移一點（頭畫得越小移越少），頭部圖層依 depth 跟著移：轉頭視差
+    const h = -(this.rig.headTop ?? [6, -110])[1] / 110;
+    this.view.setFaceOffset([this.look[0] * 3 * h, this.look[1] * 2.5 * h]);
   }
 
   // 頭頂在螢幕上的位置（特效錨點）
