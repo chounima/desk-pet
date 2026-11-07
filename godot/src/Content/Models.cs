@@ -34,8 +34,10 @@ public sealed class RigData
     public Dictionary<string, PhysicsParams>? Physics { get; set; }
     /// <summary>分層臉（選配）：眼眶、瞳孔、眼線、腮紅、嘴…分開，由 Game/FaceDriver 決定每層顯示什麼；沒有就只用整張臉</summary>
     public FaceRig? Face { get; set; }
-    /// <summary>（第 6 階段）其他視角（bust = 正面半身）與半身取景</summary>
-    public Dictionary<string, JsonElement>? Views { get; set; }
+    /// <summary>其他視角（正面、背面…）：{ 名稱: 視角 }，調角度時選最接近的（見 ContentLoader.ViewFor）</summary>
+    public Dictionary<string, ViewData>? Views { get; set; }
+    /// <summary>這份資料是哪個視角（視角資料夾裡的才有）</summary>
+    public string? View { get; set; }
     public JsonElement? Bust { get; set; }
     /// <summary>還不認得的欄位：讀進來保留，工具重寫檔案時不會弄丟（之後版本的欄位、AI 部件包先放的資料）</summary>
     [JsonExtensionData] public Dictionary<string, JsonElement>? Extra { get; set; }
@@ -138,6 +140,16 @@ public sealed class FormData
 {
     public string Label { get; set; } = "";
     /// <summary>型態資料夾（相對角色資料夾），空字串 = 預設型態本身</summary>
+    public string Rig { get; set; } = "";
+    [JsonIgnore] public RigData Data { get; set; } = null!;
+}
+
+public sealed class ViewData
+{
+    public string Label { get; set; } = "";
+    /// <summary>面向角度：0 正面、90 側面朝右、180 背面（270 左側由程式鏡像側面）</summary>
+    public float Yaw { get; set; }
+    /// <summary>視角資料夾（相對角色資料夾），空字串 = 這份 rig.json 本身</summary>
     public string Rig { get; set; } = "";
     [JsonIgnore] public RigData Data { get; set; } = null!;
 }

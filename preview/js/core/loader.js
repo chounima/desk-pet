@@ -24,12 +24,21 @@ export async function loadCharacters() {
       f.data.animSource = id;
       f.data.formName = formName;
     }));
+    // 其他視角（正面、背面…）：rig.views[名稱].data 是那個視角的骨架資料
+    await Promise.all(Object.values(rig.views ?? {}).map(async v => {
+      if (!v.rig) { v.data = rig; return; }
+      v.data = await getJSON(`${base}${v.rig}rig.json`);
+      v.data.base = `${base}${v.rig}`;
+      v.data.animSource = id;
+      v.data.id = id;
+    }));
   }));
   await applyPhysicsOverrides(rigs);
   await loadPackages(ids, rigs);
   // data/face.json 的表情調整（部件包之後：部件包畫了整張臉時就沒有分層臉）
   for (const [id, rig] of Object.entries(rigs))
-    for (const r of new Set([rig, ...Object.values(rig.forms ?? {}).map(f => f.data)])) applyFaceOverrides(r, id);
+    for (const r of new Set([rig, ...Object.values(rig.forms ?? {}).map(f => f.data), ...Object.values(rig.views ?? {}).map(v => v.data)]))
+      applyFaceOverrides(r, id);
   return { ids, rigs };
 }
 
@@ -74,7 +83,22 @@ async function loadPackages(ids, rigs) {
   for (const name of await res.json()) {
     try {
       const folder = `${PATHS.art}/packages/${name}/`;
-      const rig = applyPackage(name, await getJSON(`${folder}character.json`), folder, rigs);
+      const pkg = await getJSON(`${folder}character.json`);
+      const rig = applyPackage(name, pkg, folder, rigs);
+      // 其他視角：部件包有 views/<視角>/character.json 就換那個視角的圖，沒有就沿用範本的（測試圖）
+      const template = formRig(rigs[pkg.base || name], pkg.form);
+      if (template.views) {
+        rig.views = {};
+        for (const [v, view] of Object.entries(template.views)) {
+          let data = view.rig ? view.data : rig;
+          if (view.rig) {
+            const vfolder = `${folder}views/${v}/`;
+            const res2 = await fetch(`${vfolder}character.json`);
+            if (res2.ok) data = applyPackage(name, await res2.json(), vfolder, rigs, view.data);
+          }
+          rig.views[v] = { ...view, data };
+        }
+      }
       if (!rigs[name]) ids.push(name);
       rigs[name] = rig;
     } catch (e) {
@@ -83,13 +107,14 @@ async function loadPackages(ids, rigs) {
   }
 }
 
-export function applyPackage(id, pkg, folder, rigs) {
+// viewTemplate：套到某個視角的骨架上（部件包的 views/<視角>/）
+export function applyPackage(id, pkg, folder, rigs, viewTemplate = null) {
   const baseId = pkg.base || id;
   const baseRig = rigs[baseId];
   if (!baseRig) throw new Error(`找不到範本角色 ${baseId}`);
-  const template = formRig(baseRig, pkg.form);
-  const { forms, ...rest } = template;
-  const rig = JSON.parse(JSON.stringify(rest));          // 複製範本（不含型態，型態的 data 會指回自己）
+  const template = viewTemplate ?? formRig(baseRig, pkg.form);
+  const { forms, views, ...rest } = template;
+  const rig = JSON.parse(JSON.stringify(rest));          // 複製範本（不含型態、視角，它們的 data 會指回自己）
   rig.base = template.base;
   rig.id = id;
   rig.animSource = template.animSource ?? template.id;     // 動作沿用範本角色的（含專屬動作）
@@ -120,6 +145,21 @@ export function applyPackage(id, pkg, folder, rigs) {
 
 // 取得角色某個型態的骨架；沒有這個型態就用預設的
 export const formRig = (rig, form) => rig.forms?.[form]?.data ?? rig;
+
+// 依面向角度（0 正面、90 側面朝右、180 背面、270 左側）選最接近的視角（和桌寵 ContentLoader.ViewFor 一樣）：
+// { rig, facing（1／-1，左側 = 側面鏡像）, bias（-1～1，角度和視角差多少，臉往那邊偏）, viewYaw }
+export function viewFor(rig, yaw) {
+  yaw = ((yaw % 360) + 360) % 360;
+  const diff = (a, b) => ((b - a + 540) % 360) - 180;
+  const options = [];
+  for (const v of Object.values(rig.views ?? {})) {
+    options.push({ rig: v.data, yaw: v.yaw, facing: 1 });
+    if (v.yaw > 0 && v.yaw < 180) options.push({ rig: v.data, yaw: 360 - v.yaw, facing: -1 });      // 鏡像（側面 → 左側）
+  }
+  if (!options.length) return { rig, facing: yaw > 180 ? -1 : 1, bias: 0, viewYaw: yaw > 180 ? 270 : 90 };
+  const best = options.reduce((a, b) => (Math.abs(diff(b.yaw, yaw)) < Math.abs(diff(a.yaw, yaw)) ? b : a));
+  return { rig: best.rig, facing: best.facing, bias: Math.max(-1, Math.min(1, diff(best.yaw, yaw) / 45)) * best.facing, viewYaw: best.yaw };
+}
 
 const bodyOf = rig => rig.body ?? "humanoid";
 

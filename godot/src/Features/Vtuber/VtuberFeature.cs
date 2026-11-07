@@ -5,7 +5,7 @@
 // - 聲音：MicCapture → VoiceAnalyzer → VoiceCalibration（自動校正）→ VoiceRules（data/vtuber.json）
 // - 快捷鍵：Ctrl+Alt+數字（data/vtuber.json 的 hotkeys），優先於聲音規則
 // - 拖曳換位置、滾輪縮放、右鍵開設定分頁
-// 測試：--vtuber 直接開；--vtuber-hide-pet 藏桌面角色；--vtuber-shot-full 截整個畫面；--vtuber-voice=quiet:2,talk:3,loud:0.2,high:1 用假的聲音（不開麥克風）；--vtuber-shot=檔名.png 幾秒後截圖並結束
+// 測試：--vtuber 直接開；--vtuber-char=tk01 角色；--vtuber-yaw=0 角度；--vtuber-hide-pet 藏桌面角色；--vtuber-shot-full 截整個畫面；--vtuber-voice=quiet:2,talk:3,loud:0.2,high:1 用假的聲音（不開麥克風）；--vtuber-shot=檔名.png 幾秒後截圖並結束
 using System.Collections.Generic;
 using System.Linq;
 using DeskPet.Content;
@@ -44,6 +44,9 @@ public sealed class VtuberFeature : IFeature
     Vector2? dragOffset;
     Vector2 dragStart;
     bool dragMoved, hidden;
+    RigData baseRig = null!;        // 半身角色（側面的 rig.json；其他視角在 baseRig.Views）
+    float yaw, viewYaw = float.NaN;     // 這一刻的面向角度、目前用的視角的角度
+    int facing = 1;
     string? shotPath;
     float shotLeft;
 
@@ -82,6 +85,8 @@ public sealed class VtuberFeature : IFeature
             shotLeft = float.Parse(host.Args.GetValueOrDefault("vtuber-shot-at", "3"), System.Globalization.CultureInfo.InvariantCulture);
         }
         if (host.Args.ContainsKey("vtuber-hide-pet")) Settings.HideDesktopPet = true;      // 測試用（--sandbox 不存設定）
+        if (host.Args.TryGetValue("vtuber-char", out var charArg)) Settings.Character = charArg;
+        if (host.Args.TryGetValue("vtuber-yaw", out var yawArg)) Settings.ViewYaw = float.Parse(yawArg, System.Globalization.CultureInfo.InvariantCulture);
         // --sandbox（測試）不依設定自動開，只認 --vtuber
         if (host.Args.ContainsKey("vtuber") || (Settings.Enabled && !host.Sandbox)) Start();
     }
@@ -99,7 +104,11 @@ public sealed class VtuberFeature : IFeature
     {
         Stop();
         var id = host.Rigs.ContainsKey(Settings.Character) ? Settings.Character : host.Pet.Rig.Id;
-        pet = new Pet(stage, host.RigOf(id), host.Clips, host.Props, 1);
+        baseRig = host.RigOf(id);
+        yaw = Settings.ViewYaw;
+        var view = ContentLoader.ViewFor(baseRig, yaw);
+        (facing, viewYaw) = (view.facing, view.viewYaw);
+        pet = new Pet(stage, view.rig, host.Clips, host.Props, 1);
         control = new ControlArbiter(a => driver?.TryStart(a) == true, Now);
         attach = new PetAttachments(stage, pet);
         pet.Gaze.Range = 100000;        // 螢幕上哪裡都看得到
@@ -166,8 +175,8 @@ public sealed class VtuberFeature : IFeature
         var area = host.Area();
         var pos = Settings.X >= 0 ? new Vector2(Settings.X, Settings.Y) : new Vector2(area.End.X - w - 24 * u, area.End.Y - h);
         stage.Position = new Vector2(Mathf.Clamp(pos.X, area.Position.X, area.End.X - w), Mathf.Clamp(pos.Y, area.Position.Y, area.End.Y - h));
-        pet.Facing = 1;
-        var x = w / 2 - top.X * s;
+        pet.Facing = facing;
+        var x = w / 2 - top.X * s * facing;
         var y = cfg.Bust.Margin * span * s - top.Y * s;
         driver = new StillDriver(pet, x, y, pet.Action ?? "idle");
         pet.ResetPhysics();
@@ -179,6 +188,44 @@ public sealed class VtuberFeature : IFeature
         var hide = host.Presence.ManualHidden || (hidden && !Settings.ShowOnFullscreen);
         stage.Visible = Active && !hide;
         host.HidePet(Id, Active && Settings.HideDesktopPet);
+    }
+
+    /// <summary>設定面向角度（Hub 的角度按鈕、拉桿）</summary>
+    public void SetViewYaw(float value)
+    {
+        Settings.ViewYaw = Mathf.PosMod(value, 360);
+        SaveSoon();
+    }
+
+    public void SetAutoTurn(bool on)
+    {
+        Settings.AutoTurn = on;
+        SaveSoon();
+    }
+
+    // 角度：設定的角度（＋跟著游標轉身）→ 最接近的視角；跨過兩個視角的中間多 8° 才換（不會在邊界來回閃）
+    void UpdateView(float dt)
+    {
+        var target = Settings.ViewYaw;
+        if (Settings.AutoTurn)
+        {
+            var area = host.Area();
+            var cursor = DesktopWindow.CursorInWindow();
+            var center = stage.Position.X + stage.Size.X / 2;
+            var side = Mathf.Clamp((cursor.X - center) / (area.Size.X / 2), -1, 1);      // 游標在右邊 = 正
+            // 正面時往右轉 = 角度變大（往側面朝右）；背面時相反
+            target += side * Settings.TurnRange * (Mathf.Cos(Mathf.DegToRad(Settings.ViewYaw)) >= 0 ? 1 : -1);
+        }
+        yaw = Mathf.RadToDeg(Mathf.LerpAngle(Mathf.DegToRad(yaw), Mathf.DegToRad(target), Mathf.Min(1, dt * 4)));
+        var view = ContentLoader.ViewFor(baseRig, yaw);
+        var far = Mathf.Abs(Mathf.RadToDeg(Mathf.AngleDifference(Mathf.DegToRad(viewYaw), Mathf.DegToRad(yaw))));
+        if ((view.rig != pet!.Rig || view.facing != facing) && (float.IsNaN(viewYaw) || far > 53))
+        {
+            (facing, viewYaw) = (view.facing, view.viewYaw);
+            pet.SetCharacter(view.rig);
+            Layout();
+        }
+        pet.Gaze.Bias = new Vector2(view.rig == pet.Rig ? view.bias : 0, 0);
     }
 
     public void SetHideDesktopPet(bool on)
@@ -217,6 +264,7 @@ public sealed class VtuberFeature : IFeature
             control.Request("voice", Channel.Mouth, rules.MouthShape(Frame, cal), Priority.Talking);
         }
 
+        UpdateView(dt);                  // 換視角時會重新取景（驅動者也換新的）
         driver.Update(dt);
         pet.ApplyControl(control);
         control.EndFrame();
@@ -309,7 +357,7 @@ public sealed class VtuberFeature : IFeature
     public void OnDisplayChanged() => Layout();
 
     public string? DumpInfo() => Active
-        ? $"mic={MicStatus} db={Frame.Db:0.0} speaking={Frame.Speaking} pitch={Frame.Pitch:0} vowel={Frame.Vowel ?? "-"} floor={cal.Floor:0.0} base={cal.BasePitch:0} rule={rules.LastFired ?? "-"} face={pet!.FaceOverride ?? pet.Animator.Face} mouth={pet.MouthShape ?? "-"} action={pet.Action}"
+        ? $"view={pet!.Rig.View ?? "side"} parts={pet.Rig.DefaultOutfit?.Count ?? 0}{(facing < 0 ? "(左)" : "")} yaw={yaw:0} mic={MicStatus} db={Frame.Db:0.0} speaking={Frame.Speaking} pitch={Frame.Pitch:0} vowel={Frame.Vowel ?? "-"} floor={cal.Floor:0.0} base={cal.BasePitch:0} rule={rules.LastFired ?? "-"} face={pet!.FaceOverride ?? pet.Animator.Face} mouth={pet.MouthShape ?? "-"} action={pet.Action}"
         : null;
 
     public void Shutdown()

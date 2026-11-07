@@ -2,7 +2,7 @@
 // 和桌寵的半身模式（Features/Vtuber）用同一套聲音分析與嘴型規則；聲音觸發的表情規則只在桌寵版。
 // ?char=sera 指定角色；?selftest=1 用合成的「い」測嘴型（tools/web_test.ps1 讀標題）
 import { TUNING } from "./config.js";
-import { formRig, loadAll } from "./core/loader.js";
+import { formRig, loadAll, viewFor } from "./core/loader.js";
 import { Skeleton } from "./core/skeleton.js";
 import { apply } from "./core/math.js";
 import { VoiceAnalyzer, VOICE, synth } from "./core/voice.js";
@@ -20,17 +20,27 @@ for (const id of ids) select.append(Object.assign(document.createElement("option
 select.value = q.get("char") ?? ids[0];
 
 const svg = $("bust");
-let pet = null;
+let pet = null, view = null;
+let yaw = Number(q.get("yaw") ?? 90);        // 面向角度：0 正面、90 側面、180 背面、270 左側
+
+// 依角度選視角（和桌寵一樣：最接近的視角，左側 = 側面鏡像），換了視角才重建
+function applyYaw(target) {
+  const v = viewFor(formRig(rigs[select.value], null), target);
+  if (!pet || v.rig !== view?.rig || v.facing !== view?.facing) { view = v; build(); }
+  pet.lookBias = [v.rig === view.rig ? v.bias : 0, 0];
+}
 
 // 取景：頭頂到腰（hips），最多到脖子往下 1.5 個頭高（和桌寵一樣）
 function build() {
   svg.replaceChildren();
   const layer = document.createElementNS(NS, "g");
   svg.append(layer);
-  const rig = formRig(rigs[select.value], null);
+  view ??= viewFor(formRig(rigs[select.value], null), yaw);
+  const rig = view.rig;
   pet = new Pet({ layer, rig, clipSets: sets, props, scale: 1, crossfade: TUNING.crossfade });
   pet.x = 0;
   pet.y = 0;
+  pet.facing = view.facing;
   const rest = new Skeleton(rig.bones, rig.rootScale ?? 1, rig.trackScale ?? {}).compute({});
   const [hx, hy] = rig.headTop ?? [6, -110];
   const [tx, top0] = apply(rest.head, hx, hy);
@@ -38,9 +48,13 @@ function build() {
   const top = top0 - (neck - top0) * 0.2;            // 頭髮、耳朵比頭頂高一點
   const bottom = Math.min(rest.hips ? rest.hips[5] : Infinity, neck + 1.5 * (neck - top0));
   const span = bottom - top, h = span * (1 + MARGIN), w = h * 0.85;
-  svg.setAttribute("viewBox", `${tx - w / 2} ${top - span * MARGIN} ${w} ${h}`);
+  svg.setAttribute("viewBox", `${tx * view.facing - w / 2} ${top - span * MARGIN} ${w} ${h}`);
 }
-select.onchange = build;
+select.onchange = () => { view = null; build(); };
+const setYaw = v => { yaw = ((Number(v) % 360) + 360) % 360; $("yaw").value = yaw; $("yawText").textContent = `${Math.round(yaw)}°`; };
+$("yaw").oninput = e => setYaw(e.target.value);
+for (const b of document.querySelectorAll("[data-yaw]")) b.onclick = () => setYaw(b.dataset.yaw);
+setYaw(yaw);
 build();
 
 // ---------- 聲音 ----------
@@ -112,6 +126,13 @@ function tick(now) {
   last = now;
   if (testQueue.length) onSamples(testQueue.shift(), 48000);
   else if (!$("mic").disabled) onSamples(new Float32Array(800), 48000);
+  // 跟著游標轉身：游標在左右兩邊時角度往那邊轉（最多 60°）
+  let target = yaw;
+  if ($("turn").checked && cursor) {
+    const vb = svg.viewBox.baseVal, side = Math.max(-1, Math.min(1, (cursor.x - (vb.x + vb.width / 2)) / (vb.width / 2)));
+    target += side * 60 * (Math.cos((yaw * Math.PI) / 180) >= 0 ? 1 : -1);
+  }
+  applyYaw(target);
   pet.faceOverride = face;
   pet.mouthShape = mouthShape();
   pet.lookAt(cursor, dt, 60);          // 角色座標（Q 版單位），離臉 60 單位算看到底

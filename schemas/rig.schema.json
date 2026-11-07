@@ -134,10 +134,26 @@
     },
     "views": {
       "type": "object",
+      "description": "其他視角（選配）：{ 名稱: { label, yaw, rig } }。yaw = 面向角度（0 正面、90 側面朝右、180 背面；270 左側由程式鏡像側面）；rig = 視角資料夾（相對角色資料夾，空字串 = 這份 rig.json 本身）。調角度時選最接近的視角",
       "additionalProperties": {
-        "type": "object"
-      },
-      "description": "（第 6 階段）其他視角，例如 bust（正面半身）"
+        "type": "object",
+        "required": [
+          "yaw"
+        ],
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "yaw": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 360
+          },
+          "rig": {
+            "type": "string"
+          }
+        }
+      }
     },
     "bust": {
       "type": "object",
@@ -241,6 +257,10 @@
           "description": "講話時嘴巴管道的值（half、open、a、i、u、e、o）→ 嘴型圖名"
         }
       }
+    },
+    "view": {
+      "type": "string",
+      "description": "這份 rig.json 是哪個視角（視角資料夾裡的才有）"
     }
   },
   "$defs": {

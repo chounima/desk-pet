@@ -16,7 +16,7 @@
 <pre id="log"></pre>
 <script type="module">
 import { PATHS } from "../js/config.js";
-import { loadCharacters, loadAnimations, formRig } from "../js/core/loader.js";
+import { loadCharacters, loadAnimations, formRig, viewFor } from "../js/core/loader.js";
 import { Skeleton } from "../js/core/skeleton.js";
 import { sampleTrack } from "../js/core/animator.js";
 import { Spring } from "../js/core/spring.js";
@@ -148,7 +148,15 @@ try {
     const same = want.length === got.length && got.every(([x, y], j) => Math.abs(x - want[j][0]) <= 0.01 && Math.abs(y - want[j][1]) <= 0.01);
     if (!same && failures++ < 30) log(`✗ 網格 ${JSON.stringify(c)}：第一個頂點 ${JSON.stringify(want[0])} ≠ ${JSON.stringify(got[0])}`);
   });
-  status.textContent = failures ? `✗ ${failures} 個不一致` : `✓ 全部通過（姿勢 ${doc.cases.length} 個、物理 ${phys.cases.length} 個、曲線 ${curves.samples.length} 個、疊加層 ${ov.cases.length} 個、分層臉 ${fc.cases.length} 個、網格 ${mc.cases.length} 個）`;
+  // 視角：角度 → [視角, 面向, 偏轉]
+  const vc = await (await fetch(`${PATHS.art}/../tests/golden/views.json`)).json();
+  vc.cases.forEach((c, i) => {
+    const v = viewFor(rigs[c.char], c.yaw), want = vc.expected[i] ?? [];
+    const got = [v.rig.view ?? "side", v.facing, Math.round(v.bias * 1000) / 1000];
+    if (!(want[0] === got[0] && want[1] === got[1] && Math.abs(want[2] - got[2]) <= 0.002) && failures++ < 30)
+      log(`✗ 視角 ${JSON.stringify(c)}：${JSON.stringify(want)} ≠ ${JSON.stringify(got)}`);
+  });
+  status.textContent = failures ? `✗ ${failures} 個不一致` : `✓ 全部通過（姿勢 ${doc.cases.length} 個、物理 ${phys.cases.length} 個、曲線 ${curves.samples.length} 個、疊加層 ${ov.cases.length} 個、分層臉 ${fc.cases.length} 個、網格 ${mc.cases.length} 個、視角 ${vc.cases.length} 個）`;
   status.className = failures ? "fail" : "pass";
   document.title = failures ? `FAIL ${failures}` : "PASS";
 } catch (e) {

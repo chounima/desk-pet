@@ -1,7 +1,7 @@
 ﻿# Desk Pet
 
 全身角色的桌面寵物：在工作列上走動、坐下、睡覺，你打字時會拿出筆電一起打。
-角色和動作都可以切換。規劃見 [plan_doc/PLAN.md](plan_doc/PLAN.md)，動畫、美術與半身模式升級見 [plan_doc/UPGRADE_PLAN.md](plan_doc/UPGRADE_PLAN.md)。程式分層與規則見 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)。
+角色和動作都可以切換。規劃見 [plan_doc/PLAN.md](plan_doc/PLAN.md)，動畫、美術與半身模式升級見 [plan_doc/UPGRADE_PLAN.md](plan_doc/UPGRADE_PLAN.md)。程式分層與規則見 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)。自己調表情、角度、聲音反應見 [docs/CUSTOMIZE.md](docs/CUSTOMIZE.md)。
 
 ## 快速開始
 

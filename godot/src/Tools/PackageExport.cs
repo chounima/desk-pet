@@ -2,6 +2,7 @@
 //
 // 當作「假的 AI 產出」走完整條美術流程（匯入 → 檢查 → 綁骨 → 播放），之後換成精細圖只要替換這些 PNG。
 // 圖片解析度 = 部件範圍（Q 版單位）× export-scale；範圍和佔位角色一樣，所以換上去位置完全對得上。
+// 角色有其他視角（正面、背面…）時，也輸出到 views/<視角>/（同樣的格式），換那個視角的圖就改那裡。
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -26,8 +27,15 @@ public static class PackageExport
         var form = parts.Length > 1 ? parts[1] : null;
         var rig = ContentLoader.FormRig(baseRig, form);
         outDir = ProjectSettings.GlobalizePath(outDir);
+        Export(rig, outDir, scale, parts[0], form, null);
+        foreach (var (name, view) in rig.Views ?? new())
+            if (view.Rig != "") Export(view.Data, Path.Combine(outDir, "views", name), scale, parts[0], form, name);
+        return 0;
+    }
+
+    static void Export(RigData rig, string outDir, float scale, string baseId, string? form, string? view)
+    {
         Directory.CreateDirectory(Path.Combine(outDir, "parts"));
-        Directory.CreateDirectory(Path.Combine(outDir, "faces"));
 
         var partsJson = new JsonObject();
         foreach (var slot in rig.Slots.Where(s => s.File != null && s.Variants == null))
@@ -49,29 +57,31 @@ public static class PackageExport
             partsJson[name] = part;
         }
 
-        var faceSlot = rig.Slots.First(s => s.Variants != null);
-        var faces = new JsonObject();
-        foreach (var (expr, file) in faceSlot.Variants!)
-        {
-            Save(rig.Resolve(file), Path.Combine(outDir, "faces", $"{expr}.png"), scale);
-            faces[expr] = $"faces/{expr}.png";
-        }
-
         var doc = new JsonObject
         {
             ["version"] = 1,
             ["name"] = rig.Name,
             ["description"] = rig.Description,
-            ["base"] = parts[0],
+            ["base"] = baseId,
             ["parts"] = partsJson,
-            ["faces"] = new JsonObject { ["box"] = Box(faceSlot.Box), ["images"] = faces },
-            ["source"] = new JsonObject { ["method"] = "generated", ["tools"] = new JsonArray("tools/artgen（佔位角色）", "--export-package") },
         };
+        // 表情（背面等沒有臉的視角就沒有）
+        var faces = new JsonObject();
+        if (rig.Slots.FirstOrDefault(s => s.Variants != null) is { } faceSlot)
+        {
+            Directory.CreateDirectory(Path.Combine(outDir, "faces"));
+            foreach (var (expr, file) in faceSlot.Variants!)
+            {
+                Save(rig.Resolve(file), Path.Combine(outDir, "faces", $"{expr}.png"), scale);
+                faces[expr] = $"faces/{expr}.png";
+            }
+            doc["faces"] = new JsonObject { ["box"] = Box(faceSlot.Box), ["images"] = faces };
+        }
+        doc["source"] = new JsonObject { ["method"] = "generated", ["tools"] = new JsonArray("tools/artgen（佔位角色）", "--export-package") };
         if (form != null) doc["form"] = form;
         File.WriteAllText(Path.Combine(outDir, "character.json"),
             doc.ToJsonString(new JsonSerializerOptions { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping }) + "\n");
-        GD.Print($"[export] {spec} → {outDir}（{partsJson.Count} 個部件、{faces.Count} 個表情，×{scale}）");
-        return 0;
+        GD.Print($"[export] {baseId}{(view != null ? $" 視角 {view}" : "")} → {outDir}（{partsJson.Count} 個部件、{faces.Count} 個表情，×{scale}）");
     }
 
     static JsonArray Box(float[] b) => new(b.Select(v => (JsonNode)v).ToArray());

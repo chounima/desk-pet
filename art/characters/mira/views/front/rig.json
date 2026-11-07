@@ -1,0 +1,605 @@
+{
+  "version": 1,
+  "id": "mira",
+  "name": "Mira",
+  "description": "蒸汽龐克的塗鴉滑板師",
+  "body": "humanoid",
+  "rootScale": 1.771,
+  "headTop": [
+    0,
+    -62
+  ],
+  "height": 332,
+  "trackScale": {},
+  "propOverrides": {
+    "guitar": {
+      "dx": 2,
+      "dy": 12,
+      "scale": 1.12
+    }
+  },
+  "anchors": {
+    "hat": {
+      "bone": "head",
+      "x": 3.7,
+      "y": -55.1,
+      "scale": 0.46,
+      "depth": 1.15
+    },
+    "eyes": {
+      "bone": "head",
+      "x": -0.7,
+      "y": -29.3,
+      "scale": 0.46,
+      "depth": 1
+    },
+    "mouth": {
+      "bone": "head",
+      "x": 19.5,
+      "y": -23.8,
+      "scale": 0.46
+    },
+    "neck": {
+      "bone": "torso",
+      "x": 2,
+      "y": -64,
+      "scale": 1
+    },
+    "back": {
+      "bone": "torso",
+      "x": -16,
+      "y": -38,
+      "scale": 1
+    }
+  },
+  "bones": [
+    {
+      "name": "root",
+      "parent": null,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "name": "prop",
+      "parent": "root",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "name": "hips",
+      "parent": "root",
+      "x": 0,
+      "y": -170
+    },
+    {
+      "name": "torso",
+      "parent": "hips",
+      "x": 0,
+      "y": -30
+    },
+    {
+      "name": "head",
+      "parent": "torso",
+      "x": 0,
+      "y": -70
+    },
+    {
+      "name": "tail",
+      "parent": "hips",
+      "x": -10,
+      "y": -20
+    },
+    {
+      "name": "cape",
+      "parent": "hips",
+      "x": -10,
+      "y": -20
+    },
+    {
+      "name": "armFar_u",
+      "parent": "torso",
+      "x": -24.8,
+      "y": -60
+    },
+    {
+      "name": "armFar_l",
+      "parent": "armFar_u",
+      "x": 0,
+      "y": 56
+    },
+    {
+      "name": "handFar",
+      "parent": "armFar_l",
+      "x": 0,
+      "y": 50
+    },
+    {
+      "name": "armNear_u",
+      "parent": "torso",
+      "x": 24.8,
+      "y": -60
+    },
+    {
+      "name": "armNear_l",
+      "parent": "armNear_u",
+      "x": 0,
+      "y": 56
+    },
+    {
+      "name": "handNear",
+      "parent": "armNear_l",
+      "x": 0,
+      "y": 50
+    },
+    {
+      "name": "legFar_u",
+      "parent": "hips",
+      "x": -11.8,
+      "y": 6
+    },
+    {
+      "name": "legFar_l",
+      "parent": "legFar_u",
+      "x": 0,
+      "y": 76
+    },
+    {
+      "name": "footFar",
+      "parent": "legFar_l",
+      "x": 0,
+      "y": 75
+    },
+    {
+      "name": "legNear_u",
+      "parent": "hips",
+      "x": 11.8,
+      "y": 6
+    },
+    {
+      "name": "legNear_l",
+      "parent": "legNear_u",
+      "x": 0,
+      "y": 76
+    },
+    {
+      "name": "footNear",
+      "parent": "legNear_l",
+      "x": 0,
+      "y": 75
+    }
+  ],
+  "slots": [
+    {
+      "name": "cape",
+      "bone": "cape",
+      "z": 0.2,
+      "file": "parts/cape.svg",
+      "box": [
+        -30,
+        -10,
+        16,
+        154
+      ],
+      "far": false
+    },
+    {
+      "name": "back",
+      "bone": "torso",
+      "z": 0.5,
+      "file": "parts/back.svg",
+      "box": [
+        -60,
+        -110,
+        70,
+        60
+      ],
+      "far": false
+    },
+    {
+      "name": "hair_back",
+      "bone": "head",
+      "z": 1,
+      "file": "parts/hair_back.svg",
+      "box": [
+        -36.800000000000004,
+        -88.2,
+        41.4,
+        40.6
+      ],
+      "far": false,
+      "depth": -0.4
+    },
+    {
+      "name": "armFar_u",
+      "bone": "armFar_u",
+      "z": 2,
+      "file": "parts/arm_u.svg",
+      "box": [
+        -18.0,
+        -18.0,
+        18.0,
+        65.0
+      ],
+      "far": false
+    },
+    {
+      "name": "armFar_l",
+      "bone": "armFar_l",
+      "z": 3,
+      "file": "parts/arm_l.svg",
+      "box": [
+        -10.0,
+        -10.0,
+        10.0,
+        58.5
+      ],
+      "far": false
+    },
+    {
+      "name": "handFar",
+      "bone": "handFar",
+      "z": 4,
+      "file": "parts/hand.svg",
+      "box": [
+        -10,
+        -4,
+        10,
+        24
+      ],
+      "far": false
+    },
+    {
+      "name": "legFar_u",
+      "bone": "legFar_u",
+      "z": 5,
+      "file": "parts/leg_u.svg",
+      "box": [
+        -14.5,
+        -14.5,
+        14.5,
+        87.5
+      ],
+      "far": false
+    },
+    {
+      "name": "legFar_l",
+      "bone": "legFar_l",
+      "z": 6,
+      "file": "parts/leg_l.svg",
+      "box": [
+        -11.5,
+        -11.5,
+        11.5,
+        85.0
+      ],
+      "far": false
+    },
+    {
+      "name": "footFar",
+      "bone": "footFar",
+      "z": 7,
+      "file": "parts/foot.svg",
+      "box": [
+        -14,
+        -14,
+        28,
+        18
+      ],
+      "far": false
+    },
+    {
+      "name": "legNear_u",
+      "bone": "legNear_u",
+      "z": 8,
+      "file": "parts/leg_u.svg",
+      "box": [
+        -14.5,
+        -14.5,
+        14.5,
+        87.5
+      ],
+      "far": false
+    },
+    {
+      "name": "legNear_l",
+      "bone": "legNear_l",
+      "z": 9,
+      "file": "parts/leg_l.svg",
+      "box": [
+        -11.5,
+        -11.5,
+        11.5,
+        85.0
+      ],
+      "far": false
+    },
+    {
+      "name": "footNear",
+      "bone": "footNear",
+      "z": 10,
+      "file": "parts/foot.svg",
+      "box": [
+        -14,
+        -14,
+        28,
+        18
+      ],
+      "far": false
+    },
+    {
+      "name": "hips",
+      "bone": "hips",
+      "z": 11,
+      "file": "parts/hips.svg",
+      "box": [
+        -32,
+        -40,
+        32,
+        20
+      ],
+      "far": false
+    },
+    {
+      "name": "torso",
+      "bone": "torso",
+      "z": 12,
+      "file": "parts/torso.svg",
+      "box": [
+        -30,
+        -76,
+        32,
+        6
+      ],
+      "far": false
+    },
+    {
+      "name": "head",
+      "bone": "head",
+      "z": 13,
+      "file": "parts/head.svg",
+      "box": [
+        -36.800000000000004,
+        -88.2,
+        41.4,
+        40.6
+      ],
+      "far": false
+    },
+    {
+      "name": "face",
+      "bone": "head",
+      "z": 14,
+      "depth": 1,
+      "box": [
+        -31.970000000000002,
+        -46.800000000000004,
+        32.43000000000001,
+        -10.0
+      ],
+      "variants": {
+        "idle": "faces/idle.svg",
+        "blink": "faces/blink.svg",
+        "happy": "faces/happy.svg",
+        "sleep": "faces/sleep.svg",
+        "surprised": "faces/surprised.svg",
+        "focus": "faces/focus.svg",
+        "shy": "faces/shy.svg",
+        "angry": "faces/angry.svg"
+      },
+      "far": false
+    },
+    {
+      "name": "hair_front",
+      "bone": "head",
+      "z": 15,
+      "file": "parts/hair_front.svg",
+      "box": [
+        -36.800000000000004,
+        -88.2,
+        41.4,
+        40.6
+      ],
+      "far": false,
+      "depth": 1.15
+    },
+    {
+      "name": "armNear_u",
+      "bone": "armNear_u",
+      "z": 16,
+      "file": "parts/arm_u.svg",
+      "box": [
+        -18.0,
+        -18.0,
+        18.0,
+        65.0
+      ],
+      "far": false
+    },
+    {
+      "name": "armNear_l",
+      "bone": "armNear_l",
+      "z": 17,
+      "file": "parts/arm_l.svg",
+      "box": [
+        -10.0,
+        -10.0,
+        10.0,
+        58.5
+      ],
+      "far": false
+    },
+    {
+      "name": "handNear",
+      "bone": "handNear",
+      "z": 18,
+      "file": "parts/hand.svg",
+      "box": [
+        -10,
+        -4,
+        10,
+        24
+      ],
+      "far": false
+    }
+  ],
+  "face": {
+    "box": [
+      -31.970000000000002,
+      -46.800000000000004,
+      32.43000000000001,
+      -10.0
+    ],
+    "layers": [
+      {
+        "name": "eyes",
+        "variants": {
+          "open": "face_parts/eyes_open.svg",
+          "half": "face_parts/eyes_half.svg",
+          "sharp": "face_parts/eyes_sharp.svg",
+          "wide": "face_parts/eyes_wide.svg",
+          "line": "face_parts/eyes_line.svg",
+          "arc": "face_parts/eyes_arc.svg"
+        }
+      },
+      {
+        "name": "pupils",
+        "variants": {
+          "open": "face_parts/pupils_open.svg",
+          "half": "face_parts/pupils_half.svg",
+          "sharp": "face_parts/pupils_sharp.svg",
+          "wide": "face_parts/pupils_wide.svg"
+        },
+        "follow": "eyes",
+        "move": [
+          -1.01,
+          -1.1,
+          1.01,
+          0.18
+        ]
+      },
+      {
+        "name": "lids",
+        "variants": {
+          "open": "face_parts/lids_open.svg",
+          "half": "face_parts/lids_half.svg",
+          "sharp": "face_parts/lids_sharp.svg",
+          "wide": "face_parts/lids_wide.svg"
+        },
+        "follow": "eyes"
+      },
+      {
+        "name": "blush",
+        "variants": {
+          "on": "face_parts/blush_on.svg"
+        }
+      },
+      {
+        "name": "mouth",
+        "variants": {
+          "flat": "face_parts/mouth_flat.svg",
+          "smile": "face_parts/mouth_smile.svg",
+          "cat": "face_parts/mouth_cat.svg",
+          "open": "face_parts/mouth_open.svg",
+          "o": "face_parts/mouth_o.svg",
+          "pout": "face_parts/mouth_pout.svg",
+          "gasp": "face_parts/mouth_gasp.svg",
+          "va": "face_parts/mouth_va.svg",
+          "vi": "face_parts/mouth_vi.svg",
+          "vu": "face_parts/mouth_vu.svg",
+          "ve": "face_parts/mouth_ve.svg",
+          "vo": "face_parts/mouth_vo.svg"
+        }
+      }
+    ],
+    "expressions": {
+      "idle": {
+        "eyes": "open",
+        "blush": "on",
+        "mouth": "smile"
+      },
+      "blink": {
+        "eyes": "line",
+        "blush": "on",
+        "mouth": "smile"
+      },
+      "happy": {
+        "eyes": "arc",
+        "blush": "on",
+        "mouth": "open"
+      },
+      "sleep": {
+        "eyes": "line",
+        "blush": "on",
+        "mouth": "o"
+      },
+      "surprised": {
+        "eyes": "wide",
+        "blush": "on",
+        "mouth": "gasp"
+      },
+      "focus": {
+        "eyes": "sharp",
+        "blush": "on",
+        "mouth": "flat"
+      },
+      "shy": {
+        "eyes": "arc",
+        "blush": "on",
+        "mouth": "smile"
+      },
+      "angry": {
+        "eyes": "sharp",
+        "blush": "on",
+        "mouth": "pout"
+      }
+    },
+    "alpha": {
+      "idle": {
+        "blush": 0.25
+      },
+      "blink": {
+        "blush": 0.25
+      },
+      "happy": {
+        "blush": 0.7
+      },
+      "sleep": {
+        "blush": 0.4
+      },
+      "surprised": {
+        "blush": 0.3
+      },
+      "focus": {
+        "blush": 0.2
+      },
+      "shy": {
+        "blush": 1.0
+      },
+      "angry": {
+        "blush": 0.6
+      }
+    },
+    "talk": {
+      "half": "o",
+      "open": "gasp",
+      "a": "va",
+      "i": "vi",
+      "u": "vu",
+      "e": "ve",
+      "o": "vo"
+    }
+  },
+  "physics": {
+    "cape": {
+      "stiffness": 140,
+      "damping": 9,
+      "gravity": 0,
+      "inertia": 1,
+      "drag": 15,
+      "limit": 25,
+      "length": 154,
+      "axis": 96
+    }
+  },
+  "view": "front"
+}

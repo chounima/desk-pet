@@ -181,6 +181,7 @@ export class PetView {
   }
 
   showFace() {
+    if (!this.faceImg) return;        // 沒有臉的視角（背面）
     // 分層臉時整張臉藏起來；自訂表情會換回整張臉
     this.faceEl.style.display = this.layered ? "none" : "";
     for (const it of this.faceLayers ?? []) if (!this.layered) it.el.style.display = "none";

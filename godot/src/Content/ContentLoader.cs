@@ -59,13 +59,23 @@ public static class ContentLoader
                 form.Data.AnimSource = id;
                 form.Data.FormName = formName;
             }
+            // 其他視角（正面、背面…）
+            foreach (var (_, view) in rig.Views ?? new())
+            {
+                if (view.Rig == "") { view.Data = rig; continue; }
+                view.Data = ReadJson<RigData>($"{dir}{view.Rig}rig.json");
+                view.Data.BasePath = $"{dir}{view.Rig}";
+                view.Data.AnimSource = id;
+                view.Data.Id = id;
+            }
         }
         ApplyPhysicsOverrides(rigs);
         LoadPackages(ids, rigs);
         // data/face.json 的表情調整（套在部件包之後：部件包畫了整張臉時就沒有分層臉）
         var faceConfig = FaceConfig.Load();
         foreach (var (id, rig) in rigs)
-            foreach (var r in (rig.Forms?.Values.Select(f => f.Data).OfType<RigData>() ?? Enumerable.Empty<RigData>()).Append(rig).Distinct())
+            foreach (var r in (rig.Forms?.Values.Select(f => f.Data).OfType<RigData>() ?? Enumerable.Empty<RigData>())
+                         .Concat(rig.Views?.Values.Select(v => v.Data).OfType<RigData>() ?? Enumerable.Empty<RigData>()).Append(rig).Distinct())
                 faceConfig.Apply(r, id);
         return (ids, rigs);
     }
@@ -126,6 +136,25 @@ public static class ContentLoader
     }
 
     /// <summary>角色某個型態的骨架；沒有這個型態就用預設的</summary>
+    /// <summary>
+    /// 依面向角度（0 正面、90 側面朝右、180 背面、270 左側）選最接近的視角：回傳（骨架, 面向 1／-1, 偏轉 -1～1）。
+    /// 側面視角也可以鏡像當左側用；偏轉 = 角度和選到的視角差多少（±45° → ±1），讓臉往那邊偏一點
+    /// </summary>
+    public static (RigData rig, int facing, float bias, float viewYaw) ViewFor(RigData rig, float yaw)
+    {
+        yaw = Mathf.PosMod(yaw, 360);
+        var options = new List<(RigData r, float yaw, int facing)>();
+        foreach (var v in rig.Views?.Values ?? Enumerable.Empty<ViewData>())
+        {
+            options.Add((v.Data, v.Yaw, 1));
+            if (v.Yaw is > 0 and < 180) options.Add((v.Data, 360 - v.Yaw, -1));      // 鏡像（側面 → 左側）
+        }
+        if (options.Count == 0) return (rig, yaw > 180 ? -1 : 1, 0, yaw > 180 ? 270 : 90);
+        var best = options.OrderBy(o => Mathf.Abs(Mathf.AngleDifference(Mathf.DegToRad(o.yaw), Mathf.DegToRad(yaw)))).First();
+        var diff = Mathf.RadToDeg(Mathf.AngleDifference(Mathf.DegToRad(best.yaw), Mathf.DegToRad(yaw)));
+        return (best.r, best.facing, Mathf.Clamp(diff / 45f, -1, 1) * best.facing, best.yaw);
+    }
+
     public static RigData FormRig(RigData rig, string? form) =>
         form != null && rig.Forms != null && rig.Forms.TryGetValue(form, out var f) ? f.Data : rig;
 

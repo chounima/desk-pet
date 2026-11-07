@@ -308,5 +308,12 @@
  "vtuber.hotkeysHint": "Ctrl+Alt+1–5: happy, surprised, angry, shy, focused; 6–9: wave, peace, cheer, think (editable in data/vtuber.json)",
  "vtuber.display": "Display",
  "vtuber.hidePet": "Hide the full-body desktop pet while VTuber mode is on",
- "vtuber.fullscreen": "Keep showing over fullscreen apps (for streaming fullscreen games)"
+ "vtuber.fullscreen": "Keep showing over fullscreen apps (for streaming fullscreen games)",
+ "vtuber.view": "Angle",
+ "vtuber.front": "Front",
+ "vtuber.side": "Side",
+ "vtuber.back": "Back",
+ "vtuber.left": "Left",
+ "vtuber.autoTurn": "Turn toward the cursor",
+ "vtuber.viewHint": "Picks the closest view art; between views the face leans that way. Front/back are test art for now — see docs/ART_GUIDE.md \"Other views\" to replace them."
 }

@@ -21,6 +21,11 @@ public sealed class VtuberSettings
     public bool HideDesktopPet { get; set; }
     /// <summary>全螢幕程式（遊戲）時也顯示（直播全螢幕遊戲用）</summary>
     public bool ShowOnFullscreen { get; set; } = true;
+    /// <summary>面向角度：0 正面、90 側面（朝右）、180 背面、270 左側；選最接近的視角（角色要有那個視角的圖）</summary>
+    public float ViewYaw { get; set; } = 90;
+    /// <summary>跟著游標轉身：游標在左右兩邊時，角度往那邊轉（最多 TurnRange 度）</summary>
+    public bool AutoTurn { get; set; }
+    public float TurnRange { get; set; } = 60;
     /// <summary>上次校正的噪音底線（dB）</summary>
     public double NoiseFloor { get; set; } = -50;
 }

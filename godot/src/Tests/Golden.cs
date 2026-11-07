@@ -22,7 +22,40 @@ public static class Golden
     static string PhysicsPath => $"{ContentLoader.Root}/tests/golden/physics.json";
     const float PhysicsTolerance = 0.05f;
 
-    public static int Run(bool update) => RunPose(update) + RunPhysics(update) + RunCurves(update) + RunOverlay(update) + RunFace(update) + RunMesh(update) + RunVoice(update) == 0 ? 0 : 1;
+    public static int Run(bool update) => RunPose(update) + RunPhysics(update) + RunCurves(update) + RunOverlay(update) + RunFace(update) + RunMesh(update) + RunVoice(update) + RunViews(update) == 0 ? 0 : 1;
+
+    // ---------- 視角（tests/golden/views.json）：角色＋角度 → [視角, 面向, 偏轉] ----------
+
+    static int RunViews(bool update)
+    {
+        var path = ProjectSettings.GlobalizePath($"{ContentLoader.Root}/tests/golden/views.json");
+        var doc = JsonNode.Parse(File.ReadAllText(path))!;
+        var (_, rigs) = ContentLoader.LoadCharacters();
+        var results = doc["cases"]!.AsArray().Select(c =>
+        {
+            var v = ContentLoader.ViewFor(rigs[c!["char"]!.GetValue<string>()], c["yaw"]!.GetValue<float>());
+            return new JsonArray(v.rig.View ?? "side", v.facing, MathF.Round(v.bias, 3));
+        }).ToList();
+        if (update)
+        {
+            doc["expected"] = new JsonArray(results.Select(r => (JsonNode)r).ToArray());
+            File.WriteAllText(path, doc.ToJsonString(new JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping }) + NL);
+            GD.Print($"[golden] 視角：已更新 {results.Count} 個案例");
+            return 0;
+        }
+        var expected = doc["expected"]!.AsArray();
+        var failures = 0;
+        for (var i = 0; i < results.Count; i++)
+        {
+            var e = expected.Count > i ? expected[i]!.AsArray() : new JsonArray("", 0, 0);
+            var g = results[i];
+            var ok = e[0]!.GetValue<string>() == g[0]!.GetValue<string>() && e[1]!.GetValue<int>() == g[1]!.GetValue<int>()
+                     && Math.Abs(e[2]!.GetValue<double>() - g[2]!.GetValue<float>()) <= 0.002;
+            if (!ok && failures++ < 10) GD.Print($"[golden] ✗ 視角 {doc["cases"]![i]!.ToJsonString()}：{e.ToJsonString()} ≠ {g.ToJsonString()}");
+        }
+        GD.Print(failures == 0 ? $"[golden] 視角全部通過（{results.Count} 個案例）" : $"[golden] ✗ 視角 {failures} 個不一致");
+        return failures == 0 ? 0 : 1;
+    }
 
     // ---------- 聲音分析（tests/golden/voice.json）：合成音 → [dB, 講話中, 音調, 母音] ----------
 

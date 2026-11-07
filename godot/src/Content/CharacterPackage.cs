@@ -65,6 +65,34 @@ public static class CharacterPackage
         if (string.IsNullOrEmpty(c.Base)) c.Base = id;        // 沒寫 base = 換掉同名角色的美術
         if (!rigs.TryGetValue(c.Base, out var baseRig)) throw new InvalidDataException($"找不到範本角色 {c.Base}");
         var template = ContentLoader.FormRig(baseRig, c.Form);
+        var rig = Build(c, folder, id, template, baseRig);
+        // 其他視角（正面、背面…）：部件包有 views/<視角>/character.json 就換那個視角的圖，沒有就沿用範本的（測試圖）
+        if (template.Views != null)
+        {
+            rig.Views = new();
+            foreach (var (name, v) in template.Views)
+            {
+                var viewFolder = Join(folder, $"views/{name}");
+                var data = v.Rig == "" ? rig
+                    : Exists(viewFolder) ? Build(Parse(viewFolder, id), viewFolder, id, v.Data, null)
+                    : v.Data;
+                rig.Views[name] = new ViewData { Label = v.Label, Yaw = v.Yaw, Rig = v.Rig, Data = data };
+            }
+        }
+        return rig;
+    }
+
+    static FileData Parse(string folder, string id)
+    {
+        var c = JsonSerializer.Deserialize<FileData>(ReadText(Join(folder, "character.json")), Options)
+                ?? throw new InvalidDataException($"{folder}/character.json 是空的");
+        if (string.IsNullOrEmpty(c.Base)) c.Base = id;
+        return c;
+    }
+
+    /// <summary>以 template 為底，換上部件包的部件、表情、錨點（baseRig = 範本角色本身，換型態用；視角時 null）</summary>
+    static RigData Build(FileData c, string folder, string id, RigData template, RigData? baseRig)
+    {
         // 複製範本的骨架資料（序列化再讀回來就是一份全新的物件）
         var rig = JsonSerializer.Deserialize<RigData>(JsonSerializer.Serialize(template, Options), Options)!;
         rig.BasePath = template.BasePath;
@@ -75,7 +103,7 @@ public static class CharacterPackage
         rig.Name = string.IsNullOrWhiteSpace(c.Name) ? Path.GetFileName(folder.TrimEnd('/', '\\')) : c.Name;
         rig.Description = c.Description;
         // 換掉自己的美術：其他型態照舊（預設型態指向新的資料）；新角色只用範本的一個型態
-        if (c.Base == id && template == baseRig && baseRig.Forms != null)
+        if (baseRig != null && c.Base == id && template == baseRig && baseRig.Forms != null)
             rig.Forms = baseRig.Forms.ToDictionary(kv => kv.Key, kv => new FormData { Label = kv.Value.Label, Rig = kv.Value.Rig, Data = kv.Value.Rig == "" ? rig : kv.Value.Data });
         else rig.Forms = null;
         rig.DefaultOutfit = new Dictionary<string, OutfitPart>();

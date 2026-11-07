@@ -312,6 +312,11 @@ AI 產生的圖常見問題，規格和檢查工具都要能抓出來：同一�
 > - 每幀聲音分析＋校正＋規則約 0.5 ms（`--selftest=vtuber` 量）
 > - **還沒實測真的麥克風**（不在使用者沒同意時開麥克風）；笑聲偵測、講話速度還沒做
 
+> **2026-11-08 追加（使用者要求）**：
+> - **角度／視角**：`rig.json` 的 `views`（`front` 0°、`side` 90°、`back` 180°；270° = 側面鏡像），`ContentLoader.ViewFor`／`loader.viewFor` 依角度選最接近的，中間角度臉往那邊偏（`Gaze.Bias`）；`tests/golden/views.json`。正面、背面目前是 `tools/artgen/views.py` 拼的測試圖，部件包 `views/<視角>/` 可以換精細圖（`import_layers.py`、`--export-package` 都支援）。半身分頁有角度拉桿與「跟著游標轉身」，網頁 `bust.html` 也有。桌面漫遊的全身角色維持側面（走路需要側面）
+> - **參數全部放資料**：`data/face.json`（眨眼、視線、動嘴節奏、表情組合，可新增表情名）＋ `data/vtuber.json`；說明 `docs/CUSTOMIZE.md`
+> - 修正：半身模式藏起桌面角色時 Zzz 等特效殘留；部件包的圖在新建的角色（客人、半身）上沒有套用
+
 ### 6-1 聲音分析
 
 | 步驟 | Godot | 網頁 | 內容 |

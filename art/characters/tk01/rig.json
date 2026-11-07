@@ -649,5 +649,22 @@
       "axis": 90,
       "length": 40
     }
+  },
+  "views": {
+    "side": {
+      "label": "側面",
+      "yaw": 90,
+      "rig": ""
+    },
+    "front": {
+      "label": "正面",
+      "yaw": 0,
+      "rig": "views/front/"
+    },
+    "back": {
+      "label": "背面",
+      "yaw": 180,
+      "rig": "views/back/"
+    }
   }
 }

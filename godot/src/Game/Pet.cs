@@ -61,6 +61,7 @@ public sealed class Pet
         world = skeleton.Compute(Animator.Pose);
         View = new PetView(rig, props, Scale);
         View.SetAccessories(accessories);
+        View.SetOutfit(outfit);          // 衣服＞部件包的圖＞範本的圖（部件包、客人、半身角色剛建立時也要套）
         parent.AddChild(View);
         parent.MoveChild(View, 0);       // 特效等其他節點畫在角色上面
     }

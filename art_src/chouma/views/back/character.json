@@ -1,0 +1,125 @@
+{
+  "version": 1,
+  "name": "Chouma",
+  "description": "愛打排球的資工系大學生",
+  "base": "chouma",
+  "parts": {
+    "arm_u": {
+      "image": "parts/arm_u.png",
+      "box": [
+        -20,
+        -14,
+        20,
+        68
+      ]
+    },
+    "arm_l": {
+      "image": "parts/arm_l.png",
+      "box": [
+        -10,
+        -10,
+        10,
+        60
+      ]
+    },
+    "hand": {
+      "image": "parts/hand.png",
+      "box": [
+        -12,
+        -4,
+        14,
+        28
+      ],
+      "alt": {
+        "peace": {
+          "image": "parts/hand@peace.png",
+          "box": [
+            -12,
+            -4,
+            12,
+            34
+          ]
+        }
+      }
+    },
+    "leg_u": {
+      "image": "parts/leg_u.png",
+      "box": [
+        -24,
+        -14,
+        24,
+        90
+      ]
+    },
+    "leg_l": {
+      "image": "parts/leg_l.png",
+      "box": [
+        -12,
+        -6,
+        12,
+        84
+      ]
+    },
+    "foot": {
+      "image": "parts/foot.png",
+      "box": [
+        -16,
+        -16,
+        34,
+        17
+      ]
+    },
+    "hips": {
+      "image": "parts/hips.png",
+      "box": [
+        -32,
+        -40,
+        32,
+        26
+      ]
+    },
+    "torso": {
+      "image": "parts/torso.png",
+      "box": [
+        -34,
+        -80,
+        36,
+        34
+      ]
+    },
+    "head": {
+      "image": "parts/head.png",
+      "box": [
+        -40,
+        -96,
+        45,
+        44
+      ]
+    },
+    "hair_back": {
+      "image": "parts/hair_back.png",
+      "box": [
+        -40,
+        -96,
+        45,
+        44
+      ]
+    },
+    "back": {
+      "image": "parts/back.png",
+      "box": [
+        -54,
+        -78,
+        0,
+        30
+      ]
+    }
+  },
+  "source": {
+    "method": "generated",
+    "tools": [
+      "tools/artgen（佔位角色）",
+      "--export-package"
+    ]
+  }
+}

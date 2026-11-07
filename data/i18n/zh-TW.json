@@ -199,5 +199,12 @@
  "vtuber.hotkeysHint": "Ctrl+Alt+1～5：開心、驚訝、生氣、害羞、認真；6～9：揮手、比 YA、歡呼、思考（data/vtuber.json 可以改）",
  "vtuber.display": "顯示",
  "vtuber.hidePet": "半身模式開著時，桌面上的全身角色先藏起來",
- "vtuber.fullscreen": "全螢幕程式（遊戲）時也顯示（直播全螢幕遊戲用）"
+ "vtuber.fullscreen": "全螢幕程式（遊戲）時也顯示（直播全螢幕遊戲用）",
+ "vtuber.view": "角度",
+ "vtuber.front": "正面",
+ "vtuber.side": "側面",
+ "vtuber.back": "背面",
+ "vtuber.left": "左側",
+ "vtuber.autoTurn": "跟著游標轉身（游標在左右兩邊時轉過去）",
+ "vtuber.viewHint": "角度會選最接近的視角圖；在兩個視角之間時臉會往那邊偏。目前的正面、背面是測試圖，換成精細的圖見 docs/ART_GUIDE.md「其他視角」。"
 }

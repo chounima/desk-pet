@@ -193,6 +193,13 @@ def check_characters(report: Report, root: Path, sch, bodies) -> tuple[list[tupl
                 if frig:
                     result.append((f"{cid}/{name}", frig.get("body", "humanoid")))
                     bones |= {b["name"] for b in frig["bones"]}
+        # 其他視角（正面、背面…）：骨架與部件都要對
+        for name, view in (rig.get("views") or {}).items():
+            vpath = path.parent / view.get("rig", "") / "rig.json"
+            if view.get("rig") and not vpath.exists():
+                report.error(rel(path, root), f"視角 {name} 的 {view['rig']}rig.json 不存在")
+            elif view.get("rig"):
+                check_rig(report, root, sch, vpath, bodies)
     return result, bones
 
 

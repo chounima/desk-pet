@@ -1,0 +1,123 @@
+{
+  "version": 1,
+  "name": "Mira",
+  "description": "蒸汽龐克的塗鴉滑板師",
+  "base": "mira",
+  "parts": {
+    "arm_u": {
+      "image": "parts/arm_u.png",
+      "box": [
+        -18,
+        -18,
+        18,
+        65
+      ]
+    },
+    "arm_l": {
+      "image": "parts/arm_l.png",
+      "box": [
+        -10,
+        -10,
+        10,
+        58.5
+      ]
+    },
+    "hand": {
+      "image": "parts/hand.png",
+      "box": [
+        -10,
+        -4,
+        10,
+        24
+      ]
+    },
+    "leg_u": {
+      "image": "parts/leg_u.png",
+      "box": [
+        -14.5,
+        -14.5,
+        14.5,
+        87.5
+      ]
+    },
+    "leg_l": {
+      "image": "parts/leg_l.png",
+      "box": [
+        -11.5,
+        -11.5,
+        11.5,
+        85
+      ]
+    },
+    "foot": {
+      "image": "parts/foot.png",
+      "box": [
+        -14,
+        -14,
+        28,
+        18
+      ]
+    },
+    "hips": {
+      "image": "parts/hips.png",
+      "box": [
+        -32,
+        -40,
+        32,
+        20
+      ]
+    },
+    "torso": {
+      "image": "parts/torso.png",
+      "box": [
+        -30,
+        -76,
+        32,
+        6
+      ]
+    },
+    "head": {
+      "image": "parts/head.png",
+      "box": [
+        -36.8,
+        -88.2,
+        41.4,
+        40.6
+      ]
+    },
+    "hair_back": {
+      "image": "parts/hair_back.png",
+      "box": [
+        -36.8,
+        -88.2,
+        41.4,
+        40.6
+      ]
+    },
+    "back": {
+      "image": "parts/back.png",
+      "box": [
+        -60,
+        -110,
+        70,
+        60
+      ]
+    },
+    "cape": {
+      "image": "parts/cape.png",
+      "box": [
+        -30,
+        -10,
+        16,
+        154
+      ]
+    }
+  },
+  "source": {
+    "method": "generated",
+    "tools": [
+      "tools/artgen（佔位角色）",
+      "--export-package"
+    ]
+  }
+}

@@ -24,6 +24,11 @@
     <h1>🎥 半身預覽</h1>
     <p class="hint">對著麥克風講話：角色動嘴（認得あいうえお）、眼睛跟著游標。數字鍵 1～5 換表情（開心、驚訝、生氣、害羞、認真），0 換回來。和桌寵的半身模式用同一套聲音分析（<code>core/voice.js</code>）與分層臉。聲音只在瀏覽器裡分析，不會錄音或上傳。</p>
     <select id="char"></select>
+    <div>角度 <input id="yaw" type="range" min="0" max="359" value="90"> <span id="yawText">90°</span></div>
+    <div>
+      <button data-yaw="0">正面</button><button data-yaw="90">側面</button><button data-yaw="180">背面</button><button data-yaw="270">左側</button>
+      <label><input type="checkbox" id="turn"> 跟著游標轉身</label>
+    </div>
     <div>
       <button id="mic">🎙 開麥克風</button>
       <button id="test">🔊 測試音（あいうえお）</button>

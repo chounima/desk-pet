@@ -1,0 +1,123 @@
+{
+  "version": 1,
+  "name": "TK-01",
+  "description": "打字輔助型人形機體",
+  "base": "tk01",
+  "parts": {
+    "arm_u": {
+      "image": "parts/arm_u.png",
+      "box": [
+        -15,
+        -15,
+        15,
+        42.5
+      ]
+    },
+    "arm_l": {
+      "image": "parts/arm_l.png",
+      "box": [
+        -10.5,
+        -10.5,
+        10.5,
+        37.5
+      ]
+    },
+    "hand": {
+      "image": "parts/hand.png",
+      "box": [
+        -12,
+        -6,
+        12,
+        20
+      ]
+    },
+    "leg_u": {
+      "image": "parts/leg_u.png",
+      "box": [
+        -14,
+        -14,
+        14,
+        56
+      ]
+    },
+    "leg_l": {
+      "image": "parts/leg_l.png",
+      "box": [
+        -12,
+        -12,
+        12,
+        52
+      ]
+    },
+    "foot": {
+      "image": "parts/foot.png",
+      "box": [
+        -12,
+        -10,
+        24,
+        10
+      ]
+    },
+    "hips": {
+      "image": "parts/hips.png",
+      "box": [
+        -30,
+        -16,
+        32,
+        26
+      ]
+    },
+    "torso": {
+      "image": "parts/torso.png",
+      "box": [
+        -30,
+        -74,
+        32,
+        6
+      ]
+    },
+    "head": {
+      "image": "parts/head.png",
+      "box": [
+        -80,
+        -170,
+        90,
+        110
+      ]
+    },
+    "hair_back": {
+      "image": "parts/hair_back.png",
+      "box": [
+        -80,
+        -170,
+        90,
+        110
+      ]
+    },
+    "hairB_1": {
+      "image": "parts/hairB_1.png",
+      "box": [
+        -57,
+        -10,
+        56,
+        56
+      ]
+    },
+    "hairB_2": {
+      "image": "parts/hairB_2.png",
+      "box": [
+        -58,
+        -10,
+        56,
+        60
+      ]
+    }
+  },
+  "source": {
+    "method": "generated",
+    "tools": [
+      "tools/artgen（佔位角色）",
+      "--export-package"
+    ]
+  }
+}

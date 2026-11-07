@@ -66,7 +66,25 @@
 | `face_parts/` | 第 3 階段：分層表情、動嘴、眼睛跟游標 | 檔名 = `圖層_圖名`，和佔位角色 `art/characters/tk01/face_parts/` 一樣：眼眶 `eyes_open`、`eyes_half`、`eyes_sharp`、`eyes_wide`（**不含瞳孔**）、閉眼 `eyes_line`（眨眼、睡覺）、`eyes_arc`（開心 ^ ^）；瞳孔 `pupils_open`…（和睜眼的眼眶同名，會跟著視線位移，四周留 2～3 單位不要畫到眼眶外）；眼線 `lids_open`…（蓋在瞳孔上面）；嘴 `mouth_flat`、`mouth_smile`、`mouth_cat`、`mouth_open`、`mouth_o`、`mouth_pout`、`mouth_gasp`，母音 `mouth_va`、`mouth_vi`、`mouth_vu`、`mouth_ve`、`mouth_vo`；`blush_on`（腮紅，不透明度由表情決定）；`extras_on`（淚痣、鬍鬚等，選配）；眉毛 `brows_*`（選配）。全部同樣大小、同樣位置（和 `faces/` 一樣的臉框）。**目前部件包還不會讀 `face_parts/`**（先備好，接上前用 `faces/` 整張臉） |
 | `hair_parts/` | 第 3 階段：頭髮飄動 | 長頭髮切成 2～3 節：`hairB_1..3`（後面，已支援：見 `tools/artgen/__init__.py` 的 `HAIR_CHAINS`），`hairF_*`、`hairS_*`（前面、側邊，格式相同）；每節的原點在上緣中間、往下畫，上端要和上一節重疊、上緣不要畫線 |
 | 網格（`rig.json` 插槽的 `mesh`） | 第 4 階段：關節彎曲時部件跟著彎 | 不用另外畫。適合**畫成一整條、跨過關節**的部件（長髮、整條手臂）；關節畫成圓頭重疊的部件不要開（圓頭會被拉歪） |
-| `bust/` | 第 6 階段：半身模式 | **正面**的上半身：`head`、`hair_back`、`hair_front`、`torso`、`arm_u`、`arm_l`、`hand`，以及正面的 `face_parts`（同上的名字） |
+| `views/front/`、`views/back/` | 半身模式的角度（已支援） | 正面、背面的部件與表情，見下面「其他視角」 |
+
+## 其他視角（正面、背面…）
+
+角色可以有多個視角，半身模式依「角度」挑最接近的一個（0° 正面、90° 側面朝右、180° 背面；270° 左側是側面鏡像，不用另外畫）。在兩個視角中間的角度，臉會往那邊偏一點。
+
+**目前的正面、背面是程式拼出來的測試圖**（側面的部件重新排列：手腳左右對稱、臉移到中間；背面用後髮蓋住頭），比例和細節都不對，等你換成精細的圖。
+
+換圖的步驟（和側面一樣，只是放在 `views/<視角>/` 底下）：
+
+1. 範本圖已經輸出好了：`art_src/<角色>/views/front/`、`art_src/<角色>/views/back/`，裡面有 `parts/*.png`（每個部件一張，名字和位置都對好）、`faces/*.png`（正面的表情；背面沒有臉）、`character.json`（每個部件的位置）
+2. 用繪圖軟體或 AI 照著畫，**同名、同樣大小**存回去（例如 `views/front/parts/head.png` 畫成正面的頭、`views/front/faces/happy.png` 畫成正面的開心表情）。只換想換的，沒換的會用測試圖
+3. 匯入：`python tools/import_layers.py art_src/<角色>`（主要的部件和各視角一起匯入，輸出到 `art/packages/<角色>/` 與 `art/packages/<角色>/views/<視角>/`）
+4. 看效果：桌寵的「🎥 半身」分頁拉角度；或網頁 `python tools/serve.py` → `preview/bust.html?char=<角色>&yaw=0`
+5. 位置不對：改 `views/<視角>/character.json` 裡那個部件的 `box`（Q 版單位，[左, 上, 右, 下]）再匯入
+
+想調整視角的**骨架**（例如正面時手臂離身體多遠）：改 `tools/artgen/views.py`（`_symmetric_bones`：肩膀約身體寬度的 40%、髖關節 19%）後 `python tools/gen_art.py`；或直接編輯 `art/characters/<角色>/views/<視角>/rig.json` 的 `bones`（gen_art 會覆蓋掉，正式用時建議改 views.py）。
+
+想加新的視角（例如 45° 斜前方）：在 `views.py` 的 `build_views` 多產生一個（`yaw` 填角度），程式會自動把它加進可選的視角；畫好圖放 `art_src/<角色>/views/<名稱>/`。
 
 ## 規格
 
@@ -87,7 +105,8 @@ art_src/<角色>/
 ├── character.json      （選配）名稱、範本角色、每個部件的位置；沒有的話匯入時自動產生草稿
 ├── parts/              部件：torso.png、arm_u.png、hand.png、hand@peace.png …
 ├── faces/              表情：idle.png、blink.png …
-├── face_parts/  hair_parts/  bust/    （選配）預先產出
+├── views/front/  views/back/   其他視角（parts/、faces/、character.json，和上面一樣的格式）
+├── face_parts/  hair_parts/    （選配）預先產出
 ├── <角色>.ora / .psd   （選配）分層檔，可以取代 parts/ 和 faces/
 └── CREDITS.md          作者、工具、授權（AI 輔助要寫工具與人工修改的範圍）
 ```

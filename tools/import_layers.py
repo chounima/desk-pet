@@ -2,6 +2,7 @@
 
 來源可以是（人工、AI 輔助都一樣）：
   1. 資料夾：parts/<部件名>.png（替換圖 <部件名>@<替換名>.png）、faces/<表情>.png，可以有 character.json
+     其他視角放 views/<視角>/parts/、views/<視角>/faces/（正面 front、背面 back），以那個視角的骨架當範本
   2. Krita .ora 分層檔：圖層名 = 部件名（hand@peace 是替換圖；face:idle 或 face_idle 是表情）
   3. Photoshop .psd：同 .ora（需要 python -m pip install psd-tools）
 部件名對應範本角色的部件圖檔名（torso、arm_u、hair_front…，見 docs/ART_GUIDE.md）。
@@ -96,12 +97,18 @@ def crop(img: Image.Image) -> Image.Image:
 
 # ---------- 範本角色 ----------
 
-def template_boxes(base: str, form: str | None) -> tuple[dict[str, list[float]], list[float] | None]:
-    """範本角色每張部件圖的範圍 { 部件名: box }、表情的範圍"""
+def template_boxes(base: str, form: str | None, view: str | None = None) -> tuple[dict[str, list[float]], list[float] | None]:
+    """範本角色（或它的某個視角）每張部件圖的範圍 { 部件名: box }、表情的範圍"""
     folder = ROOT / "art" / "characters" / base
     rig = json.loads((folder / "rig.json").read_text(encoding="utf-8"))
     if form and form in (rig.get("forms") or {}) and rig["forms"][form]["rig"]:
         rig = json.loads((folder / rig["forms"][form]["rig"] / "rig.json").read_text(encoding="utf-8"))
+    if view:
+        v = (rig.get("views") or {}).get(view)
+        if v is None:
+            raise SystemExit(f"✗ 範本角色 {base} 沒有視角 {view}（有：{', '.join(rig.get('views') or {}) or '無'}）")
+        if v.get("rig"):
+            rig = json.loads((folder / v["rig"] / "rig.json").read_text(encoding="utf-8"))
     boxes, face = {}, None
     for s in rig["slots"]:
         if s.get("variants"):
@@ -126,9 +133,9 @@ def fit(box: list[float], img: Image.Image) -> list[float]:
 # ---------- 匯入 ----------
 
 def build(layers: dict[str, Image.Image], draft: dict | None, base: str, form: str | None,
-          name: str | None, warnings: list[str]) -> tuple[dict, dict[str, Image.Image]]:
-    """回傳 (character.json, { 輸出檔名: 圖 })"""
-    boxes, face_box = template_boxes(base, form)
+          name: str | None, warnings: list[str], view: str | None = None) -> tuple[dict, dict[str, Image.Image]]:
+    """回傳 (character.json, { 輸出檔名: 圖 })；view = 範本用哪個視角（正面、背面…）"""
+    boxes, face_box = template_boxes(base, form, view)
     pkg = dict(draft or {})
     pkg.setdefault("version", 1)
     pkg["base"] = base
@@ -193,7 +200,7 @@ def build(layers: dict[str, Image.Image], draft: dict | None, base: str, form: s
     return pkg, files
 
 
-def write(out: Path, pkg: dict, files: dict[str, Image.Image], src: Path | None) -> None:
+def write(out: Path, pkg: dict, files: dict[str, Image.Image], src: Path | None, index: bool = True) -> None:
     if out.exists():
         shutil.rmtree(out)
     for file, img in files.items():
@@ -202,6 +209,8 @@ def write(out: Path, pkg: dict, files: dict[str, Image.Image], src: Path | None)
     (out / "character.json").write_text(json.dumps(pkg, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     if src and (src / "CREDITS.md").exists():
         shutil.copy(src / "CREDITS.md", out / "CREDITS.md")
+    if not index:
+        return
     index_path = out.parent / "index.json"
     index = json.loads(index_path.read_text(encoding="utf-8")) if index_path.exists() else []
     if out.name not in index:
@@ -253,6 +262,18 @@ def main() -> int:
     out = a.out.resolve() / cid
     write(out, pkg, files, folder)
     print(f"→ {out}")
+    # 其他視角：art_src/<id>/views/<視角>/（parts/、faces/，和主要的一樣）→ 部件包的 views/<視角>/
+    for vdir in sorted(p for p in (folder / "views").glob("*") if p.is_dir()) if src.is_dir() else []:
+        vlayers = read_folder(vdir)
+        if not vlayers:
+            continue
+        vdraft = json.loads((vdir / "character.json").read_text(encoding="utf-8")) if (vdir / "character.json").exists() else None
+        vwarn: list[str] = []
+        vpkg, vfiles = build(vlayers, vdraft, base, form, a.name, vwarn, view=vdir.name)
+        for w in vwarn:
+            print(f"⚠ {vdir.name}：{w}")
+        write(out / "views" / vdir.name, vpkg, vfiles, None, index=False)
+        print(f"  視角 {vdir.name}：{len(vpkg['parts'])} 個部件、{len((vpkg.get('faces') or {}).get('images', {}))} 個表情 → {out / 'views' / vdir.name}")
     # 寫完馬上檢查（格式、圖片、範本）
     sys.path.insert(0, str(ROOT / "tools"))
     import validate

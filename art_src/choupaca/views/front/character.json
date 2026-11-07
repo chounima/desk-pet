@@ -1,0 +1,141 @@
+{
+  "version": 1,
+  "name": "Choupaca",
+  "description": "Chouma 的羊駝化身（暴躁、體力差）",
+  "base": "choupaca",
+  "parts": {
+    "tail": {
+      "image": "parts/tail.png",
+      "box": [
+        -22,
+        -10,
+        10,
+        18
+      ]
+    },
+    "hair_back": {
+      "image": "parts/hair_back.png",
+      "box": [
+        -60,
+        -140,
+        70,
+        24
+      ]
+    },
+    "arm_u": {
+      "image": "parts/arm_u.png",
+      "box": [
+        -11,
+        -11,
+        11,
+        24.5
+      ]
+    },
+    "arm_l": {
+      "image": "parts/arm_l.png",
+      "box": [
+        -10.5,
+        -10.5,
+        10.5,
+        22
+      ]
+    },
+    "hand": {
+      "image": "parts/hand.png",
+      "box": [
+        -10,
+        -6,
+        10,
+        14
+      ]
+    },
+    "leg_u": {
+      "image": "parts/leg_u.png",
+      "box": [
+        -12.5,
+        -12.5,
+        12.5,
+        29.5
+      ]
+    },
+    "leg_l": {
+      "image": "parts/leg_l.png",
+      "box": [
+        -11.5,
+        -11.5,
+        11.5,
+        26.5
+      ]
+    },
+    "foot": {
+      "image": "parts/foot.png",
+      "box": [
+        -12,
+        -10,
+        20,
+        10
+      ]
+    },
+    "hips": {
+      "image": "parts/hips.png",
+      "box": [
+        -44,
+        -16,
+        48,
+        32
+      ]
+    },
+    "torso": {
+      "image": "parts/torso.png",
+      "box": [
+        -52,
+        -76,
+        52,
+        40
+      ]
+    },
+    "head": {
+      "image": "parts/head.png",
+      "box": [
+        -60,
+        -140,
+        70,
+        24
+      ]
+    },
+    "hair_front": {
+      "image": "parts/hair_front.png",
+      "box": [
+        -60,
+        -140,
+        70,
+        24
+      ]
+    }
+  },
+  "faces": {
+    "box": [
+      -49.5,
+      -110,
+      50.5,
+      -46
+    ],
+    "images": {
+      "idle": "faces/idle.png",
+      "blink": "faces/blink.png",
+      "happy": "faces/happy.png",
+      "sleep": "faces/sleep.png",
+      "surprised": "faces/surprised.png",
+      "focus": "faces/focus.png",
+      "shy": "faces/shy.png",
+      "angry": "faces/angry.png"
+    }
+  },
+  "source": {
+    "method": "generated",
+    "tools": [
+      "tools/artgen（佔位角色）",
+      "--export-package"
+    ]
+  }
+}

@@ -13,6 +13,7 @@ import shutil
 from pathlib import Path
 
 from . import rig
+from .views import build_views
 from .accessories import ACCESSORIES, SLOTS as ACCESSORY_SLOTS
 from .characters import ALL as CHARACTERS
 from .props import PROPS
@@ -143,6 +144,9 @@ def build_character(char, out: Path, form=None) -> dict:
         data["physics"] = physics
     if hasattr(src, "VOLLEY"):
         data["volley"] = src.VOLLEY
+    # 其他視角（正面、背面）的測試圖：只有人形的預設型態（見 views.py）
+    if form is None and not isinstance(prop, rig.QuadProportions):
+        data["views"] = build_views(src, data, out)
     forms = getattr(char, "FORMS", {}) if form is None else {}
     if forms:
         # 型態清單：預設型態用 rig.json，其他放在 forms/<名稱>/

@@ -1,0 +1,141 @@
+{
+  "version": 1,
+  "name": "Sera",
+  "description": "藪貓族的見習盜賊",
+  "base": "sera",
+  "parts": {
+    "tail": {
+      "image": "parts/tail.png",
+      "box": [
+        -60,
+        -12,
+        14,
+        114
+      ]
+    },
+    "hair_back": {
+      "image": "parts/hair_back.png",
+      "box": [
+        -80,
+        -170,
+        90,
+        110
+      ]
+    },
+    "arm_u": {
+      "image": "parts/arm_u.png",
+      "box": [
+        -13,
+        -13,
+        13,
+        44.5
+      ]
+    },
+    "arm_l": {
+      "image": "parts/arm_l.png",
+      "box": [
+        -11.5,
+        -11.5,
+        11.5,
+        37
+      ]
+    },
+    "hand": {
+      "image": "parts/hand.png",
+      "box": [
+        -12,
+        -6,
+        12,
+        20
+      ]
+    },
+    "leg_u": {
+      "image": "parts/leg_u.png",
+      "box": [
+        -16,
+        -16,
+        16,
+        59
+      ]
+    },
+    "leg_l": {
+      "image": "parts/leg_l.png",
+      "box": [
+        -13,
+        -13,
+        13,
+        52
+      ]
+    },
+    "foot": {
+      "image": "parts/foot.png",
+      "box": [
+        -12,
+        -10,
+        26,
+        10
+      ]
+    },
+    "hips": {
+      "image": "parts/hips.png",
+      "box": [
+        -30,
+        -18,
+        32,
+        40
+      ]
+    },
+    "torso": {
+      "image": "parts/torso.png",
+      "box": [
+        -34,
+        -76,
+        32,
+        6
+      ]
+    },
+    "head": {
+      "image": "parts/head.png",
+      "box": [
+        -80,
+        -170,
+        90,
+        110
+      ]
+    },
+    "hair_front": {
+      "image": "parts/hair_front.png",
+      "box": [
+        -80,
+        -170,
+        90,
+        110
+      ]
+    }
+  },
+  "faces": {
+    "box": [
+      -69.5,
+      -80,
+      70.5,
+      0
+    ],
+    "images": {
+      "idle": "faces/idle.png",
+      "blink": "faces/blink.png",
+      "happy": "faces/happy.png",
+      "sleep": "faces/sleep.png",
+      "surprised": "faces/surprised.png",
+      "focus": "faces/focus.png",
+      "shy": "faces/shy.png",
+      "angry": "faces/angry.png"
+    }
+  },
+  "source": {
+    "method": "generated",
+    "tools": [
+      "tools/artgen（佔位角色）",
+      "--export-package"
+    ]
+  }
+}

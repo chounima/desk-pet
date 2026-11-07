@@ -62,6 +62,20 @@ public partial class VtuberTab : ScrollContainer
         body.AddChild(pick);
         body.AddChild(Ui.Text(I18n.T("vtuber.moveHint"), Ui.Muted, 13, wrap: true));
 
+        // 角度（面向）：0 正面、90 側面、180 背面、270 左側；角色有那個視角的圖才換得過去
+        body.AddChild(Ui.Heading(I18n.T("vtuber.view")));
+        var angle = new HSlider { MinValue = 0, MaxValue = 359, Step = 1, Value = v.ViewYaw, SizeFlagsHorizontal = SizeFlags.ExpandFill,
+                                  FocusMode = FocusModeEnum.None, CustomMinimumSize = new Vector2(0, Ui.Px(24)) };
+        var angleText = Ui.Text($"{v.ViewYaw:0}°", Ui.Accent, 13);
+        angle.ValueChanged += a => { feature.SetViewYaw((float)a); angleText.Text = $"{a:0}°"; };
+        var presets = new HFlowContainer();
+        foreach (var (key, yaw) in new[] { ("vtuber.front", 0f), ("vtuber.side", 90f), ("vtuber.back", 180f), ("vtuber.left", 270f) })
+            presets.AddChild(Ui.Button(I18n.T(key), () => angle.Value = yaw));
+        body.AddChild(presets);
+        body.AddChild(Ui.Row(angle, angleText));
+        body.AddChild(Check("vtuber.autoTurn", v.AutoTurn, feature.SetAutoTurn));
+        body.AddChild(Ui.Text(I18n.T("vtuber.viewHint"), Ui.Muted, 13, wrap: true));
+
         // 麥克風
         body.AddChild(Ui.Heading(I18n.T("vtuber.mic")));
         var mics = new OptionButton { FocusMode = FocusModeEnum.None };
