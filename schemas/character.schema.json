@@ -1,12 +1,17 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "character.schema.json",
-  "title": "自訂角色 文件\\DeskPet\\characters\\<名稱>\\character.json",
+  "title": "角色部件包 character.json（正式角色 art/characters/<id>/、原始檔 art_src/<id>/、自訂角色 文件\\DeskPet\\characters\\<名稱>\\ 都用這個格式）",
+  "description": "以 base 角色的骨架與動作為範本，部件與表情換成自己的圖。圖片可以是 PNG／JPG／WebP／SVG；檔名（或圖層名）就是部件名，見 docs/ART_GUIDE.md。",
   "type": "object",
   "required": [
     "base"
   ],
   "properties": {
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
     "name": {
       "type": "string"
     },
@@ -15,12 +20,20 @@
     },
     "base": {
       "type": "string",
-      "description": "範本角色 id（複製它的骨架與動作）"
+      "description": "範本角色 id（複製它的骨架、比例、動作、錨點）"
+    },
+    "form": {
+      "type": "string",
+      "description": "範本角色的哪個型態（例如 quadruped）；沒有 = 預設型態"
     },
     "parts": {
       "type": "object",
       "additionalProperties": {
         "type": "object",
+        "required": [
+          "image",
+          "box"
+        ],
         "properties": {
           "image": {
             "type": "string"
@@ -32,18 +45,42 @@
             },
             "minItems": 4,
             "maxItems": 4,
-            "description": "[x0, y0, x1, y1]，Q 版單位"
+            "description": "[x0, y0, x1, y1]：圖片放在部件座標（Q 版單位）的哪個範圍"
+          },
+          "alt": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "required": [
+                "image",
+                "box"
+              ],
+              "properties": {
+                "image": {
+                  "type": "string"
+                },
+                "box": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 4,
+                  "maxItems": 4,
+                  "description": "[x0, y0, x1, y1]：圖片放在部件座標（Q 版單位）的哪個範圍"
+                }
+              }
+            },
+            "description": "替換圖（例如手的 peace），沒有就用範本角色的"
           }
-        },
-        "required": [
-          "image",
-          "box"
-        ]
+        }
       },
-      "description": "{ 部件圖名: { image, box } }"
+      "description": "{ 部件名（torso、arm_u、hair_front…，同範本的部件圖檔名）: { image, box, alt } }"
     },
     "faces": {
       "type": "object",
+      "required": [
+        "images"
+      ],
       "properties": {
         "box": {
           "type": "array",
@@ -52,7 +89,7 @@
           },
           "minItems": 4,
           "maxItems": 4,
-          "description": "[x0, y0, x1, y1]，Q 版單位"
+          "description": "[x0, y0, x1, y1]：圖片放在部件座標（Q 版單位）的哪個範圍"
         },
         "images": {
           "type": "object",
@@ -61,9 +98,56 @@
           }
         }
       },
-      "required": [
-        "images"
-      ]
+      "description": "整張臉的表情 { box, images: { idle, blink, happy, sleep, surprised, focus, shy, angry } }，沒有的用 idle"
+    },
+    "anchors": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "bone"
+        ],
+        "properties": {
+          "bone": {
+            "type": "string"
+          },
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "scale": {
+            "type": "number"
+          }
+        }
+      },
+      "description": "錨點覆寫（hat、eyes、neck、back、mouth、nameTag…）"
+    },
+    "propOverrides": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "dx": {
+            "type": "number"
+          },
+          "dy": {
+            "type": "number"
+          },
+          "scale": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "headTop": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 2,
+      "maxItems": 2
     },
     "lines": {
       "type": "object",
@@ -72,7 +156,49 @@
         "items": {
           "type": "string"
         }
+      },
+      "description": "台詞（沒有的 key 用 default）"
+    },
+    "source": {
+      "type": "object",
+      "description": "美術來源（人工／AI 輔助／混合）與工具，詳細寫在 art_src/<id>/CREDITS.md",
+      "properties": {
+        "method": {
+          "enum": [
+            "manual",
+            "ai",
+            "mixed",
+            "generated"
+          ]
+        },
+        "tools": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "author": {
+          "type": "string"
+        }
       }
+    },
+    "face": {
+      "type": "object",
+      "description": "（第 3 階段）分層表情：eyes、pupils、brows、mouth 各自的圖"
+    },
+    "hair": {
+      "type": "object",
+      "description": "（第 3 階段）頭髮骨鏈分節的圖"
+    },
+    "views": {
+      "type": "object",
+      "description": "（第 6 階段）其他視角，例如 bust（正面半身）的部件"
+    },
+    "physics": {
+      "type": "object"
+    },
+    "mesh": {
+      "type": "object"
     }
   }
 }

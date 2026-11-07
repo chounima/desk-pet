@@ -77,6 +77,15 @@ public partial class Main : Node2D
             GetTree().Quit();
             return;
         }
+        // --export-package=角色[@型態] --out=資料夾：佔位角色輸出成部件包（美術流程測試用，見 Tools/PackageExport.cs）
+        if (OS.GetCmdlineUserArgs().FirstOrDefault(a => a.StartsWith("--export-package=")) is { } exportArg)
+        {
+            duplicate = true;
+            var a = ParseArgs();
+            GetTree().Quit(Tools.PackageExport.Run(exportArg.Split('=', 2)[1], a.GetValueOrDefault("out", "user://package"),
+                float.Parse(a.GetValueOrDefault("export-scale", "4"), System.Globalization.CultureInfo.InvariantCulture)));
+            return;
+        }
         // --selftest=control：動作與表情的優先順序規則
         if (OS.GetCmdlineUserArgs().Contains("--selftest=control"))
         {

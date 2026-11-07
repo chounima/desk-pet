@@ -21,6 +21,9 @@ function preload(urls) {
   for (const url of urls) new Image().src = url;
 }
 
+// 部件圖的網址：完整網址（部件包的圖）直接用，否則接在角色資料夾後面
+const resolve = (rig, file) => /^[a-z]+:/i.test(file) ? file : rig.base + file;
+
 export class PetView {
   constructor(layer, rig, props) {
     this.rig = rig;
@@ -80,7 +83,7 @@ export class PetView {
   }
 
   showFace() {
-    const c = this.customFaces;
+    const c = this.customFaces ?? this.rig.defaultFaces;      // 編輯器的自訂表情 > 部件包的表情 > 角色原本的
     if (c?.images && Object.keys(c.images).length) {
       setImage(this.faceImg, c.images[this.face] ?? c.images.idle ?? Object.values(c.images)[0], c.box);
       return;
@@ -94,7 +97,7 @@ export class PetView {
     for (const a of this.altSlots) {
       const want = a.slot.alt[map[a.slot.name]] ? map[a.slot.name] : null;
       if (want === a.current) continue;
-      if (want) setImage(a.img, this.rig.base + a.slot.alt[want].file, a.slot.alt[want].box);
+      if (want) setImage(a.img, resolve(this.rig, a.slot.alt[want].file), a.slot.alt[want].box);
       else this.restoreImage(a.slot, a.img);
       a.current = want;
     }
@@ -131,7 +134,7 @@ export class PetView {
   // 部件的基本圖：有穿衣服就用衣服的圖，否則用角色原本的
   restoreImage(slot, img) {
     const art = slot.file.split("/").pop().replace(/\.svg$/, "");
-    const part = this.outfit?.[art];
+    const part = this.outfit?.[art] ?? this.rig.defaultOutfit?.[art];     // 衣服 > 部件包的圖 > 角色原本的
     if (part) setImage(img, part.url, part.box);
     else setImage(img, this.rig.base + slot.file, slot.box);
   }

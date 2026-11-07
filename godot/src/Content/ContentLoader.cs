@@ -2,6 +2,7 @@
 //
 // 開發時直接讀專案根目錄（godot/ 的上一層）的 art/ 與 data/，網頁預覽和桌寵共用同一份資料；
 // 匯出後則讀 res://content/（打包前由 tools/sync_content.py 複製進來）。
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -56,7 +57,40 @@ public static class ContentLoader
                 form.Data.BasePath = $"{dir}{form.Rig}";
             }
         }
+        LoadPackages(ids, rigs);
         return (ids, rigs);
+    }
+
+    /// <summary>
+    /// art/packages/&lt;id&gt;/character.json（美術部件包，由 tools/import_layers.py 產生）：
+    /// 和佔位角色同名 = 換掉它的美術（骨架、動作沿用 art/characters/&lt;id&gt;）；新名字 = 新角色（要指定 base）。
+    /// 佔位角色由 tools/gen_art.py 整個重新產生，美術放在另一個資料夾才不會被蓋掉。
+    /// </summary>
+    static void LoadPackages(List<string> ids, Dictionary<string, RigData> rigs)
+    {
+        var root = $"{Root}/art/packages";
+        // 清單 index.json（匯入工具維護，網頁也讀這份）；沒有就掃資料夾
+        IEnumerable<string> names;
+        if (Godot.FileAccess.FileExists($"{root}/index.json")) names = ReadJson<List<string>>($"{root}/index.json");
+        else
+        {
+            using var dir = DirAccess.Open(root);
+            if (dir == null) return;
+            names = dir.GetDirectories().OrderBy(n => n).ToList();
+        }
+        foreach (var name in names)
+        {
+            var folder = $"{root}/{name}";
+            if (!CharacterPackage.Exists(folder)) continue;
+            try
+            {
+                var rig = CharacterPackage.Load(folder, name, rigs);
+                WarnNewerFormat(rig);
+                if (!rigs.ContainsKey(name)) ids.Add(name);
+                rigs[name] = rig;
+            }
+            catch (Exception e) { GD.PushWarning($"部件包 {name} 讀取失敗：{e.Message}"); }
+        }
     }
 
     static void WarnNewerFormat(RigData rig)

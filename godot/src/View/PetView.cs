@@ -172,7 +172,7 @@ public partial class PetView : Node2D
             if (item.Slot?.Alt is not { } alts) continue;
             var want = map.TryGetValue(item.Slot.Name, out var w) && alts.ContainsKey(w) ? w : null;
             if (want == item.CurrentAlt) continue;
-            if (want != null) SetImage(item, rig.BasePath + alts[want].File, alts[want].Box);
+            if (want != null) SetImage(item, rig.Resolve(alts[want].File), alts[want].Box);
             else RestoreImage(item);
             item.CurrentAlt = want;
         }

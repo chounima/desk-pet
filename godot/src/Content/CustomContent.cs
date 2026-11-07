@@ -1,4 +1,4 @@
-// 使用者自訂內容：文件\DeskPet\accessories（配件）與 outfits（衣服），由網頁預覽的編輯器（preview/editor.html）產生
+﻿// 使用者自訂內容：文件\DeskPet\accessories（配件）與 outfits（衣服），由網頁預覽的編輯器（preview/editor.html）產生
 //
 // 配件  accessories\<名稱>\accessory.json  { "name", "slot": head|face|neck|back, "image": "hat.png", "box": [x0,y0,x1,y1] }
 // 衣服  outfits\<名稱>\outfit.json        { "name", "character": "chouma", "parts": { "torso": { "image", "box" }, … } }
@@ -93,24 +93,8 @@ public static class CustomContent
         return result;
     }
 
-    sealed class CharacterFile
-    {
-        public string Name { get; set; } = "";
-        public string Description { get; set; } = "";
-        public string Base { get; set; } = "";
-        public Dictionary<string, OutfitPart> Parts { get; set; } = new();
-        public FaceSet? Faces { get; set; }
-        public Dictionary<string, List<string>> Lines { get; set; } = new();
-    }
-
-    sealed class FaceSet
-    {
-        public float[] Box { get; set; } = { 0, 0, 1, 1 };
-        public Dictionary<string, string> Images { get; set; } = new();
-    }
-
     /// <summary>
-    /// 自訂角色：以 base 角色的骨架與動作為範本（複製它的 rig），部件與表情換成自己的圖。
+    /// 自訂角色（文件\DeskPet\characters\&lt;資料夾&gt;\character.json）：和正式角色同一種部件包格式（CharacterPackage）。
     /// id 為 custom_&lt;資料夾名&gt;；沒換的部件、表情沿用範本的。
     /// </summary>
     public static List<RigData> LoadCharacters(IReadOnlyDictionary<string, RigData> builtin)
@@ -120,35 +104,11 @@ public static class CustomContent
         if (!Directory.Exists(dir)) return result;
         foreach (var folder in Directory.EnumerateDirectories(dir))
         {
-            var json = System.IO.Path.Combine(folder, "character.json");
             try
             {
-                if (!File.Exists(json)) continue;
-                var c = JsonSerializer.Deserialize<CharacterFile>(File.ReadAllText(json), Options)!;
-                if (!builtin.TryGetValue(c.Base, out var template)) throw new InvalidDataException($"找不到範本角色 {c.Base}");
-                // 複製範本的骨架資料（序列化再讀回來就是一份全新的物件）
-                var rig = JsonSerializer.Deserialize<RigData>(JsonSerializer.Serialize(template, Options), Options)!;
-                rig.BasePath = template.BasePath;
-                rig.Id = $"custom_{System.IO.Path.GetFileName(folder)}";
-                rig.Name = string.IsNullOrWhiteSpace(c.Name) ? System.IO.Path.GetFileName(folder) : c.Name;
-                rig.Description = string.IsNullOrWhiteSpace(c.Description) ? "自訂角色" : c.Description;
-                rig.Forms = null;
-                foreach (var part in c.Parts.Values)
-                {
-                    part.Path = System.IO.Path.Combine(folder, part.Image).Replace('\\', '/');
-                    if (!File.Exists(part.Path)) throw new FileNotFoundException($"找不到圖片 {part.Image}");
-                }
-                rig.DefaultOutfit = c.Parts;
-                if (c.Faces is { Images.Count: > 0 } faces)
-                {
-                    var faceSlot = rig.Slots.Find(s => s.Variants != null)!;
-                    var idle = faces.Images.GetValueOrDefault("idle") ?? System.Linq.Enumerable.First(faces.Images.Values);
-                    // 每個表情都要有圖：沒做的用 idle
-                    faceSlot.Variants = faceSlot.Variants!.Keys.ToDictionary(
-                        k => k, k => System.IO.Path.Combine(folder, faces.Images.GetValueOrDefault(k) ?? idle).Replace('\\', '/'));
-                    faceSlot.Box = faces.Box;
-                }
-                rig.CustomLines = c.Lines;
+                if (!CharacterPackage.Exists(folder)) continue;
+                var rig = CharacterPackage.Load(folder, $"custom_{System.IO.Path.GetFileName(folder)}", builtin);
+                if (string.IsNullOrWhiteSpace(rig.Description)) rig.Description = "自訂角色";
                 result.Add(rig);
             }
             catch (Exception e) { GD.PushWarning($"[DeskPet] 自訂角色 {folder} 讀取失敗：{e.Message}"); }

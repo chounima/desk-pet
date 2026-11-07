@@ -244,11 +244,47 @@ def check_i18n(report: Report, root: Path):
             report.warn(rel(f, root), f"少了 {len(missing)} 個翻譯（會用繁中）：{', '.join(missing[:8])}{'…' if len(missing) > 8 else ''}")
 
 
+def check_package(report: Report, root: Path, sch, folder: Path, char_ids: set[str]) -> None:
+    """部件包（art/packages/<id>/、art_src/<id>/）：格式、圖片都在、範本角色存在"""
+    pkg = check_schema(report, root, sch["character"], folder / "character.json")
+    if pkg is None:
+        return
+    where = rel(folder / "character.json", root)
+    base = pkg.get("base") or folder.name
+    if base not in char_ids:
+        report.error(where, f"範本角色 {base} 不存在")
+    parts = pkg.get("parts", {})
+    images = [p["image"] for p in parts.values()]
+    images += [a["image"] for p in parts.values() for a in (p.get("alt") or {}).values()]
+    images += list((pkg.get("faces") or {}).get("images", {}).values())
+    for image in images:
+        if not (folder / image).exists():
+            report.error(where, f"圖片 {image} 不存在")
+
+
+def check_packages(report: Report, root: Path, sch, char_ids: set[str]) -> None:
+    packages = root / "art" / "packages"
+    if packages.exists():
+        listed = load(packages / "index.json") if (packages / "index.json").exists() else []
+        for name in listed:
+            if not (packages / name / "character.json").exists():
+                report.error("art/packages/index.json", f"{name} 沒有 character.json")
+        for folder in (p for p in packages.iterdir() if (p / "character.json").exists()):
+            if folder.name not in listed:
+                report.warn(rel(folder, root), "沒有列在 art/packages/index.json，不會被載入（重新匯入會更新清單）")
+            check_package(report, root, sch, folder, char_ids)
+    src = root / "art_src"
+    if src.exists():
+        for folder in (p for p in src.iterdir() if (p / "character.json").exists()):
+            check_package(report, root, sch, folder, char_ids)
+
+
 def validate(root: Path) -> Report:
     report = Report()
     sch = schemas(root)
     bodies = check_animations(report, root, sch)
     chars, bones = check_characters(report, root, sch, bodies)
+    check_packages(report, root, sch, {c.split("/")[0] for c, _ in chars})
     check_tracks_and_props(report, root, bones | {"root"})
     for name in ("tuning", "guests"):
         if (root / "data" / f"{name}.json").exists():

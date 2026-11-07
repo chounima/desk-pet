@@ -22,7 +22,56 @@ export async function loadCharacters() {
       f.data.base = `${base}${f.rig}`;
     }));
   }));
+  await loadPackages(ids, rigs);
   return { ids, rigs };
+}
+
+// 美術部件包 art/packages/<id>/character.json（tools/import_layers.py 產生，清單在 index.json）：
+// 和佔位角色同名 = 換掉它的美術（骨架、動作沿用）；新名字 = 新角色（要指定 base）。規則同桌寵的 CharacterPackage
+async function loadPackages(ids, rigs) {
+  const res = await fetch(`${PATHS.art}/packages/index.json`);
+  if (!res.ok) return;
+  for (const name of await res.json()) {
+    try {
+      const folder = `${PATHS.art}/packages/${name}/`;
+      const rig = applyPackage(name, await getJSON(`${folder}character.json`), folder, rigs);
+      if (!rigs[name]) ids.push(name);
+      rigs[name] = rig;
+    } catch (e) {
+      console.warn(`部件包 ${name} 讀取失敗：${e.message}`);
+    }
+  }
+}
+
+function applyPackage(id, pkg, folder, rigs) {
+  const baseId = pkg.base || id;
+  const baseRig = rigs[baseId];
+  if (!baseRig) throw new Error(`找不到範本角色 ${baseId}`);
+  const template = formRig(baseRig, pkg.form);
+  const { forms, ...rest } = template;
+  const rig = JSON.parse(JSON.stringify(rest));          // 複製範本（不含型態，型態的 data 會指回自己）
+  rig.base = template.base;
+  rig.id = id;
+  rig.name = pkg.name || id;
+  rig.description = pkg.description ?? "";
+  const url = file => new URL(file, new URL(folder, location.href)).href;
+  rig.defaultOutfit = {};
+  for (const [name, part] of Object.entries(pkg.parts ?? {})) {
+    rig.defaultOutfit[name] = { url: url(part.image), box: part.box };
+    // 替換圖：用這張部件圖的插槽（近側、遠側）都換
+    for (const [alt, a] of Object.entries(part.alt ?? {}))
+      for (const slot of rig.slots.filter(s => s.file?.split("/").pop().replace(/\.[a-z]+$/, "") === name))
+        (slot.alt ??= {})[alt] = { file: url(a.image), box: a.box };
+  }
+  if (pkg.faces?.images && Object.keys(pkg.faces.images).length)
+    rig.defaultFaces = { box: pkg.faces.box, images: Object.fromEntries(Object.entries(pkg.faces.images).map(([k, v]) => [k, url(v)])) };
+  Object.assign(rig.anchors ??= {}, pkg.anchors ?? {});
+  Object.assign(rig.propOverrides ??= {}, pkg.propOverrides ?? {});
+  if (pkg.headTop?.length === 2) rig.headTop = pkg.headTop;
+  // 換掉自己的美術：其他型態照舊（預設型態指向新的資料）
+  if (baseId === id && template === baseRig && forms)
+    rig.forms = Object.fromEntries(Object.entries(forms).map(([k, f]) => [k, { ...f, data: f.rig ? f.data : rig }]));
+  return rig;
 }
 
 // 取得角色某個型態的骨架；沒有這個型態就用預設的
