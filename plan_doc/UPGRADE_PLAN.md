@@ -150,6 +150,10 @@
 
 ## 第 2 階段：動作編輯器＋角色專屬動作
 
+> ✅ 2026-11-07 完成（`04ab357`～）：2a～2n；2o 重修 walk、run、dragged、jump（著地壓扁、頭慢半拍、被拎著晃）並新增 land；2p 試做 Chouma 專屬 walk（差異）。
+> 沒動 vbSpike：會改到排球擊球點的計算（Probe），要調的話要和排球參數一起測。
+> 動作編輯器：`preview/animator.html`（`?selftest=1`），存檔與物理參數走 `tools/serve.py`。
+
 ### 2-1 角色專屬動作
 
 找動作的順序（找到就用）：
