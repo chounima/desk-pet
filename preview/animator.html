@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>Desk Pet 動作編輯器</title>
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/editor.css">
+<link rel="stylesheet" href="css/animator.css">
+</head>
+<body>
+  <aside id="side">
+    <h1>🎬 動作編輯器</h1>
+    <p class="hint">在角色身上拖關節點轉動骨頭（Shift＋拖 = 移動），會在目前的時間加上或更新關鍵影格。<br>時間軸：點一下跳到那個時間、拖關鍵影格移動、雙擊加關鍵影格、Delete 刪除。空白鍵播放／暫停，← → 一格。</p>
+
+    <h2>角色與動作</h2>
+    <div class="row"><select data-char></select><select data-form></select></div>
+    <div class="row"><select data-clip></select><button data-new title="複製目前的動作成一個新動作">＋ 新動作</button></div>
+    <p class="hint" data-source></p>
+
+    <h2>播放</h2>
+    <div class="row">
+      <button data-play class="on">▶ 播放</button>
+      <select data-speed><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option></select>
+      <span data-time class="muted"></span>
+    </div>
+    <div class="row">
+      <label><input type="checkbox" data-onion checked> 洋蔥皮</label>
+      <label><input type="checkbox" data-compare checked> 多角色比較</label>
+      <label><input type="checkbox" data-overlay> 呼吸疊加層</label>
+    </div>
+
+    <h2>動作設定</h2>
+    <label class="field">名稱 <input data-label></label>
+    <label class="field">長度（秒） <input type="number" step="0.05" min="0.05" data-duration></label>
+    <label class="field">表情 <input data-face placeholder="idle、happy…"></label>
+    <div class="row"><label><input type="checkbox" data-loop> 循環</label></div>
+
+    <h2>選到的關鍵影格</h2>
+    <p class="hint" data-key-info>點時間軸上的關鍵影格</p>
+    <label class="field">數值 <input type="number" step="0.5" data-key-value disabled></label>
+    <label class="field">曲線（到下一個關鍵影格）
+      <select data-curve disabled>
+        <option value="smooth">smooth 平滑</option><option value="linear">linear 等速</option>
+        <option value="easeIn">easeIn 慢→快</option><option value="easeOut">easeOut 快→慢</option>
+        <option value="back">back 超過再回來</option><option value="hold">hold 停住再跳</option>
+      </select>
+    </label>
+    <canvas data-curve-preview width="280" height="90"></canvas>
+
+    <h2>存檔 <span class="muted">（要用 python tools/serve.py 開）</span></h2>
+    <label class="field">存到
+      <select data-target>
+        <option value="shared">共用（所有角色）</option>
+        <option value="body">這個體型</option>
+        <option value="character">這個角色專屬</option>
+        <option value="form">這個角色＋型態專屬</option>
+      </select>
+    </label>
+    <div class="row"><label><input type="checkbox" data-diff checked> 只存差異（extends，角色專屬時）</label></div>
+    <div class="buttons"><button data-save class="on">💾 存檔</button></div>
+    <p class="hint" data-status></p>
+
+    <h2>次級物理 <span class="muted">（這個角色）</span></h2>
+    <div data-physics></div>
+    <div class="row"><label><input type="checkbox" data-move> 平移測試（左右移動、急停）</label></div>
+    <div class="buttons"><button data-save-physics>💾 存物理參數</button></div>
+  </aside>
+
+  <main id="main">
+    <svg id="canvas">
+      <line data-ground></line>
+      <g id="compare"></g>
+      <g id="onion" class="ghost"></g>
+      <g id="pets"></g>
+      <g id="joints"></g>
+    </svg>
+    <section id="timeline"></section>
+  </main>
+
+  <script>
+    // 程式出錯時顯示在標題與狀態列（測試頁 tools/web_test.ps1 讀得到）
+    const showError = msg => { document.title = `ERROR ${msg}`; const s = document.querySelector("[data-status]"); if (s) s.textContent = `程式錯誤：${msg}`; };
+    addEventListener("error", e => showError(`${e.message} @${e.filename?.split("/").pop()}:${e.lineno}`));
+    addEventListener("unhandledrejection", e => showError(e.reason?.stack ?? e.reason));
+  </script>
+  <script type="module" src="js/animator/main.js"></script>
+</body>
+</html>

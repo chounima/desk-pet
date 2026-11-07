@@ -142,6 +142,7 @@ async function attachCharacterClips(sets, dir) {
       set[name] = { name, ...(file.extends ? extendClip(set[file.extends], file) : file) };
     }
   };
+  Object.defineProperty(sets, "characterIndex", { enumerable: false, value: index });   // 動作編輯器判斷動作來自哪一層
   Object.defineProperty(sets, "for", {
     enumerable: false,
     value(rig) {

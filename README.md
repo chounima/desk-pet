@@ -77,6 +77,7 @@ godot/src/
 | `tools/test_discord.ps1` | 假的 Discord RPC 伺服器（`tools/mock_discord.ps1`）跑完整劇本 |
 | `tools/record_clip.ps1 -Char sera -Clip walk` | 桌寵與網頁各錄一張比較圖到 `build/record/`（`--record`、`preview/record.html`） |
 | `tools/perf.ps1` | 1、8、20 隻客人時每幀處理時間，結果附加到 `build/perf.txt` |
+| `preview/animator.html` | **動作編輯器**（用 `python tools/serve.py` 開）：拖關節調姿勢、時間軸調關鍵影格與曲線、洋蔥皮、多角色比較、存成共用／體型／角色專屬（可以只存差異）、調次級物理參數存到 `data/physics.json`。`?selftest=1` 自我測試 |
 | `--sandbox`、`--no-single` | 測試用：不動真正的進度與設定、不連設定裡的外部服務；使用者的桌寵開著也能跑 |
 
 程式分層、功能模組、兩邊同步的規則見 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)。

@@ -1,0 +1,23 @@
+/* 動作編輯器（版面沿用 editor.css 的側欄） */
+#main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+#canvas { flex: 1; min-height: 0; cursor: default; background:
+  linear-gradient(45deg, #2f3242 25%, transparent 25%) 0 0 / 24px 24px,
+  linear-gradient(45deg, transparent 75%, #2f3242 75%) 0 0 / 24px 24px, #343747; }
+#joints circle { fill: #ffd75e; stroke: #24161b; stroke-width: 1.5; cursor: grab; opacity: 0.85; }
+#joints circle.sel { fill: #ff7d8a; r: 7; opacity: 1; }
+#joints text { fill: #ffd75e; font-size: 11px; pointer-events: none; paint-order: stroke; stroke: #24161b; stroke-width: 3px; }
+#compare .label { fill: var(--muted); font-size: 11px; }
+canvas[data-curve-preview] { width: 100%; background: rgba(0, 0, 0, 0.25); border-radius: 6px; }
+
+#timeline { height: 260px; overflow: auto; background: var(--panel); border-top: 1px solid var(--line); font-size: 12px; position: relative; user-select: none; }
+#timeline .ruler, #timeline .track { display: flex; height: 22px; }
+#timeline .ruler { position: sticky; top: 0; background: #23252f; z-index: 2; height: 24px; }
+#timeline .name { width: 130px; flex: none; padding: 3px 8px; color: var(--muted); border-right: 1px solid var(--line); overflow: hidden; white-space: nowrap; cursor: pointer; position: sticky; left: 0; background: inherit; }
+#timeline .track:nth-child(even) { background: rgba(255, 255, 255, 0.03); }
+#timeline .track.sel .name { color: #ffd75e; }
+#timeline .lane { position: relative; flex: 1; min-width: 400px; cursor: crosshair; }
+#timeline .tick { position: absolute; top: 0; bottom: 0; border-left: 1px solid #3a3f55; color: #7c809a; padding-left: 3px; font-size: 10px; }
+#timeline .key { position: absolute; top: 5px; width: 11px; height: 11px; margin-left: -5px; transform: rotate(45deg); background: #a9acc4; border: 1px solid #24161b; cursor: ew-resize; }
+#timeline .key.curve { background: #6fb7ff; }
+#timeline .key.sel { background: #ff7d8a; }
+#timeline .playhead { position: absolute; top: 0; bottom: 0; width: 2px; background: #d81e2c; pointer-events: none; z-index: 3; }
