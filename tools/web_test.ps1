@@ -1,4 +1,4 @@
-# 用無頭 Edge 跑網頁測試頁，依頁面標題（PASS／FAIL n／ERROR）決定結束碼
+﻿# 用無頭 Edge 跑網頁測試頁，依頁面標題（PASS／FAIL n／ERROR）決定結束碼
 # 用法：powershell -File tools/web_test.ps1 [-Page preview/tests/golden.html] [-Shot 截圖.png]
 param(
     [string]$Page = "preview/tests/golden.html",

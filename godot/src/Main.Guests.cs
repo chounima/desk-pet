@@ -97,7 +97,8 @@ public partial class Main
             if (s.Id == "discord") selfSpeaking.Remove(s.Id);
         }
         liveSources.Clear();
-        if (!settings.LiveMode) return;
+        // --sandbox（測試）不連設定裡的直播來源，只用命令列給的（--twitch、--discord、--audio）
+        if (!settings.LiveMode || sandbox) return;
         if (!string.IsNullOrWhiteSpace(settings.TwitchChannel)) liveSources.Add(new TwitchChat(settings.TwitchChannel));
         if (!string.IsNullOrWhiteSpace(settings.DiscordClientId)) liveSources.Add(new DiscordRpc(settings));
         if (settings.MicTalk || settings.MeetingAudio)

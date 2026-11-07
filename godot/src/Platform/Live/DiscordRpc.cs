@@ -144,9 +144,12 @@ public sealed class DiscordRpc : PresenceSource
 
     static async Task<NamedPipeClientStream> Connect(CancellationToken ct)
     {
-        for (var i = 0; i < 10; i++)
+        // 測試用：DESKPET_DISCORD_PIPE 指定假伺服器的 pipe（真的 Discord 開著時也能測，見 tools/test_discord.ps1）
+        var forced = Environment.GetEnvironmentVariable("DESKPET_DISCORD_PIPE");
+        var names = string.IsNullOrEmpty(forced) ? Enumerable.Range(0, 10).Select(i => $"discord-ipc-{i}") : new[] { forced };
+        foreach (var name in names)
         {
-            var p = new NamedPipeClientStream(".", $"discord-ipc-{i}", PipeDirection.InOut, PipeOptions.Asynchronous);
+            var p = new NamedPipeClientStream(".", name, PipeDirection.InOut, PipeOptions.Asynchronous);
             try
             {
                 await p.ConnectAsync(300, ct);

@@ -11,6 +11,7 @@
 //   --zones            印出身體各點判定成哪個部位
 //   --volley / --volley-bot  直接開始排球對打（bot = 模擬完美玩家自動回球）
 //   --guests=join:a@sera,speak:a,chat:a:嗨,leave:a  假的多人來源（見 ScriptSource）
+//   --no-single        自動測試用：不檢查單一實例（使用者的桌寵開著時也能跑）
 //   --twitch=頻道      連線某個 Twitch 聊天室（不存設定）
 //   --discord=ClientID 連線 Discord 本機 RPC（不存設定、不存 token）
 //   --audio=mic+apps   偵測麥克風／會議軟體音量（apps 可以在 data/guests.json 的 meetingApps 加程式）
@@ -72,6 +73,13 @@ public partial class Main : Node2D
             GetTree().Quit();
             return;
         }
+        // --selftest=live：多人功能的規則測試（Twitch 解析、聊天關鍵字）
+        if (OS.GetCmdlineUserArgs().Contains("--selftest=live"))
+        {
+            duplicate = true;
+            GetTree().Quit(Tests.LiveSelfTest.Run());
+            return;
+        }
         // --selftest=golden [--update]：共用測試（tests/golden/），和網頁版比對同一份答案
         if (OS.GetCmdlineUserArgs().Contains("--selftest=golden"))
         {
@@ -88,7 +96,8 @@ public partial class Main : Node2D
             return;
         }
         var args0 = ParseArgs();
-        if (!SingleInstance.TryAcquire())
+        // --no-single：自動測試用，使用者的桌寵開著時也能跑（會暫時多一隻）
+        if (!args0.ContainsKey("no-single") && !SingleInstance.TryAcquire())
         {
             GD.Print("[DeskPet] 已經有一隻桌寵在執行，結束這個實例");
             // SetProcess(false) 擋不住 Godot 在 _Ready 之後自動開啟的 _Process，所以另外用旗標擋
