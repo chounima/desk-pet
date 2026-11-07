@@ -1,5 +1,6 @@
-// 自訂配件／衣服編輯器：上傳圖片 → 在動起來的角色身上拖曳對齊 → 匯出 json
+// 自訂配件／衣服／角色編輯器：上傳圖片 → 在動起來的角色身上拖曳對齊 → 匯出 json
 // 配件掛在角色的錨點上（rig.anchors），衣服換掉同名部件；兩者的座標都是 Q 版單位，桌寵版用同一套規則畫
+// 📦 部件包（綁骨模式）：讀 art_src/<id>/ 的部件包，調整部件、表情的範圍與錨點（嘴巴、名牌），透過 tools/serve.py 存回去
 import { PATHS, TUNING } from "../config.js";
 import { formRig, loadAll } from "../core/loader.js";
 import { apply, mul } from "../core/math.js";
@@ -24,6 +25,8 @@ const state = {
   outfit: { name: "我的衣服", parts: {}, selected: null },
   // 自訂角色：parts 同衣服；faces.place 是所有表情共用的位置，faces.images 每個表情一張圖
   character: { name: "我的角色", desc: "自己做的角色", greet: "嗨！", parts: {}, selected: null, faces: { place: null, images: {} } },
+  // 部件包：parts、faces 同自訂角色；anchors 是可以拖的錨點 { 名稱: { bone, x, y, w, h, scale, anchorScale } }
+  package: { id: null, list: [], parts: {}, selected: null, faces: { place: null, images: {} }, anchors: {} },
   paused: false,
 };
 
@@ -67,14 +70,18 @@ function layout() {
 
 // 換部件的兩種模式（衣服、自訂角色）各有一份資料
 const EXPRESSIONS = { idle: "待機", blink: "眨眼", happy: "開心", sleep: "睡覺", surprised: "驚訝", focus: "專注", shy: "害羞", angry: "生氣" };
-const parts = () => (state.mode === "character" ? state.character : state.outfit);
+const parts = () => (state.mode === "character" ? state.character : state.mode === "package" ? state.package : state.outfit);
+const withFaces = () => state.mode === "character" || state.mode === "package";
 const faceOf = sel => (sel?.startsWith("face:") ? sel.slice(5) : null);
+const anchorOf = sel => (sel?.startsWith("anchor:") ? sel.slice(7) : null);
+const ANCHORS = { mouth: "錨點：嘴巴（講話的聲波）", nameTag: "錨點：名牌、泡泡" };
 const faceBox = () => rig().slots.find(s => s.variants).box;
 
 // ---------- 目前在編輯的圖 ----------
 function currentImg() {
   if (state.mode === "accessory") return state.acc.img;
   const ps = parts();
+  if (anchorOf(ps.selected)) return ps.anchors?.[anchorOf(ps.selected)] ?? null;
   return faceOf(ps.selected) ? ps.faces?.place ?? null : ps.parts[ps.selected] ?? null;
 }
 
@@ -87,6 +94,7 @@ function frameOf() {
     return mul(pet.world[a.bone], [a.scale, 0, 0, a.scale, a.x, a.y]);
   }
   const sel = parts().selected;
+  if (anchorOf(sel)) return pet.world[parts().anchors[anchorOf(sel)]?.bone] ?? null;
   const slot = faceOf(sel) ? r.slots.find(s => s.variants) : partSlot(sel);
   return slot ? pet.world[slot.bone] : null;
 }
@@ -103,11 +111,11 @@ function applyEdits() {
   const map = {};
   if (state.mode !== "accessory") for (const [art, img] of Object.entries(parts().parts)) map[art] = { url: img.url, box: boxOf(img) };
   pet.setOutfit(Object.keys(map).length ? map : null);
-  // 自訂角色的表情：共用一個位置；選到某個表情時讓角色擺出那個表情
-  const faces = state.character.faces, charMode = state.mode === "character";
+  // 自訂角色、部件包的表情：共用一個位置；選到某個表情時讓角色擺出那個表情
+  const charMode = withFaces(), faces = charMode ? parts().faces : state.character.faces;
   const urls = Object.fromEntries(Object.entries(faces.images).map(([k, v]) => [k, v.url]));
   pet.setFaceImages(charMode && faces.place ? { box: boxOf(faces.place), images: urls } : null);
-  pet.faceOverride = charMode ? faceOf(state.character.selected) : null;
+  pet.faceOverride = charMode ? faceOf(parts().selected) : null;
   ghostLayer.style.display = state.mode !== "accessory" && $("[data-ghost]").checked ? "" : "none";
   syncFields();
   updateHint();
@@ -173,6 +181,7 @@ $("[data-reset]").onclick = () => {
   const img = currentImg();
   if (!img) return;
   if (state.mode === "accessory") Object.assign(img, { x: 0, y: 0, scale: 1 });
+  else if (anchorOf(parts().selected)) Object.assign(img, { ...img.original });
   else {
     const sel = parts().selected;
     const [x0, y0, x1, y1] = faceOf(sel) ? faceBox() : partSlot(sel).box;
@@ -260,7 +269,8 @@ function renderCharacter() {
 function fillParts() {
   const arts = [...new Set(rig().slots.filter(s => s.file && !s.variants).map(s => s.file.split("/").pop().replace(".svg", "")))];
   const entries = arts.map(a => [a, PART_LABELS[a] ?? a]);
-  if (state.mode === "character") entries.push(...Object.entries(EXPRESSIONS).map(([k, v]) => [`face:${k}`, `表情：${v}`]));
+  if (withFaces()) entries.push(...Object.entries(EXPRESSIONS).map(([k, v]) => [`face:${k}`, `表情：${v}`]));
+  if (state.mode === "package") entries.push(...Object.entries(ANCHORS).map(([k, v]) => [`anchor:${k}`, v]));
   const ps = parts();
   fillSelect($("[data-part]"), entries, ps.selected ?? "torso");
   ps.selected = $("[data-part]").value;
@@ -278,7 +288,7 @@ $("[data-part]").onchange = e => { parts().selected = e.target.value; renderPart
 function renderPartList() {
   const ps = parts();
   const done = Object.keys(ps.parts).map(a => [a, PART_LABELS[a] ?? a]);
-  if (state.mode === "character") done.push(...Object.keys(ps.faces.images).map(k => [`face:${k}`, `表情：${EXPRESSIONS[k]}`]));
+  if (withFaces()) done.push(...Object.keys(ps.faces.images).map(k => [`face:${k}`, `表情：${EXPRESSIONS[k]}`]));
   $("[data-part-list]").replaceChildren(...done.map(([key, label]) => {
     const b = document.createElement("button");
     b.textContent = `✓ ${label}`;
@@ -292,20 +302,102 @@ for (const b of document.querySelectorAll("[data-mode]")) {
   b.onclick = () => {
     state.mode = b.dataset.mode;
     for (const x of document.querySelectorAll("[data-mode]")) x.classList.toggle("on", x === b);
-    const show = { accessory: ["accessory"], outfit: ["outfit"], character: ["character", "outfit"] }[state.mode];
+    const show = { accessory: ["accessory"], outfit: ["outfit"], character: ["character", "outfit"], package: ["package", "outfit"] }[state.mode];
     for (const p of document.querySelectorAll("[data-panel]")) p.hidden = !show.includes(p.dataset.panel);
-    $("[data-parts-title]").textContent = state.mode === "character" ? "部件與表情" : "衣服";
-    $("[data-outfit-name-field]").hidden = state.mode === "character";
-    $("[data-form]").hidden = state.mode === "character" || Object.keys(rigs[state.charId].forms ?? {}).length < 2;
+    $("[data-parts-title]").textContent = withFaces() ? "部件、表情、錨點" : "衣服";
+    $("[data-outfit-name-field]").hidden = withFaces();
+    $("[data-form]").hidden = withFaces() || Object.keys(rigs[state.charId].forms ?? {}).length < 2;
+    if (state.mode === "package") openPackageMode();
     fillParts();
     renderPartList();
     applyEdits();
   };
 }
 
+// ---------- 部件包（綁骨模式） ----------
+const pkgBase = id => new URL(`../art_src/${id}/`, location.href).href;
+const round1 = v => Math.round(v * 10) / 10;
+
+// 範圍 [x0, y0, x1, y1] → 編輯用的圖（中心、寬高、縮放 1）
+const fromBox = ([x0, y0, x1, y1], extra) => ({ ...extra, x: (x0 + x1) / 2, y: (y0 + y1) / 2, w: x1 - x0, h: y1 - y0, scale: 1 });
+
+async function openPackageMode() {
+  const status = $("[data-pkg-status]");
+  try {
+    const res = await fetch("/api/packages");
+    if (!res.ok) throw new Error(res.status);
+    state.package.list = await res.json();
+  } catch {
+    status.textContent = "讀不到部件包清單：請用 python tools/serve.py 開這個頁面（存檔也要靠它）。";
+    return;
+  }
+  const list = state.package.list;
+  fillSelect($("[data-pkg]"), list.map(p => [p.id, `${p.name}（${p.id}）`]), state.package.id ?? list[0]?.id);
+  if (!list.length) status.textContent = "art_src 裡還沒有部件包（見 docs/ART_GUIDE.md）。";
+  else if (!state.package.id) await loadPackage($("[data-pkg]").value);
+}
+
+async function loadPackage(id) {
+  const base = pkgBase(id);
+  const pkg = await (await fetch(`${base}character.json`)).json();
+  const p = state.package;
+  Object.assign(p, { id, parts: {}, faces: { place: null, images: {} }, anchors: {}, selected: null });
+  state.charId = rigs[pkg.base || id] ? pkg.base || id : state.charId;
+  state.form = pkg.form ?? null;
+  // 替換圖（例如 hand@peace）這裡不編輯，匯入時保留原本的範圍
+  for (const [art, part] of Object.entries(pkg.parts ?? {})) p.parts[art] = fromBox(part.box, { url: base + part.image, fileName: part.image });
+  if (pkg.faces?.box) {
+    p.faces.place = fromBox(pkg.faces.box);
+    for (const [k, v] of Object.entries(pkg.faces.images ?? {})) p.faces.images[k] = { url: base + v, fileName: v };
+  }
+  const r = rig();
+  for (const name of Object.keys(ANCHORS)) {
+    const a = pkg.anchors?.[name] ?? r.anchors?.[name] ?? (name === "nameTag" ? { bone: "head", x: r.headTop[0], y: r.headTop[1], scale: 1 } : null);
+    if (a) p.anchors[name] = { bone: a.bone, x: a.x, y: a.y, w: 6, h: 6, scale: 1, anchorScale: a.scale ?? 1, original: { x: a.x, y: a.y, scale: 1 } };
+  }
+  $("[data-pkg-status]").textContent = `${pkg.name || id}：範本 ${rigs[state.charId].name}${state.form ? `（${state.form}）` : ""}，${Object.keys(p.parts).length} 個部件、${Object.keys(p.faces.images).length} 個表情。拖曳或滾輪調整後存檔。`;
+  renderCharacter();
+}
+
+$("[data-pkg]").onchange = e => loadPackage(e.target.value);
+
+async function savePackage(doImport) {
+  const p = state.package;
+  if (!p.id) return;
+  const body = { parts: {}, anchors: {} };
+  for (const [art, img] of Object.entries(p.parts))
+    body.parts[art] = { box: boxOf(img), ...(img.url.startsWith("data:") ? { upload: img.url } : {}) };
+  if (p.faces.place) {
+    const uploads = Object.fromEntries(Object.entries(p.faces.images).filter(([, v]) => v.url.startsWith("data:")).map(([k, v]) => [k, v.url]));
+    body.faces = { box: boxOf(p.faces.place), uploads };
+  }
+  for (const [name, a] of Object.entries(p.anchors)) body.anchors[name] = { bone: a.bone, x: round1(a.x), y: round1(a.y), scale: a.anchorScale };
+  const status = $("[data-pkg-status]");
+  status.textContent = "存檔中…";
+  try {
+    const res = await fetch(`/api/package/${encodeURIComponent(p.id)}${doImport ? "?import=1" : ""}`, {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error ?? res.status);
+    status.textContent = doImport
+      ? `已存檔並${data.imported ? "匯入" : "匯入失敗"}。\n${data.output ?? ""}\n重新整理預覽頁面、重新啟動桌寵就會看到。`
+      : "已存回 art_src（還沒匯入：按「存檔並匯入」或跑 tools/import_layers.py）。";
+  } catch (e) {
+    status.textContent = `存檔失敗：${e.message}`;
+  }
+}
+
+$("[data-pkg-save]").onclick = () => savePackage(false);
+$("[data-pkg-import]").onclick = () => savePackage(true);
+
 // ---------- 匯出 ----------
 function updateHint() {
   const hint = $("[data-hint]");
+  if (state.mode === "package") {
+    hint.textContent = "部件包用上面的「存回部件包」存檔（不用下載）。換圖：選部件後上傳新圖片，存檔時會一起存進 art_src。";
+    return;
+  }
   if (state.mode === "accessory") {
     const img = state.acc.img;
     hint.textContent = img
@@ -326,6 +418,7 @@ function updateHint() {
 }
 
 $("[data-export]").onclick = () => {
+  if (state.mode === "package") return savePackage(false);
   if (state.mode === "accessory") {
     if (!state.acc.img) return alert("還沒有圖片");
     download("accessory.json", accessoryJson(state.acc.name, state.acc.slot, state.acc.img));
@@ -349,7 +442,9 @@ if (q.has("demo")) {
     const blob = await (await fetch(url)).blob();
     return readImage(new File([blob], url.split("/").pop(), { type: blob.type }));
   };
-  if (q.get("demo") === "character") {
+  if (q.get("demo") === "package") {
+    document.querySelector('[data-mode="package"]').click();
+  } else if (q.get("demo") === "character") {
     document.querySelector('[data-mode="character"]').click();
     const c = state.character;
     const pic = await asData(`${PATHS.art}/props/book.svg`);

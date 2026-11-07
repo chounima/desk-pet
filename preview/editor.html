@@ -13,6 +13,7 @@
       <button data-mode="accessory" class="on">🎩 配件</button>
       <button data-mode="outfit">👕 衣服</button>
       <button data-mode="character">🧍 角色</button>
+      <button data-mode="package">📦 部件包</button>
     </div>
 
     <h2>角色</h2>
@@ -48,7 +49,18 @@
       <label class="field">招呼語 <input data-char-greet value="嗨！"></label>
     </section>
 
-    <!-- 衣服（自訂角色也用這一區換部件與表情） -->
+    <!-- 部件包（art_src/<id>/）：綁骨模式，調整部件與表情的位置、錨點，存回部件包 -->
+    <section data-panel="package" hidden>
+      <h2>部件包 <span class="muted">（art_src/&lt;角色&gt;/，要用 python tools/serve.py 開）</span></h2>
+      <label class="field">部件包 <select data-pkg></select></label>
+      <div class="buttons">
+        <button data-pkg-save>💾 存回部件包</button>
+        <button data-pkg-import class="on">💾 存檔並匯入</button>
+      </div>
+      <p class="hint" data-pkg-status></p>
+    </section>
+
+    <!-- 衣服（自訂角色、部件包也用這一區換部件與表情） -->
     <section data-panel="outfit" hidden>
       <h2 data-parts-title>衣服</h2>
       <label class="field" data-outfit-name-field>名稱 <input data-outfit-name value="我的衣服"></label>
