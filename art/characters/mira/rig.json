@@ -1,4 +1,5 @@
 {
+  "version": 1,
   "id": "mira",
   "name": "Mira",
   "description": "蒸汽龐克的塗鴉滑板師",
@@ -28,6 +29,12 @@
       "bone": "head",
       "x": 3.7,
       "y": -29.3,
+      "scale": 0.46
+    },
+    "mouth": {
+      "bone": "head",
+      "x": 23.9,
+      "y": -23.8,
       "scale": 0.46
     },
     "neck": {

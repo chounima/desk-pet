@@ -1,4 +1,4 @@
-// 讀取角色、動作、道具資料
+﻿// 讀取角色、動作、道具資料
 //
 // 開發時直接讀專案根目錄（godot/ 的上一層）的 art/ 與 data/，網頁預覽和桌寵共用同一份資料；
 // 匯出後則讀 res://content/（打包前由 tools/sync_content.py 複製進來）。
@@ -47,6 +47,7 @@ public static class ContentLoader
             var dir = $"{Root}/art/characters/{id}/";
             var rig = ReadJson<RigData>($"{dir}rig.json");
             rig.BasePath = dir;
+            WarnNewerFormat(rig);
             rigs[id] = rig;
             foreach (var form in rig.Forms?.Values ?? Enumerable.Empty<FormData>())
             {
@@ -56,6 +57,12 @@ public static class ContentLoader
             }
         }
         return (ids, rigs);
+    }
+
+    static void WarnNewerFormat(RigData rig)
+    {
+        if (rig.Version > RigData.FormatVersion)
+            GD.PushWarning($"角色 {rig.Id} 的格式版本 {rig.Version} 比程式認得的 {RigData.FormatVersion} 新，部分功能可能沒有作用");
     }
 
     /// <summary>角色某個型態的骨架；沒有這個型態就用預設的</summary>

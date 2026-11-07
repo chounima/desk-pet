@@ -1,4 +1,5 @@
 {
+  "version": 1,
   "id": "chouma",
   "name": "Chouma",
   "description": "愛打排球的資工系大學生",
@@ -28,6 +29,12 @@
       "bone": "head",
       "x": 4.0,
       "y": -32.0,
+      "scale": 0.5
+    },
+    "mouth": {
+      "bone": "head",
+      "x": 26.0,
+      "y": -26.0,
       "scale": 0.5
     },
     "neck": {

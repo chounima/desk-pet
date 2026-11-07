@@ -158,6 +158,8 @@ def default_anchors(p, head=(1, 0)) -> dict:
     anchors = {
         "hat": ("head", 8 * s, -98 * s + dy, s),
         "eyes": ("head", 8 * s, -42 * s + dy, s),
+        # 嘴巴前緣（講話的聲波從這裡出來；之後的分層表情也用它定位嘴巴）
+        "mouth": ("head", 52 * s, -30 * s + dy, s),
     }
     if not isinstance(p, QuadProportions):
         anchors["neck"] = ("torso", 2, -p.neck + 6, 1)

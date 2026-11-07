@@ -1,4 +1,4 @@
-// 與網頁預覽共用的資料格式（art/characters/*/rig.json、data/animations/*.json、art/props/props.json）
+﻿// 與網頁預覽共用的資料格式（art/characters/*/rig.json、data/animations/*.json、art/props/props.json）
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -8,6 +8,11 @@ namespace DeskPet.Content;
 
 public sealed class RigData
 {
+    /// <summary>這個程式認得的最新角色格式版本（schemas/rig.schema.json）</summary>
+    public const int FormatVersion = 1;
+
+    /// <summary>角色格式版本；沒有 = 1。比 FormatVersion 新的檔案照樣讀，但會提醒</summary>
+    public int Version { get; set; } = 1;
     public string Id { get; set; } = "";
     public string Name { get; set; } = "";
     public string Description { get; set; } = "";
@@ -23,8 +28,17 @@ public sealed class RigData
     public Dictionary<string, float> TrackScale { get; set; } = new();
     /// <summary>個別道具的位置／大小修正（Q 版單位）</summary>
     public Dictionary<string, PropOverride> PropOverrides { get; set; } = new();
-    /// <summary>配件錨點：hat、eyes、neck、back</summary>
+    /// <summary>錨點：配件（hat、eyes、neck、back）、嘴巴（mouth，講話的聲波）…，開放的字典</summary>
     public Dictionary<string, AnchorData> Anchors { get; set; } = new();
+    /// <summary>（第 1 階段）次級物理 { 骨骼: 參數 }</summary>
+    public Dictionary<string, JsonElement>? Physics { get; set; }
+    /// <summary>（第 3 階段）分層表情：eyes、pupils、brows、mouth</summary>
+    public JsonElement? Face { get; set; }
+    /// <summary>（第 6 階段）其他視角（bust = 正面半身）與半身取景</summary>
+    public Dictionary<string, JsonElement>? Views { get; set; }
+    public JsonElement? Bust { get; set; }
+    /// <summary>還不認得的欄位：讀進來保留，工具重寫檔案時不會弄丟（之後版本的欄位、AI 部件包先放的資料）</summary>
+    [JsonExtensionData] public Dictionary<string, JsonElement>? Extra { get; set; }
     public List<BoneData> Bones { get; set; } = new();
     public List<SlotData> Slots { get; set; } = new();
 
@@ -111,6 +125,9 @@ public sealed class SlotData
     public Dictionary<string, string>? Variants { get; set; }
     /// <summary>部件替換圖：{ 替換名: { file, box } }</summary>
     public Dictionary<string, AltData>? Alt { get; set; }
+    /// <summary>（第 4 階段）網格變形</summary>
+    public JsonElement? Mesh { get; set; }
+    [JsonExtensionData] public Dictionary<string, JsonElement>? Extra { get; set; }
 }
 
 public sealed class AltData

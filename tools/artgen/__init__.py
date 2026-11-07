@@ -58,6 +58,7 @@ def build_character(char, out: Path, form=None) -> dict:
     })
     prop = getattr(src, "PROPORTIONS", rig.CHIBI)
     data = {
+        "version": 1,       # 角色格式版本（schemas/rig.schema.json）
         "id": char.ID, "name": char.NAME, "description": char.DESCRIPTION,
         "body": getattr(prop, "body_type", "humanoid"),
         "rootScale": prop.root_scale,

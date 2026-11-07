@@ -1,4 +1,4 @@
-// 講話中的聲波：從嘴巴前面一圈一圈往外擴散的弧線 ) ) )，讓「正在講話」更明顯
+﻿// 講話中的聲波：從嘴巴前面一圈一圈往外擴散的弧線 ) ) )，讓「正在講話」更明顯
 // 主角色和客人共用；講話停了就淡出
 using DeskPet.Game;
 using Godot;
@@ -10,7 +10,7 @@ public partial class SpeechWaves : Node2D
     const float Period = 0.7f;        // 一道聲波從嘴邊擴散到最外面的時間
     const int Count = 3;              // 同時有幾道
     const float Spread = 0.75f;       // 弧線的半個張角（弧度，約 43°）
-    static readonly Vector2 MouthFront = new(52, -30);     // 頭部骨骼座標：臉的前緣、嘴巴高度
+    static readonly Vector2 MouthFallback = new(52, -30);  // 角色沒有 mouth 錨點時（舊角色、自訂角色）：Q 版頭的嘴巴前緣
 
     static readonly Color Fill = new(1, 1, 1, 0.95f), Outline = new(0.14f, 0.09f, 0.11f, 0.85f);
 
@@ -31,8 +31,10 @@ public partial class SpeechWaves : Node2D
         time += dt;
         boost = Mathf.MoveToward(boost, mouthOpen ? 1 : 0, dt * 8);
         facing = pet.Facing;
-        size = pet.Scale;
-        Position = pet.BoneToScreen("head", MouthFront);
+        // 頭比較小的角色（正常頭身）聲波也小一點，但不要小到看不清楚
+        var hasMouth = pet.Rig.Anchors.TryGetValue("mouth", out var m);
+        size = pet.Scale * (hasMouth ? Mathf.Max(0.65f, m!.Scale) : 1);
+        Position = hasMouth ? pet.BoneToScreen(m!.Bone, new Vector2(m.X, m.Y)) : pet.BoneToScreen("head", MouthFallback);
         QueueRedraw();
     }
 

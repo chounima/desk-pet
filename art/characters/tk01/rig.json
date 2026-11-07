@@ -1,4 +1,5 @@
 {
+  "version": 1,
   "id": "tk01",
   "name": "TK-01",
   "description": "打字輔助型人形機體",
@@ -22,6 +23,12 @@
       "bone": "head",
       "x": 8,
       "y": -42,
+      "scale": 1
+    },
+    "mouth": {
+      "bone": "head",
+      "x": 52,
+      "y": -30,
       "scale": 1
     },
     "neck": {

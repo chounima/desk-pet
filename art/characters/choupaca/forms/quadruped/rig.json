@@ -1,4 +1,5 @@
 {
+  "version": 1,
   "id": "choupaca",
   "name": "Choupaca",
   "description": "Chouma 的羊駝化身（暴躁、體力差）",
@@ -22,6 +23,12 @@
       "bone": "head",
       "x": 7.5,
       "y": -80.5,
+      "scale": 0.7
+    },
+    "mouth": {
+      "bone": "head",
+      "x": 56,
+      "y": -56,
       "scale": 0.7
     },
     "neck": {

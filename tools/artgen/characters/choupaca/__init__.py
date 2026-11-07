@@ -33,6 +33,7 @@ ANCHORS = {
     "eyes": ("head", 7.5, -80.5, 0.7),
     "neck": ("torso", 4, -66, 0.9),
     "back": ("torso", -30, -30, 1),
+    "mouth": ("head", 56, -56, 0.7),    # 吻部前緣（和四足型態同一顆頭）
 }
 
 # 可切換的型態：預設直立，四足的動作放在 data/animations/quadruped/
