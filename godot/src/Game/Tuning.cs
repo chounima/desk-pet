@@ -1,40 +1,34 @@
-// 調整參數（對應 preview/js/config.js）
-using DeskPet.Content;
+// 調整參數：讀 data/tuning.json 的 pet、auto（網頁預覽 preview/js/config.js 讀同一份）
 using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json.Nodes;
+using DeskPet.Content;
 
 namespace DeskPet.Game;
 
 public static class Tuning
 {
-    public const float Scale = 0.8f;          // 角色縮放（「中」的大小）
+    /// <summary>data/tuning.json 整份（VolleyConfig 也從這裡讀）</summary>
+    internal static readonly JsonNode Data = JsonNode.Parse(ContentLoader.ReadText($"{ContentLoader.Root}/data/tuning.json"))!;
+    static readonly JsonNode Pet = Data["pet"]!;
+
+    public static readonly float Scale = F(Pet, "scale");               // 角色縮放（「中」的大小）
 
     /// <summary>系統匣可選的大小（乘在 Scale 上）</summary>
-    public static readonly (string Label, float Value)[] Sizes = { ("size.small", 0.7f), ("size.medium", 1f), ("size.large", 1.4f) };
-    public const float Gravity = 2400;        // 掉落加速度 (px/s²)
-    public const float Crossfade = 0.18f;     // 動作切換的混合時間 (s)
-    public const float SleepAfter = 30;       // 多久沒輸入就睡著 (s)
-    public const float TypingHold = 2.5f;     // 停止打字後多久收起筆電 (s)
-    public const int FocusRate = 6;           // 每秒幾下進入專注表情
-    public const float Margin = 80;           // 走路時離螢幕邊緣的距離 (px)
+    public static readonly (string Label, float Value)[] Sizes =
+        Pet["sizes"]!.AsArray().Select(s => (s!["label"]!.GetValue<string>(), F(s, "value"))).ToArray();
+    public static readonly float Gravity = F(Pet, "gravity");           // 掉落加速度 (px/s²)
+    public static readonly float Crossfade = F(Pet, "crossfade");       // 動作切換的混合時間 (s)
+    public static readonly float SleepAfter = F(Pet, "sleepAfter");     // 多久沒輸入就睡著 (s)
+    public static readonly float TypingHold = F(Pet, "typingHold");     // 停止打字後多久收起筆電 (s)
+    public static readonly int FocusRate = (int)F(Pet, "focusRate");    // 每秒幾下進入專注表情
+    public static readonly float Margin = F(Pet, "margin");             // 走路時離螢幕邊緣的距離 (px)
 
     /// <summary>自動行為：權重越高越常出現；Time = 循環動作持續秒數範圍</summary>
-    public static readonly Dictionary<string, (float Weight, float[]? Time)> Auto = new()
-    {
-        ["idle"] = (3, new[] { 2f, 4f }),
-        ["walk"] = (5, null),
-        ["run"] = (1, null),
-        ["sit"] = (2, new[] { 5f, 9f }),
-        ["sitEdge"] = (1, new[] { 5f, 9f }),
-        ["think"] = (1, new[] { 3f, 5f }),
-        ["wave"] = (1, new[] { 2f, 3f }),
-        ["dance"] = (1, new[] { 3f, 5f }),
-        ["stretch"] = (1, null),
-        ["jump"] = (1, null),
-        ["peace"] = (1, new[] { 2f, 3f }),
-        ["climb"] = (2, null),          // 跳到附近的視窗上（附近沒有視窗就改成待機）
-        ["hopDown"] = (2, null),        // 從視窗上跳下來（站在地面時改成待機）
-        ["volleyball"] = (1, new[] { 4f, 7f }),
-        ["coffee"] = (1, new[] { 5f, 8f }),        // 商店商品，買了才會出現（Behavior.Allowed）
-        ["read"] = (1, new[] { 6f, 10f }),
-    };
+    public static readonly Dictionary<string, (float Weight, float[]? Time)> Auto =
+        Data["auto"]!.AsObject().ToDictionary(kv => kv.Key, kv => (F(kv.Value!, "weight"), Floats(kv.Value!["time"])));
+
+    internal static float F(JsonNode node, string key) => node[key]!.GetValue<float>();
+
+    internal static float[]? Floats(JsonNode? node) => node?.AsArray().Select(v => v!.GetValue<float>()).ToArray();
 }
