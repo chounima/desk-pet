@@ -107,7 +107,12 @@ try {
         if (!(Math.abs(want - (got[frame]?.[bone] ?? NaN)) <= PHYSICS_TOLERANCE) && failures++ < 30)
           log(`✗ 物理 ${c.char} ${c.clip} 第 ${frame} 幀 ${bone}：${want} ≠ ${got[frame]?.[bone]}`);
   });
-  status.textContent = failures ? `✗ ${failures} 個不一致` : `✓ 全部通過（姿勢 ${doc.cases.length} 個、物理 ${phys.cases.length} 個案例）`;
+  const curves = await (await fetch(`${PATHS.art}/../tests/golden/curves.json`)).json();
+  curves.samples.forEach((t, i) => {
+    const got = sampleTrack(curves.keys, Math.fround(t));
+    if (!(Math.abs(got - curves.expected[i]) <= 0.001) && failures++ < 30) log(`✗ 曲線 t=${t}：${curves.expected[i]} ≠ ${got}`);
+  });
+  status.textContent = failures ? `✗ ${failures} 個不一致` : `✓ 全部通過（姿勢 ${doc.cases.length} 個、物理 ${phys.cases.length} 個、曲線 ${curves.samples.length} 個）`;
   status.className = failures ? "fail" : "pass";
   document.title = failures ? `FAIL ${failures}` : "PASS";
 } catch (e) {

@@ -42,18 +42,30 @@ public sealed class Animator
 
     static float Smooth(float t) => t * t * (3 - 2 * t);
 
-    /// <summary>keys: [[時間, 數值], ...]，兩個關鍵影格之間平滑插值</summary>
-    public static float SampleTrack(List<float[]> keys, float t)
+    /// <summary>keys: [[時間, 數值, 曲線], ...]，兩個關鍵影格之間依前一個的曲線插值（預設平滑）</summary>
+    public static float SampleTrack(List<Keyframe> keys, float t)
     {
-        if (keys.Count == 1 || t <= keys[0][0]) return keys[0][1];
+        if (keys.Count == 1 || t <= keys[0].T) return keys[0].V;
         for (var i = 0; i < keys.Count - 1; i++)
         {
-            var (t0, v0) = (keys[i][0], keys[i][1]);
-            var (t1, v1) = (keys[i + 1][0], keys[i + 1][1]);
-            if (t <= t1) return v0 + (v1 - v0) * Smooth((t - t0) / Math.Max(t1 - t0, 1e-6f));
+            var (k0, k1) = (keys[i], keys[i + 1]);
+            if (t <= k1.T) return k0.V + (k1.V - k0.V) * Ease(k0.Curve, (t - k0.T) / Math.Max(k1.T - k0.T, 1e-6f));
         }
-        return keys[^1][1];
+        return keys[^1].V;
     }
+
+    // back：先超過一點再回來（easeOutBack，最多超過約 10%）；hold：停在前一個值，到下一個關鍵影格才跳過去
+    const float BackC1 = 1.70158f, BackC3 = BackC1 + 1;
+
+    public static float Ease(Curve curve, float u) => curve switch
+    {
+        Curve.Linear => u,
+        Curve.EaseIn => u * u,
+        Curve.EaseOut => 1 - (1 - u) * (1 - u),
+        Curve.Back => 1 + BackC3 * (u - 1) * (u - 1) * (u - 1) + BackC1 * (u - 1) * (u - 1),
+        Curve.Hold => u >= 1 ? 1 : 0,
+        _ => Smooth(u),
+    };
 
     /// <param name="mods">播放時縮放某些軌道，例如 { "root.y": 0.5 }</param>
     public void Play(string name, bool restart = false, Dictionary<string, float>? mods = null)

@@ -22,7 +22,29 @@ public static class Golden
     static string PhysicsPath => $"{ContentLoader.Root}/tests/golden/physics.json";
     const float PhysicsTolerance = 0.05f;
 
-    public static int Run(bool update) => RunPose(update) + RunPhysics(update) == 0 ? 0 : 1;
+    public static int Run(bool update) => RunPose(update) + RunPhysics(update) + RunCurves(update) == 0 ? 0 : 1;
+
+    // ---------- 關鍵影格曲線（tests/golden/curves.json） ----------
+
+    static int RunCurves(bool update)
+    {
+        var path = ProjectSettings.GlobalizePath($"{ContentLoader.Root}/tests/golden/curves.json");
+        var doc = JsonNode.Parse(File.ReadAllText(path))!;
+        var keys = JsonSerializer.Deserialize<List<Keyframe>>(doc["keys"]!.ToJsonString())!;
+        var values = doc["samples"]!.AsArray().Select(t => MathF.Round(Animator.SampleTrack(keys, t!.GetValue<float>()), 4)).ToList();
+        if (update)
+        {
+            doc["expected"] = new JsonArray(values.Select(v => (JsonNode)v).ToArray());
+            File.WriteAllText(path, doc.ToJsonString(new JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping }) + "\n");
+            GD.Print($"[golden] 曲線：已更新 {values.Count} 個取樣");
+            return 0;
+        }
+        var expected = doc["expected"]!.AsArray().Select(v => v!.GetValue<float>()).ToList();
+        var bad = Enumerable.Range(0, values.Count).Where(i => i >= expected.Count || MathF.Abs(values[i] - expected[i]) > 0.001f).ToList();
+        foreach (var i in bad.Take(10)) GD.Print($"[golden] ✗ 曲線 t={doc["samples"]![i]}：{(i < expected.Count ? expected[i] : float.NaN)} ≠ {values[i]}");
+        GD.Print(bad.Count == 0 ? $"[golden] 曲線全部通過（{values.Count} 個取樣）" : $"[golden] ✗ 曲線 {bad.Count} 個不一致");
+        return bad.Count == 0 ? 0 : 1;
+    }
 
     static int RunPose(bool update)
     {

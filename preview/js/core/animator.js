@@ -2,12 +2,26 @@
 
 const smooth = t => t * t * (3 - 2 * t);
 
-// keys: [[時間, 數值], ...]，兩個關鍵影格之間平滑插值
+// back：先超過一點再回來（easeOutBack）；hold：停在前一個值，到下一個關鍵影格才跳過去（和桌寵 Animator.Ease 一樣）
+// 用 Math.fround 讓中間值和桌寵的 float（32 位元）一致
+const C1 = Math.fround(1.70158), C3 = Math.fround(C1 + 1);
+export const ease = (curve, u) => {
+  switch (curve) {
+    case "linear": return u;
+    case "easeIn": return u * u;
+    case "easeOut": return 1 - (1 - u) * (1 - u);
+    case "back": return 1 + C3 * (u - 1) ** 3 + C1 * (u - 1) ** 2;
+    case "hold": return u >= 1 ? 1 : 0;
+    default: return smooth(u);
+  }
+};
+
+// keys: [[時間, 數值, 曲線], ...]，兩個關鍵影格之間依前一個的曲線插值（預設平滑）
 export function sampleTrack(keys, t) {
   if (keys.length === 1 || t <= keys[0][0]) return keys[0][1];
   for (let i = 0; i < keys.length - 1; i++) {
-    const [t0, v0] = keys[i], [t1, v1] = keys[i + 1];
-    if (t <= t1) return v0 + (v1 - v0) * smooth((t - t0) / (t1 - t0 || 1));
+    const [t0, v0, curve] = keys[i], [t1, v1] = keys[i + 1];
+    if (t <= t1) return v0 + (v1 - v0) * ease(curve, (t - t0) / (t1 - t0 || 1));
   }
   return keys[keys.length - 1][1];
 }

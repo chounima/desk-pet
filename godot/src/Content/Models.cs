@@ -180,7 +180,7 @@ public sealed class ClipData
     public Dictionary<string, string>? Alt { get; set; }
     public string? Fx { get; set; }
     public float Move { get; set; }
-    public Dictionary<string, List<float[]>> Tracks { get; set; } = new();
+    public Dictionary<string, List<Keyframe>> Tracks { get; set; } = new();
 
     List<(float t, string name)>? faceKeys;
 
@@ -204,5 +204,47 @@ public sealed class ClipData
         foreach (var (k, name) in faceKeys)
             if (t >= k) value = name;
         return value;
+    }
+}
+
+/// <summary>關鍵影格曲線：從這個關鍵影格到下一個怎麼變化</summary>
+public enum Curve { Smooth, Linear, EaseIn, EaseOut, Back, Hold }
+
+/// <summary>關鍵影格 [時間, 數值] 或 [時間, 數值, "曲線"]（曲線：smooth、linear、easeIn、easeOut、back、hold）</summary>
+[JsonConverter(typeof(KeyframeConverter))]
+public readonly record struct Keyframe(float T, float V, Curve Curve = Curve.Smooth);
+
+public sealed class KeyframeConverter : JsonConverter<Keyframe>
+{
+    public override Keyframe Read(ref Utf8JsonReader reader, System.Type type, JsonSerializerOptions options)
+    {
+        if (reader.TokenType != JsonTokenType.StartArray) throw new JsonException("關鍵影格要是陣列 [時間, 數值, 曲線]");
+        reader.Read();
+        var t = reader.GetSingle();
+        reader.Read();
+        var v = reader.GetSingle();
+        reader.Read();
+        var curve = Curve.Smooth;
+        if (reader.TokenType == JsonTokenType.String)
+        {
+            var name = reader.GetString();
+            curve = name switch
+            {
+                "smooth" => Curve.Smooth, "linear" => Curve.Linear, "easeIn" => Curve.EaseIn, "easeOut" => Curve.EaseOut,
+                "back" => Curve.Back, "hold" => Curve.Hold, _ => throw new JsonException($"不認識的曲線 {name}"),
+            };
+            reader.Read();
+        }
+        if (reader.TokenType != JsonTokenType.EndArray) throw new JsonException("關鍵影格最多三個值");
+        return new Keyframe(t, v, curve);
+    }
+
+    public override void Write(Utf8JsonWriter writer, Keyframe k, JsonSerializerOptions options)
+    {
+        writer.WriteStartArray();
+        writer.WriteNumberValue(k.T);
+        writer.WriteNumberValue(k.V);
+        if (k.Curve != Curve.Smooth) writer.WriteStringValue(char.ToLowerInvariant(k.Curve.ToString()[0]) + k.Curve.ToString()[1..]);
+        writer.WriteEndArray();
     }
 }
