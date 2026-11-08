@@ -104,6 +104,7 @@ public partial class VtuberTab : ScrollContainer
         body.AddChild(Ui.Row(threshold, thresholdText));
         body.AddChild(Ui.Row(Ui.Button(I18n.T("vtuber.recalibrate"), feature.Recalibrate)));
         body.AddChild(Ui.Text(I18n.T("vtuber.micHint"), Ui.Muted, 13, wrap: true));
+        body.AddChild(Check("vtuber.micWhenOff", v.MicWhenOff, feature.SetMicWhenOff));
 
         // 規則
         body.AddChild(Ui.Heading(I18n.T("vtuber.reactions")));
@@ -122,7 +123,7 @@ public partial class VtuberTab : ScrollContainer
     public void Tick()
     {
         if (meter == null || !IsInstanceValid(meter) || level == null) return;
-        if (!feature.Active)
+        if (!feature.Active && !feature.MicRunning)
         {
             meter.Text = I18n.T("vtuber.off");
             level.Value = 0;

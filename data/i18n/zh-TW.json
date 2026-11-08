@@ -192,6 +192,7 @@
  "vtuber.threshold": "講話門檻：音量超過才算在講話（太容易動嘴就往右拉，講話沒反應就往左拉）",
  "vtuber.thresholdAuto": "{0} dB（自動）",
  "vtuber.thresholdManual": "{0} dB（手動）",
+ "vtuber.micWhenOff": "半身模式關掉後，全身角色還是跟著我講話動嘴（麥克風保持開著，用上面的門檻）",
  "vtuber.recalibrate": "🎚 重新校正",
  "vtuber.micHint": "門檻預設依環境噪音自動調整；拉了拉桿就固定在你設的值。按「重新校正」清掉學到的音量、音調，門檻也回到自動。",
  "vtuber.meter": "音量 {0} dB（噪音 {1}）{2}　音調 {3}　母音 {4}　最近的反應 {5}",

@@ -30,4 +30,6 @@ public sealed class VtuberSettings
     public double NoiseFloor { get; set; } = -50;
     /// <summary>噪音底線自動學（false = 使用者用拉桿固定了門檻，NoiseFloor 就是固定值）</summary>
     public bool AutoFloor { get; set; } = true;
+    /// <summary>半身模式關掉後，桌面上的全身角色還是用麥克風動嘴（麥克風保持開著）</summary>
+    public bool MicWhenOff { get; set; }
 }

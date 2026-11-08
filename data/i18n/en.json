@@ -301,6 +301,7 @@
  "vtuber.threshold": "Speaking threshold: louder than this counts as talking (mouth moves too easily → drag right; no reaction → drag left)",
  "vtuber.thresholdAuto": "{0} dB (auto)",
  "vtuber.thresholdManual": "{0} dB (manual)",
+ "vtuber.micWhenOff": "Keep the desktop pet lip-syncing to my voice when bust mode is off (mic stays on, uses the threshold above)",
  "vtuber.recalibrate": "🎚 Recalibrate",
  "vtuber.micHint": "The threshold follows background noise automatically; dragging the slider fixes it at your value. Recalibrate clears learned loudness and pitch and puts the threshold back on auto.",
  "vtuber.meter": "Level {0} dB (noise {1}) {2}  pitch {3}  vowel {4}  last reaction {5}",

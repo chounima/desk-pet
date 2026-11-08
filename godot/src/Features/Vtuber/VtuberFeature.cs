@@ -55,6 +55,7 @@ public sealed class VtuberFeature : IFeature
     /// <summary>最新的聲音分析結果（Hub 分頁顯示）</summary>
     public VoiceFrame Frame { get; private set; } = VoiceFrame.Silent;
     public VoiceCalibration Calibration => cal;
+    public bool MicRunning => mic.Running;
     public string? LastRule => rules.LastFired;
     public string MicStatus => script != null ? "script" : mic.Running ? AudioServer.InputDevice : "off";
 
@@ -89,7 +90,9 @@ public sealed class VtuberFeature : IFeature
         if (host.Args.TryGetValue("vtuber-char", out var charArg)) Settings.Character = charArg;
         if (host.Args.TryGetValue("vtuber-yaw", out var yawArg)) Settings.ViewYaw = float.Parse(yawArg, System.Globalization.CultureInfo.InvariantCulture);
         // --sandbox（測試）不依設定自動開，只認 --vtuber
+        if (host.Args.TryGetValue("vtuber-mic-off", out var micOff)) Settings.MicWhenOff = micOff != "0";      // 測試用
         if (host.Args.ContainsKey("vtuber") || (Settings.Enabled && !host.Sandbox)) Start();
+        else UpdateIdleMic();
     }
 
     // ---------- 開關 ----------
@@ -98,7 +101,7 @@ public sealed class VtuberFeature : IFeature
     {
         Settings.Enabled = on;
         if (!host.Sandbox) host.Settings.Save();
-        if (on) Start(); else Stop();
+        if (on) Start(); else { Stop(); UpdateIdleMic(); }
     }
 
     void Start()
@@ -147,8 +150,35 @@ public sealed class VtuberFeature : IFeature
 
     public void RestartMic()
     {
-        if (!Active || script != null) return;
+        if (script != null || !mic.Running) return;
         mic.Start(string.IsNullOrEmpty(Settings.MicDevice) ? null : Settings.MicDevice);
+        mic.Floor = cal.Floor;
+    }
+
+    /// <summary>半身關掉後，全身角色還是用麥克風動嘴</summary>
+    public void SetMicWhenOff(bool on)
+    {
+        Settings.MicWhenOff = on;
+        if (!host.Sandbox) host.Settings.Save();
+        UpdateIdleMic();
+    }
+
+    // 半身關著時：勾了 MicWhenOff 就開麥克風給全身角色動嘴（同一套分析、校正、門檻），沒勾就關掉
+    void UpdateIdleMic()
+    {
+        if (Active) return;
+        if (Settings.MicWhenOff && script == null)
+        {
+            if (!mic.Running) mic.Start(string.IsNullOrEmpty(Settings.MicDevice) ? null : Settings.MicDevice);
+            mic.Floor = cal.Floor;
+            host.Voice.Add(mic);
+        }
+        else
+        {
+            host.Voice.Remove(mic);
+            mic.Stop();
+            Frame = VoiceFrame.Silent;
+        }
     }
 
     /// <summary>重新校正：清掉學到的數值，門檻回到自動</summary>
@@ -267,6 +297,13 @@ public sealed class VtuberFeature : IFeature
 
     public void AfterPet(float dt)
     {
+        if (pet == null && mic.Running)          // 半身關著、麥克風給全身角色用：照樣校正
+        {
+            Frame = mic.Frame;
+            cal.Update(Frame);
+            mic.Floor = cal.Floor;
+            return;
+        }
         if (pet == null || driver == null || control == null || attach == null) return;
         Frame = script?.Next(dt) ?? mic.Frame;
         cal.Update(Frame);
