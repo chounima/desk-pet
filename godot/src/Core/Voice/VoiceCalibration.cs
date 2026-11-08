@@ -21,7 +21,16 @@ public sealed class VoiceCalibration
     /// <summary>平常的音調（Hz，中位數）；還沒聽到 = 0（音調規則先不動）</summary>
     public double BasePitch => pitches.Count >= 30 ? Median(pitches) : 0;
 
+    /// <summary>手動固定底線（使用者拉了門檻拉桿）：不再自動調整，直到 Reset</summary>
+    public bool Manual { get; private set; }
+
     public VoiceCalibration(double floor = -50) => Floor = floor;
+
+    public void SetManual(double floor)
+    {
+        Manual = true;
+        Floor = Math.Clamp(floor, -90, -10);
+    }
 
     public void Reset(double floor = -50)
     {
@@ -29,6 +38,7 @@ public sealed class VoiceCalibration
         speechDb.Clear();
         pitches.Clear();
         Floor = floor;
+        Manual = false;
     }
 
     public void Update(VoiceFrame f)
@@ -36,7 +46,7 @@ public sealed class VoiceCalibration
         if (!f.Speaking)
         {
             Push(noise, f.Db, NoiseFrames);
-            if (noise.Count >= 60)
+            if (noise.Count >= 60 && !Manual)
             {
                 var sorted = noise.OrderBy(v => v).ToList();
                 Floor = Math.Clamp(sorted[(int)(sorted.Count * 0.9)] + FloorMargin, -75, -20);

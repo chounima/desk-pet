@@ -19,6 +19,8 @@ public partial class VtuberTab : ScrollContainer
     readonly VBoxContainer body = new() { SizeFlagsHorizontal = SizeFlags.ExpandFill };
     Label? meter;
     ProgressBar? level;
+    HSlider? threshold;
+    Label? thresholdText;
 
     public VtuberTab(Settings settings, List<RigData> characters, Func<string, bool> unlocked, VtuberFeature feature)
     {
@@ -93,6 +95,13 @@ public partial class VtuberTab : ScrollContainer
         meter = Ui.Text("", Ui.Accent, 13, wrap: true);
         body.AddChild(level);
         body.AddChild(meter);
+        // 講話門檻：音量超過才算在講話（預設自動學；拉了就固定，按重新校正回到自動）
+        body.AddChild(Ui.Text(I18n.T("vtuber.threshold"), null, 13, wrap: true));
+        threshold = new HSlider { MinValue = -70, MaxValue = -10, Step = 1, Value = Math.Round(feature.Threshold), SizeFlagsHorizontal = SizeFlags.ExpandFill,
+                                  FocusMode = FocusModeEnum.None, CustomMinimumSize = new Vector2(0, Ui.Px(24)) };
+        thresholdText = Ui.Text("", Ui.Accent, 13);
+        threshold.ValueChanged += db => feature.SetThreshold(db);
+        body.AddChild(Ui.Row(threshold, thresholdText));
         body.AddChild(Ui.Row(Ui.Button(I18n.T("vtuber.recalibrate"), feature.Recalibrate)));
         body.AddChild(Ui.Text(I18n.T("vtuber.micHint"), Ui.Muted, 13, wrap: true));
 
@@ -121,6 +130,12 @@ public partial class VtuberTab : ScrollContainer
         }
         var f = feature.Frame;
         var cal = feature.Calibration;
+        if (threshold != null && IsInstanceValid(threshold) && thresholdText != null)
+        {
+            // 自動時拉桿跟著學到的值走（不觸發 ValueChanged，免得變成手動）
+            if (!cal.Manual) threshold.SetValueNoSignal(Math.Round(feature.Threshold));
+            thresholdText.Text = I18n.T(cal.Manual ? "vtuber.thresholdManual" : "vtuber.thresholdAuto", $"{feature.Threshold:0}");
+        }
         level.Value = Mathf.Clamp((float)(f.Db - cal.Floor) / 40, 0, 1);
         var st = Core.Voice.VoiceAnalyzer.Semitones(f.Pitch, cal.BasePitch);
         meter.Text = I18n.T("vtuber.meter", $"{f.Db:0}", $"{cal.Floor:0}", f.Speaking ? "🎤" : "·",

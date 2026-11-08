@@ -67,6 +67,7 @@ public sealed class VtuberFeature : IFeature
         rules = new VoiceRules(cfg);
         hotkeys = new Hotkeys(cfg.Hotkeys.Keys);
         cal.Reset(Settings.NoiseFloor);
+        if (!Settings.AutoFloor) cal.SetManual(Settings.NoiseFloor);
 
         mic = new MicCapture();
         host.Root.AddChild(mic);
@@ -150,7 +151,25 @@ public sealed class VtuberFeature : IFeature
         mic.Start(string.IsNullOrEmpty(Settings.MicDevice) ? null : Settings.MicDevice);
     }
 
-    public void Recalibrate() => cal.Reset();
+    /// <summary>重新校正：清掉學到的數值，門檻回到自動</summary>
+    public void Recalibrate()
+    {
+        cal.Reset();
+        Settings.AutoFloor = true;
+        if (!host.Sandbox) host.Settings.Save();
+    }
+
+    /// <summary>講話門檻（dB）：音量超過這個才算在講話。使用者拉了拉桿就固定，按重新校正回到自動</summary>
+    public double Threshold => cal.Floor + VoiceAnalyzer.Open;
+
+    public void SetThreshold(double db)
+    {
+        cal.SetManual(db - VoiceAnalyzer.Open);
+        mic.Floor = cal.Floor;
+        Settings.AutoFloor = false;
+        Settings.NoiseFloor = cal.Floor;
+        if (!host.Sandbox) host.Settings.Save();
+    }
 
     // 取景：頭頂到腰（hips），上面留一點空間；角色依高度縮放，放在角落（或設定的位置）
     void Layout()
@@ -357,7 +376,7 @@ public sealed class VtuberFeature : IFeature
     public void OnDisplayChanged() => Layout();
 
     public string? DumpInfo() => Active
-        ? $"view={pet!.Rig.View ?? "side"} parts={pet.Rig.DefaultOutfit?.Count ?? 0}{(facing < 0 ? "(左)" : "")} yaw={yaw:0} mic={MicStatus} db={Frame.Db:0.0} speaking={Frame.Speaking} pitch={Frame.Pitch:0} vowel={Frame.Vowel ?? "-"} floor={cal.Floor:0.0} base={cal.BasePitch:0} rule={rules.LastFired ?? "-"} face={pet!.FaceOverride ?? pet.Animator.Face} mouth={pet.MouthShape ?? "-"} action={pet.Action}"
+        ? $"view={pet!.Rig.View ?? "side"} parts={pet.Rig.DefaultOutfit?.Count ?? 0}{(facing < 0 ? "(左)" : "")} yaw={yaw:0} mic={MicStatus} db={Frame.Db:0.0} speaking={Frame.Speaking} pitch={Frame.Pitch:0} vowel={Frame.Vowel ?? "-"} floor={cal.Floor:0.0}{(cal.Manual ? "(手動)" : "")} base={cal.BasePitch:0} rule={rules.LastFired ?? "-"} face={pet!.FaceOverride ?? pet.Animator.Face} mouth={pet.MouthShape ?? "-"} action={pet.Action}"
         : null;
 
     public void Shutdown()

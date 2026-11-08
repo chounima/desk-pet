@@ -65,6 +65,15 @@ public static class VtuberSelfTest
         Run(31, new VoiceFrame(-70, false, 0, null));
         Check(started.Contains("stretch"), $"安靜 30 秒要伸懶腰：{string.Join(",", started)}");
 
+        // 6b. 手動門檻：拉桿固定的底線不會被環境音改掉，重新校正回到自動
+        var manual = new VoiceCalibration();
+        manual.SetManual(-40);
+        for (var i = 0; i < 200; i++) manual.Update(new VoiceFrame(-70, false, 0, null));
+        Check(manual.Manual && manual.Floor == -40, $"手動門檻要固定：{manual.Floor}");
+        manual.Reset();
+        for (var i = 0; i < 200; i++) manual.Update(new VoiceFrame(-70, false, 0, null));
+        Check(!manual.Manual && manual.Floor is > -68 and < -66, $"重新校正回到自動：{manual.Floor}");
+
         // 7. 快捷鍵：data/vtuber.json 的組合鍵都要認得
         Check(new Platform.Hotkeys(cfg.Hotkeys.Keys).Count == cfg.Hotkeys.Count, "快捷鍵都要認得");
         Check(new Platform.Hotkeys(new[] { "Ctrl+Alt+F5", "Shift+Q", "Ctrl+?" }).Count == 2, "F5、字母可以，其他符號略過");

@@ -28,4 +28,6 @@ public sealed class VtuberSettings
     public float TurnRange { get; set; } = 60;
     /// <summary>上次校正的噪音底線（dB）</summary>
     public double NoiseFloor { get; set; } = -50;
+    /// <summary>噪音底線自動學（false = 使用者用拉桿固定了門檻，NoiseFloor 就是固定值）</summary>
+    public bool AutoFloor { get; set; } = true;
 }

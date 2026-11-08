@@ -81,6 +81,7 @@ JSON 小提醒：字串要用雙引號、最後一項後面不能有逗號。開
 | `priority` | 誰蓋過誰（預設 10；講話動嘴 20、快捷鍵 40） |
 
 - 「平常」的音量、音調會自動學（Hub「🎥 半身」分頁可以看即時數值、按「重新校正」）
+- **講話門檻**：Hub「🎥 半身」分頁的拉桿，音量超過才算在講話。預設跟著環境噪音自動調整；拉了就固定（存在 settings.json 的 `Vtuber.AutoFloor`、`NoiseFloor`），按「重新校正」回到自動。太容易動嘴（鍵盤、風扇聲）往右拉，講話沒反應往左拉
 - `mouth.openDb`：沒認出母音時，比平常小聲不到這麼多 dB 算「全開」，更小聲算「半開」
 - `hotkeys`：`"Ctrl+Alt+1": { "face": "happy", "seconds": 3 }`，修飾鍵 Ctrl、Alt、Shift，按鍵 0～9、A～Z、F1～F12
 - `bust.height`、`bust.margin`：半身預設高度、頭頂上面留多少
