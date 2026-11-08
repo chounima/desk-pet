@@ -89,7 +89,7 @@ public partial class Main
     void UpdateFocus(float dt)
     {
         focus.Update(dt);
-        if (focus.Current != Focus.Phase.Off && !presence.Hidden)
+        if (focus.Current != Focus.Phase.Off && !PetHidden)
         {
             // 倒數顯示在頭的旁邊（頭上是對話泡泡的位置）
             var u = DesktopWindow.UiScale;

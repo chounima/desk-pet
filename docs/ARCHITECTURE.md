@@ -32,6 +32,12 @@
 
 新程式**不可以增加例外**；碰到需要跨層時，先想能不能用事件或介面反過來。
 
+## 主角色藏起來（PetHidden）
+
+桌面上的主角色可能因為三個原因藏起來：全螢幕自動隱藏、使用者暫時隱藏、功能模組要求（`FeatureHost.HidePet`，例如半身模式）。`Main.PetHidden` 把三個合起來，藏起來時主角色相關的東西**全部**停：畫面、特效、泡泡、聲波、台詞音效、番茄鐘倒數、彈吉他、排球、日常反應、收集計時、動嘴、點擊判定。
+
+新增任何「跟著主角色」的東西（特效、聲音、浮動文字、計時器顯示），都要看 `PetHidden`，不要只看 `presence.Hidden`（那只是全螢幕／使用者隱藏）。功能模組自己的東西（客人、半身角色）用 `IFeature.OnHiddenChanged`，只收到全螢幕／使用者隱藏。
+
 ## 功能模組
 
 功能（專注、音樂、日常、收集、自訂內容，之後的半身模式）原本是 `Main` 的 `partial` 檔，共用 `Main` 的欄位。目標是每個功能一個資料夾 `godot/src/Features/<功能>/`，實作 `IFeature`（0k）。已經搬好的：**多人**（`Features/Guests/`）、**半身 VTuber 模式**（`Features/Vtuber/`：麥克風 `Platform/Voice/MicCapture`、聲音分析 `Core/Voice/`、規則 `Game/Vtuber/VoiceRules`、分頁 `UI/Hub/VtuberTab`）。

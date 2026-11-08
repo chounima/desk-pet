@@ -99,8 +99,8 @@ public partial class Main
 
     void UpdateProgress(float dt)
     {
-        if (!presence.Hidden) progress.Tick(dt, pet.Rig.Id);
-        if ((pointsTimer -= dt) <= 0 && pendingPoints > 0 && !presence.Hidden)
+        if (!PetHidden) progress.Tick(dt, pet.Rig.Id);
+        if ((pointsTimer -= dt) <= 0 && pendingPoints > 0 && !PetHidden)
         {
             fx.Burst($"+{pendingPoints} 💎", pet.HeadTop(), new Color("#7fe0ff"));
             pendingPoints = 0;

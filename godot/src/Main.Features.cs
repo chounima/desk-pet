@@ -34,12 +34,22 @@ public partial class Main
         if (hide ? petHiders.Add(source) : petHiders.Remove(source)) ApplyPetVisibility();
     }
 
-    /// <summary>主角色和它的掛件（特效、泡泡、聲波）一起顯示／隱藏：全螢幕、使用者隱藏、功能模組要求</summary>
+    /// <summary>
+    /// 桌面上的主角色藏起來了嗎：全螢幕自動隱藏、使用者暫時隱藏、功能模組要求（例如半身模式）。
+    /// 藏起來時，主角色相關的東西全部停：畫面、特效、泡泡、聲波、台詞音效、番茄鐘倒數、彈吉他、排球、日常反應、收集計時、動嘴、點擊。
+    /// 新增主角色相關的東西時，都要看這個（不要只看 presence.Hidden）
+    /// </summary>
+    bool PetHidden => presence.Hidden || petHiders.Count > 0;
+
     void ApplyPetVisibility()
     {
-        var hide = presence.Hidden || petHiders.Count > 0;
+        var hide = PetHidden;
         pet.View.Visible = !hide;
         attachments.SetHidden(hide);
+        if (!hide) return;
+        drag = null;
+        if (volley.Active) { volley.SetActive(false); tray.SetVolley(false); }
+        focusView.Visible = false;
     }
 
     /// <summary>換主角色的驅動者；null = 換回桌面漫遊（Behavior）</summary>

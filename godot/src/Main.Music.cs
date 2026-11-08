@@ -92,7 +92,7 @@ public partial class Main
     {
         if (!performing) return;
         // 對打開始或角色躲起來時停止演奏
-        if (volley.Active || presence.Hidden) { StopPerformance(); return; }
+        if (volley.Active || PetHidden) { StopPerformance(); return; }
         if ((bpmTimer -= dt) <= 0) { bpmTimer = 1; UpdateStrumSpeed(); }     // 自訂音樂的 BPM 是邊聽邊估的
     }
 }

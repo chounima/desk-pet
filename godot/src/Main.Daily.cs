@@ -66,7 +66,7 @@ public partial class Main
             displayTimer = daily.DisplayCheckSeconds;
             if (DesktopWindow.RefreshDisplay()) OnDisplayChanged();
         }
-        if (!presence.Hidden) dailyLife.Update(dt);
+        if (!PetHidden) dailyLife.Update(dt);
     }
 
     void OnPresenceChanged(bool hidden)
@@ -74,13 +74,7 @@ public partial class Main
         ApplyPetVisibility();
         FeaturesHiddenChanged(hidden);
         tray.SetHidden(presence.ManualHidden);
-        if (hidden)
-        {
-            drag = null;
-            if (volley.Active) { volley.SetActive(false); tray.SetVolley(false); }
-            DesktopWindow.SetClickThrough(true);
-        }
-        else behavior.Say("back");
+        if (!hidden && !PetHidden) behavior.Say("back");
     }
 
     // 解析度、縮放比例、工作列位置改變：重新計算大小，角色留在畫面內並回到地面

@@ -84,7 +84,7 @@ public sealed class VtuberFeature : IFeature
             shotPath = ProjectSettings.GlobalizePath(shot);
             shotLeft = float.Parse(host.Args.GetValueOrDefault("vtuber-shot-at", "3"), System.Globalization.CultureInfo.InvariantCulture);
         }
-        if (host.Args.ContainsKey("vtuber-hide-pet")) Settings.HideDesktopPet = true;      // 測試用（--sandbox 不存設定）
+        if (host.Args.TryGetValue("vtuber-hide-pet", out var hideArg)) Settings.HideDesktopPet = hideArg != "0";      // 測試用（--sandbox 不存設定）；=0 不藏
         if (host.Args.TryGetValue("vtuber-char", out var charArg)) Settings.Character = charArg;
         if (host.Args.TryGetValue("vtuber-yaw", out var yawArg)) Settings.ViewYaw = float.Parse(yawArg, System.Globalization.CultureInfo.InvariantCulture);
         // --sandbox（測試）不依設定自動開，只認 --vtuber

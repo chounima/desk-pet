@@ -16,7 +16,7 @@ public partial class Main
     void UpdateMainMouth(float dt)
     {
         // 講話（麥克風、Discord）動嘴並出聲波；冒台詞泡泡時只動嘴
-        var speaking = voice.Speaking && !performing && !presence.Hidden;
+        var speaking = voice.Speaking && !performing && !PetHidden;
         mainTalking = mainMouth.Update(dt, driver, control, speaking || bubble.Talking) && speaking;
     }
 }

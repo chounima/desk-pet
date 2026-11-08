@@ -182,7 +182,7 @@ public partial class Main : Node2D
         {
             if (focus != null && !ShouldSpeak(key)) return;     // 專注中保持安靜
             bubble.Say(lines.Pick(pet.Rig.Id, key));
-            sfx.PlayForLine(key);
+            if (!PetHidden) sfx.PlayForLine(key);      // 藏起來時泡泡不顯示，聲音也不要
         };
 
         VolleySkills.Load();
@@ -393,7 +393,7 @@ public partial class Main : Node2D
 
     void DumpState() =>
         GD.Print($"[state] keys={keyCount} input={GlobalInput.Running} action={pet.Action} " +
-                 $"t={pet.Animator.LocalTime:0.00} facing={pet.Facing} x={pet.X:0} char={pet.Rig.Id} scale={pet.Scale:0.00} today={settings.TodayKeys} y={pet.Y:0} surface={behavior.SurfaceInfo} windows=[{WindowTracker.Stats}]" + (volley.Active ? $" volley[{volley.DebugInfo}]" : "") + $" hidden={presence.Hidden}" + (focus?.Current is { } fp && fp != Focus.Phase.Off ? $" focus[{fp} {focus.Label()} rounds={focus.Rounds} pts={progress.State.Points}]" : "") + (performing ? $" music[{music.Current?.Title} bpm={music.Bpm:0} speed={pet.Animator.Speed:0.00}]" : "") + $" sfx[{string.Join(",", sfx.Played.Select(kv => $"{kv.Key}={kv.Value}"))}]");
+                 $"t={pet.Animator.LocalTime:0.00} facing={pet.Facing} x={pet.X:0} char={pet.Rig.Id} scale={pet.Scale:0.00} today={settings.TodayKeys} y={pet.Y:0} surface={behavior.SurfaceInfo} windows=[{WindowTracker.Stats}]" + (volley.Active ? $" volley[{volley.DebugInfo}]" : "") + $" hidden={presence.Hidden}{(petHiders.Count > 0 ? $" hiddenBy={string.Join(",", petHiders)}" : "")}" + (focus?.Current is { } fp && fp != Focus.Phase.Off ? $" focus[{fp} {focus.Label()} rounds={focus.Rounds} pts={progress.State.Points}]" : "") + (performing ? $" music[{music.Current?.Title} bpm={music.Bpm:0} speed={pet.Animator.Speed:0.00}]" : "") + $" sfx[{string.Join(",", sfx.Played.Select(kv => $"{kv.Key}={kv.Value}"))}]");
 
     // ---------- 滑鼠：點擊與拖曳 ----------
 
@@ -463,10 +463,10 @@ public partial class Main : Node2D
     // 游標在角色不透明的像素上（或正在拖曳）才接收滑鼠，其他時候點擊穿透到桌面
     void UpdateClickThrough()
     {
-        if (presence.Hidden) return;       // 隱藏中一律穿透（OnPresenceChanged 已設好）
         var cursor = DesktopWindow.CursorInWindow();
-        // 對打中球和角色都要能點（角色用來按右鍵叫選單）
-        var over = drag != null || (volley.Active && volley.HitBall(cursor)) || pet.View.HitTest(cursor) || (!volley.Active && FeaturesWantMouse(cursor));
+        // 對打中球和角色都要能點（角色用來按右鍵叫選單）；桌面角色藏起來時只剩功能模組（例如半身角色）能點
+        var over = !PetHidden && (drag != null || (volley.Active && volley.HitBall(cursor)) || pet.View.HitTest(cursor));
+        over |= !volley.Active && FeaturesWantMouse(cursor);
         DesktopWindow.SetClickThrough(!over);
     }
 
